@@ -10,6 +10,7 @@ This file lives at `.ai/VIZ.md`, under the `.ai/` directory in the root of the r
 | [`ValidateAllSkills`](../.skills/ValidateAllSkills/SKILL.md) | Meta-skill that validates every skill in this repository against `.ai/RULES.md`, by invoking `ValidateSkill` once per skill and then performing the whole-repo checks. |
 | [`PreCommitSkillWithRunId`](../.skills/PreCommitSkillWithRunId/SKILL.md) | Meta-skill that performs the pre-commit gate under a caller-supplied `SkillRunId`: receipt-hygiene checks, directory invariants from `ai-invariants.yml` (stale ones in parallel, cached ones skipped), optional `PRECOMMIT.md` checks, then `ValidateAllSkills` for full compliance. |
 | [`PreCommitSkill`](../.skills/PreCommitSkill/SKILL.md) | Meta-skill that gates a commit to this repository: takes no parameters, generates a fresh `SkillRunId` in the default format, and delegates to `PreCommitSkillWithRunId`. |
+| [`ImplementWhatWeJustDiscussed`](../.skills/ImplementWhatWeJustDiscussed/SKILL.md) | Summarizes the current conversation to extract the feature request, implements the feature with a design document, then invokes `PreCommitSkill` and iterates on any failures until all pre-commit checks pass. |
 
 ## SkillInvocations
 
@@ -18,6 +19,7 @@ This file lives at `.ai/VIZ.md`, under the `.ai/` directory in the root of the r
 | `PreCommitSkill` | `PreCommitSkillWithRunId` |
 | `PreCommitSkillWithRunId` | `ValidateAllSkills` |
 | `ValidateAllSkills` | `ValidateSkill` |
+| `ImplementWhatWeJustDiscussed` | `PreCommitSkill` |
 
 ## Diagram
 
@@ -25,7 +27,8 @@ An arrow from A to B means skill A can, under some circumstances, invoke skill B
 
 ```mermaid
 graph TD
-    PreCommitSkill["PreCommitSkill"] --> PreCommitSkillWithRunId["PreCommitSkillWithRunId"]
+    ImplementWhatWeJustDiscussed["ImplementWhatWeJustDiscussed"] --> PreCommitSkill["PreCommitSkill"]
+    PreCommitSkill --> PreCommitSkillWithRunId["PreCommitSkillWithRunId"]
     PreCommitSkillWithRunId --> ValidateAllSkills["ValidateAllSkills"]
     ValidateAllSkills --> ValidateSkill["ValidateSkill"]
 ```
