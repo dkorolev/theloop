@@ -22,7 +22,7 @@ If either parameter is missing, or extra parameters are passed, stop and report 
 ## Steps
 
 1. **Confirm the target skill exists.** Look for `.skills/<SkillNameToCheck>/SKILL.md` in this repository. If it does not exist, this run is an error: report it to the user, write the run receipt with `"status": "error"` and an explanatory `"error"` message, and stop.
-2. **Probe the validation cache.** Per the rule on hashing and caching of slow checks, run `.skills/ValidateSkill/scripts/cache.py probe <SkillNameToCheck>` from the repository root. It computes the fingerprint described in `.ai/CACHING.md` — the input set is every non-ignored file under `.skills/<SkillNameToCheck>/` plus `.ai/RULES.md`, `SKILLS.md`, and `.ai/VIZ.md`, under the check name `ValidateSkill:<SkillNameToCheck>` — and reports whether a cache entry exists. On a cache hit (`"cached": true`), this exact validation has already passed over byte-identical inputs: skip the remaining validation steps entirely — do not read the rules or the target skill — report to the user that the skill is compliant per the cache, and proceed directly to writing the run receipt with `"status": "pass"` and `"cached": true`.
+2. **Probe the validation cache.** Per the rule on hashing and caching of slow checks, run `.skills/ValidateSkill/scripts/cache.py probe <SkillNameToCheck>` from the repository root. It computes the fingerprint described in `.ai/CACHING.md` — the input set is every non-ignored file under `.skills/<SkillNameToCheck>/` plus `.ai/RULES.md`, `SKILLS.md`, and `.ai/VIZ.md`, under the check name `ValidateSkill:<SkillNameToCheck>` — and reports whether a cache entry exists. On a cache hit (`"cached": true`), this exact validation has already passed over byte-identical inputs: skip the remaining validation steps entirely — do not read the rules or the target skill — report to the user that the skill is compliant per the cache, and proceed directly to writing the run receipt with `"status": "pass"` and `"source": "cache"`.
 3. **Read the rules.** Read `.ai/RULES.md`, under the `.ai/` directory at the repository root. Every rule in that file applies to the target skill.
 4. **Run the mechanical checks.** Run `.skills/ValidateSkill/scripts/mechanical-checks.py <SkillNameToCheck>` from the repository root. It checks the mechanically verifiable projections of the rules and prints the outcomes as JSON:
    - for the rule on containment within the repo, that the target skill states that running it is fully contained within the repository directory;
@@ -53,7 +53,7 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
   "skill": "ValidateSkill",
   "checked_skill": "string|null — the SkillNameToCheck parameter, or null if it was missing",
   "status": "pass | fail | error",
-  "cached": "boolean|null — true when the pass verdict was served from the cache, false when validation ran in full, null when status is 'error'",
+  "source": "cache | regenerated | null — cache when the pass verdict was served from the cache, regenerated when validation ran in full, null when status is error",
   "violations": [
     { "rule": "string — the name of the violated rule, as it is titled in .ai/RULES.md", "detail": "string — what is violated and where" }
   ],
@@ -61,8 +61,8 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
 }
 ```
 
-- `status` is `"pass"` when the target skill exists and satisfies every rule (then `violations` is `[]` and `error` is `null`); `"cached"` is `true` when the verdict came from the cache, `false` when the full validation ran;
-- `"fail"` when it exists but violates at least one rule (then `violations` is non-empty and `"cached"` is `false`);
-- `"error"` when validation could not be performed at all (then `error` explains why and `"cached"` is `null`).
+- `status` is `"pass"` when the target skill exists and satisfies every rule (then `violations` is `[]` and `error` is `null`); `"source"` is `"cache"` when the verdict came from the cache, `"regenerated"` when the full validation ran;
+- `"fail"` when it exists but violates at least one rule (then `violations` is non-empty and `"source"` is `"regenerated"`);
+- `"error"` when validation could not be performed at all (then `error` explains why and `"source"` is `null`).
 
 **Run receipt (final reminder):** before finishing this skill — regardless of outcome, success or error alike — write `tmp/<SkillRunId>.json` containing a single well-formed JSON object conforming to the schema above. The only exception is when `tmp/<SkillRunId>.json` already existed before the run: in that case refuse to run and never overwrite it.

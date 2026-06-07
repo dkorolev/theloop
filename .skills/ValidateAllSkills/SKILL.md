@@ -22,7 +22,7 @@ If the parameter is missing, or extra parameters are passed, stop and report an 
 
 1. **Enumerate the skills and run the whole-repo checks.** Run `.skills/ValidateAllSkills/scripts/repo-checks.py` from the repository root. It enumerates the skills of this repository — exactly the directories `.skills/<SkillName>/` that contain a `SKILL.md` file — extracts the invocation relationships that actually exist from the skills' `SKILL.md` files, performs the whole-repo checks described in the fourth step, and prints the skills, the relationships, and any violations as JSON. If it reports that no skills exist, this run is an error: report it, write the run receipt with `"status": "error"`, and stop.
 2. **Check the sub-run preconditions.** For each `<SkillName>`, the sub-run identifier is `<SkillRunId>-<SkillName>`. If the file `tmp/<SkillRunId>-<SkillName>.json` already exists for any skill, this run is an error: report which files are in the way, write the run receipt with `"status": "error"`, and stop before validating anything.
-3. **Validate each skill.** Per the rule on parallel invocation of spawned skills, launch every `ValidateSkill` sub-run concurrently — each `<SkillName>` from step 1, including `ValidateSkill` and this very skill, gets its own sub-run with identifier `<SkillRunId>-<SkillName>` checked in step 2. For each, invoke `ValidateSkill` with exactly two parameters, in this order: the sub-run identifier `<SkillRunId>-<SkillName>`, and `<SkillName>`. Invoke through the configured skill runner if one is available; otherwise execute by reading `.skills/ValidateSkill/SKILL.md` and following its instructions literally. After all sub-runs have completed, read each sub-run receipt `tmp/<SkillRunId>-<SkillName>.json` and record its `status` and `violations`. The sub-run receipts are write-once like any run receipt: leave them in place, never overwrite or delete them.
+3. **Validate each skill.** Per the rule on parallel invocation of spawned skills, launch every `ValidateSkill` sub-run concurrently — each `<SkillName>` from step 1, including `ValidateSkill` and this very skill, gets its own sub-run with identifier `<SkillRunId>-<SkillName>` checked in step 2. For each, invoke `ValidateSkill` with exactly two parameters, in this order: the sub-run identifier `<SkillRunId>-<SkillName>`, and `<SkillName>`. Invoke through the configured skill runner if one is available; otherwise execute by reading `.skills/ValidateSkill/SKILL.md` and following its instructions literally. After all sub-runs have completed, read each sub-run receipt `tmp/<SkillRunId>-<SkillName>.json` and record its `status`, `source`, and `violations`. The sub-run receipts are write-once like any run receipt: leave them in place, never overwrite or delete them.
 4. **Record the whole-repo checks.** These are the checks that `ValidateSkill` declares out of scope for a single-skill run, because they are properties of the repository as a whole; the script from the first step has already performed them:
    - For the rule on the `SKILLS.md` file: `SKILLS.md` lists exactly the skills enumerated in the first step — every skill in the repo appears in `SKILLS.md`, and every skill listed in `SKILLS.md` exists in the repo.
    - For the rule on visualization and topology: `.ai/VIZ.md` lists exactly the skills enumerated in the first step, and exactly the invocation relationships that actually exist. Also, the Mermaid diagram in `.ai/VIZ.md` contains exactly the same skills as nodes and the same invocation relationships as arrows as the two tables do.
@@ -45,7 +45,7 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
       "skill": "string — the name of the validated skill",
       "sub_run_id": "string — the sub-run identifier passed to ValidateSkill",
       "status": "pass | fail | error — as reported by the sub-run receipt",
-      "cached": "boolean|null — as reported by the sub-run receipt: true when the pass verdict came from the cache",
+      "source": "cache | regenerated | null — as reported by the sub-run receipt; null when status is error",
       "violations": [
         { "rule": "string — the name of the violated rule, as it is titled in .ai/RULES.md", "detail": "string — what is violated and where" }
       ]
@@ -54,10 +54,15 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
   "repo_violations": [
     { "rule": "string — the name of the violated rule, as it is titled in .ai/RULES.md", "detail": "string — what is violated and where" }
   ],
+  "cache_summary": {
+    "cached": "integer — count of skills_checked entries whose source is cache",
+    "regenerated": "integer — count of skills_checked entries whose source is regenerated"
+  },
   "error": "string|null — set only when status is 'error' (e.g. missing parameter or a pre-existing receipt file)"
 }
 ```
 
+- `cache_summary` counts how many skill validations were served from the cache versus re-run in full; its counts must match `skills_checked`;
 - `status` is `"pass"` when every entry of `skills_checked` has `"status": "pass"` and `repo_violations` is `[]` (then `error` is `null`);
 - `"fail"` when validation ran but at least one entry of `skills_checked` has a status other than `"pass"`, or `repo_violations` is non-empty (then `error` is `null`);
 - `"error"` when validation could not be performed at all (then `skills_checked` and `repo_violations` contain whatever was gathered before the failure, possibly `[]`, and `error` explains why).
