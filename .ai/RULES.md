@@ -53,7 +53,7 @@ The `SKILLS.md` file should, at any commit in this repo, contain exactly the ful
 
 The `.ai/VIZ.md` file should, at any commit in this repo, contain exactly the full list of the skills, and a complete list of what skill can invoke what other skill.
 
-"The full list" here means that every skill in the repo must be present in `.ai/VIZ.md`, and every skill present in `.ai/VIZ.md` is present in the repo. Same with invocation relationships: every invocation relationship between two skills must be present in `.ai/VIZ.md`, and every relation that is listed in `.ai/VIZ.md` must be actual in the repo.
+"The full list" here means that every skill in the repo must be present in `.ai/VIZ.md`, and every skill present in `.ai/VIZ.md` is present in the repo. Same with invocation relationships: every invocation relationship between two skills must be present in `.ai/VIZ.md`, and every relation that is listed in `.ai/VIZ.md` must be actually present in the repo.
 
 Besides the textual list (two markdown tables, Skills and SkillInvocations), the `.ai/VIZ.md` file should also contain a Mermaid diagram outlining the above graphically: skills as nodes, skill invocation relationships as arrows, where an arrow from A to B means skill A can, under some circumstances, invoke skill B.
 
