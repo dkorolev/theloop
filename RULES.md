@@ -18,6 +18,8 @@ Furthermore, when a skill is executing other skills, it should make sure to pass
 
 Most skills must take the `SkillRunId` as the first parameter. The skills that do not require this parameter should explicitly state so in their body, that this is the exceptional one that does not require the `SkillRunId` parameter.
 
+The default format of a `SkillRunId` is `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}`: the local date and time at which the run started, followed by six random lowercase Latin letters — for example, `20260607-153012-kqzwxy`. A skill that generates a `SkillRunId` itself, rather than receiving it from its caller, must generate it in this format. Sub-run identifiers are not generated from scratch but derived, by suffixing the parent's `SkillRunId` as the invoking skill prescribes.
+
 For skills with the `SkillRunId` parameter, the skill should explicitly mention several things:
 
 * The skill should refuse to run, and result in an error, if the `tmp/${SkillRunId}.json` file exists prior to the skill being run.
@@ -26,14 +28,14 @@ For skills with the `SkillRunId` parameter, the skill should explicitly mention 
 
 Specifically, for every skill that does take the `SkillRunId` as the parameter, the very rule to write but not overwrite the `tmp/${SkillRunId}.json` file must be present in the skill definition at least twice: once closer to the beginning of the skill, and once towards the very end of it.
 
-Concretely, a skill complies with this rule when all of the following hold:
+Concretely, a skill that takes the `SkillRunId` parameter complies with this rule when all of the following hold:
 
 1. The skill declares `SkillRunId` as one of its parameters.
 2. The first instruction of the skill body tells the model to write `tmp/<SkillRunId>.json` upon completion.
 3. The last instruction of the skill body repeats that same requirement.
 4. The skill describes the JSON schema of the object that goes into `tmp/<SkillRunId>.json`.
 
-Note that the `tmp/` directory is `.gitignore`-d, so skill run receipts are never committed. The `PreCommitSkill` skill must check this.
+Note that the `tmp/` directory is `.gitignore`-d, so skill run receipts are never committed. The `PreCommitSkillWithRunId` skill must check this.
 
 ## Rule 4: Universal directory for skills
 

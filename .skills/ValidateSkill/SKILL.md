@@ -26,12 +26,12 @@ If either parameter is missing, or extra parameters are passed, stop and report 
 3. **Validate.** Read the target skill's `SKILL.md` and check it against each rule in `RULES.md`. In particular:
    - For the rule on containment within the repo, verify that the target skill states that running it is fully contained within the repository directory.
    - For the rule on strict parameters, verify that the target skill declares exactly which parameters it takes and instructs the runner to validate them before executing, and that any invocations of other skills pass exactly the right parameters.
-   - For the rule on run receipts, verify that the target skill:
-     - declares `SkillRunId` as its first parameter (or explicitly states that it is an exception that takes no `SkillRunId`);
+   - For the rule on run receipts, verify that the target skill declares `SkillRunId` as its first parameter, or explicitly states that it is an exception that takes no `SkillRunId`. When the target skill takes the `SkillRunId` parameter, also verify that it:
      - refuses to run, with an error, if `tmp/<SkillRunId>.json` exists prior to the run;
      - **begins** its instruction body with the instruction to write `tmp/<SkillRunId>.json` upon completion, success or error alike;
      - **ends** its instruction body with that same instruction;
      - describes the fixed JSON schema of the object written to `tmp/<SkillRunId>.json`.
+   - Still for the rule on run receipts: when the target skill generates a `SkillRunId` itself, rather than receiving it from its caller, verify that it prescribes the default format codified in that rule.
    - For the rule on the universal directory for skills, verify that the target skill lives under `.skills/` in the root of the repo. (Step 1 already enforces this structurally: a skill anywhere else is not found at all.)
    - For the rule on the `SKILLS.md` file and the rule on visualization and topology, verify their per-skill projection: the target skill is listed in `SKILLS.md`, and is listed in `VIZ.md` together with all of its actual invocation relationships. Checking the other direction — that nothing extra is listed — is a whole-repo property and is out of scope for this single-skill check.
    - For the rule on use of scripts, verify that any non-trivial code the target skill runs is provided under `.skills/<SkillNameToCheck>/scripts/` rather than written as ad-hoc temporary files.
