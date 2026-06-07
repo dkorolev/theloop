@@ -73,7 +73,15 @@ The Markdown texts should be easy to read. The scripts should not be excessive, 
 
 Skills must not refer to the rules in this file by their numbers. The set of rules is expected to stay stable, but their numbering may change as rules are added, removed, or reordered. Whenever a skill needs to reference a rule — in its instructions or in its run receipts — it must use the rule's name (its heading in this file) or a short description of it.
 
-## Rule 10: Parallel invocation of spawned skills
+## Rule 10: Hashing and caching of slow checks
+
+Whenever a skill performs a check that is potentially slow or token-consuming — one that requires an agentic runner to read files and exercise judgment — and the outcome of that check is fully determined by a fixed set of files, the skill must use the hashing and caching technique documented in `.ai/CACHING.md`: a provided Python script computes the fingerprint of the check's input set before the check runs, the check is skipped entirely when a cache entry for that fingerprint exists, and a passing verdict writes the cache entry so the next unchanged run is skipped.
+
+The fingerprint must be computed by the skill's provided Python script, never reproduced inline by an agentic runner. The scripts are the single source of truth: because every agent uses the same script, they produce identical fingerprints for identical content, and cache entries are shared across agents and sessions automatically.
+
+Cache entries live under `tmp/caches/`, are written only on passing verdicts, and are never committed. Skills whose own checks are all fast and mechanical are unaffected by this rule, even when they invoke skills that cache.
+
+## Rule 11: Parallel invocation of spawned skills
 
 When a skill invokes other skills, its definition must state clearly whether those invocations may and should run in parallel.
 

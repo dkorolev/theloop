@@ -45,6 +45,7 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
       "skill": "string — the name of the validated skill",
       "sub_run_id": "string — the sub-run identifier passed to ValidateSkill",
       "status": "pass | fail | error — as reported by the sub-run receipt",
+      "cached": "boolean|null — as reported by the sub-run receipt: true when the pass verdict came from the cache",
       "violations": [
         { "rule": "string — the name of the violated rule, as it is titled in .ai/RULES.md", "detail": "string — what is violated and where" }
       ]

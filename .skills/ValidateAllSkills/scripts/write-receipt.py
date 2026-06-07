@@ -43,6 +43,10 @@ def main():
         die('"skills_checked" and "repo_violations" must be lists')
     if (receipt["status"] == "error") != (receipt["error"] is not None):
         die('"error" must be set when and only when status is "error"')
+    entry_fields = {"skill", "sub_run_id", "status", "cached", "violations"}
+    for entry in receipt["skills_checked"]:
+        if not isinstance(entry, dict) or set(entry) != entry_fields:
+            die(f'each entry of "skills_checked" must have exactly the fields {sorted(entry_fields)}')
     failing = [s.get("skill") for s in receipt["skills_checked"]
                if not (isinstance(s, dict) and s.get("status") == "pass")]
     if receipt["status"] == "pass" and (failing or receipt["repo_violations"]):

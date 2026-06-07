@@ -15,7 +15,7 @@ import sys
 from typing import NoReturn
 
 SKILL = "ValidateSkill"
-FIELDS = {"skill_run_id", "skill", "checked_skill", "status", "violations", "error"}
+FIELDS = {"skill_run_id", "skill", "checked_skill", "status", "cached", "violations", "error"}
 STATUSES = {"pass", "fail", "error"}
 
 
@@ -39,6 +39,10 @@ def main():
         die(f'"skill" must be "{SKILL}"')
     if receipt["status"] not in STATUSES:
         die('"status" must be "pass", "fail", or "error"')
+    if receipt["status"] == "error" and receipt["cached"] is not None:
+        die('"cached" must be null when status is "error"')
+    if receipt["status"] != "error" and not isinstance(receipt["cached"], bool):
+        die('"cached" must be a boolean when status is "pass" or "fail"')
     if not isinstance(receipt["violations"], list):
         die('"violations" must be a list')
     if receipt["status"] == "pass" and receipt["violations"]:
