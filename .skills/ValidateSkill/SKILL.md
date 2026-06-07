@@ -1,6 +1,6 @@
 ---
 name: ValidateSkill
-description: Meta-skill that validates another skill in this repository against RULES.md. Takes a SkillRunId and the name of the skill to check; errors if the target skill does not exist, otherwise reports whether it complies with every rule.
+description: Meta-skill that validates another skill in this repository against .ai/RULES.md. Takes a SkillRunId and the name of the skill to check; errors if the target skill does not exist, otherwise reports whether it complies with every rule.
 argument-hint: <SkillRunId> <SkillNameToCheck>
 ---
 
@@ -22,8 +22,8 @@ If either parameter is missing, or extra parameters are passed, stop and report 
 ## Steps
 
 1. **Confirm the target skill exists.** Look for `.skills/<SkillNameToCheck>/SKILL.md` in this repository. If it does not exist, this run is an error: report it to the user, write the run receipt with `"status": "error"` and an explanatory `"error"` message, and stop.
-2. **Read the rules.** Read `RULES.md` at the repository root. Every rule in that file applies to the target skill.
-3. **Validate.** Read the target skill's `SKILL.md` and check it against each rule in `RULES.md`. In particular:
+2. **Read the rules.** Read `.ai/RULES.md`, under the `.ai/` directory at the repository root. Every rule in that file applies to the target skill.
+3. **Validate.** Read the target skill's `SKILL.md` and check it against each rule in `.ai/RULES.md`. In particular:
    - For the rule on containment within the repo, verify that the target skill states that running it is fully contained within the repository directory.
    - For the rule on strict parameters, verify that the target skill declares exactly which parameters it takes and instructs the runner to validate them before executing, and that any invocations of other skills pass exactly the right parameters.
    - For the rule on run receipts, verify that the target skill declares `SkillRunId` as its first parameter, or explicitly states that it is an exception that takes no `SkillRunId`. When the target skill takes the `SkillRunId` parameter, also verify that it:
@@ -33,7 +33,7 @@ If either parameter is missing, or extra parameters are passed, stop and report 
      - describes the fixed JSON schema of the object written to `tmp/<SkillRunId>.json`.
    - Still for the rule on run receipts: when the target skill generates a `SkillRunId` itself, rather than receiving it from its caller, verify that it prescribes the default format codified in that rule.
    - For the rule on the universal directory for skills, verify that the target skill lives under `.skills/` in the root of the repo. (Step 1 already enforces this structurally: a skill anywhere else is not found at all.)
-   - For the rule on the `SKILLS.md` file and the rule on visualization and topology, verify their per-skill projection: the target skill is listed in `SKILLS.md`, and is listed in `VIZ.md` together with all of its actual invocation relationships. Checking the other direction — that nothing extra is listed — is a whole-repo property and is out of scope for this single-skill check.
+   - For the rule on the `SKILLS.md` file and the rule on visualization and topology, verify their per-skill projection: the target skill is listed in `SKILLS.md`, and is listed in `.ai/VIZ.md` together with all of its actual invocation relationships. Checking the other direction — that nothing extra is listed — is a whole-repo property and is out of scope for this single-skill check.
    - For the rule on use of scripts, verify that any non-trivial code the target skill runs is provided under `.skills/<SkillNameToCheck>/scripts/` rather than written as ad-hoc temporary files.
    - For the rule on taste and style, verify that the target skill's text is free of grammatical errors and easy to read.
    - For the rule on referring to rules by name, verify that the target skill never references a rule by its number.
@@ -52,7 +52,7 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
   "checked_skill": "string|null — the SkillNameToCheck parameter, or null if it was missing",
   "status": "pass | fail | error",
   "violations": [
-    { "rule": "string — the name of the violated rule, as it is titled in RULES.md", "detail": "string — what is violated and where" }
+    { "rule": "string — the name of the violated rule, as it is titled in .ai/RULES.md", "detail": "string — what is violated and where" }
   ],
   "error": "string|null — set only when status is 'error' (e.g. target skill not found)"
 }

@@ -1,6 +1,6 @@
 ---
 name: PreCommitSkillWithRunId
-description: Meta-skill that performs the pre-commit gate for this repository under a caller-supplied run identifier. Takes a single SkillRunId; checks that the tmp/ directory is gitignored and that no run receipts are tracked or staged, performs every additional check described in PRECOMMIT.md when that file exists at the root of the repo, then invokes ValidateAllSkills to confirm that every skill and the repository as a whole comply with RULES.md.
+description: Meta-skill that performs the pre-commit gate for this repository under a caller-supplied run identifier. Takes a single SkillRunId; checks that the tmp/ directory is gitignored and that no run receipts are tracked or staged, performs every additional check described in PRECOMMIT.md when that file exists at the root of the repo, then invokes ValidateAllSkills to confirm that every skill and the repository as a whole comply with .ai/RULES.md.
 argument-hint: <SkillRunId>
 ---
 

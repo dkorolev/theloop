@@ -2,6 +2,8 @@
 
 Every skill in this repository must comply with all of the rules below. The `ValidateSkill` skill checks compliance. The `ValidateAllSkills` skill checks compliance of all skills.
 
+This file lives at `.ai/RULES.md`, under the `.ai/` directory in the root of the repo. All file paths in this file are relative to the root of the repo.
+
 ## Rule 1: Contained within the repo
 
 Every skill should mention that running the skill is an operation that is fully contained within the directory of the repository. The agentic runner of the skill should not need to access files outside the repository, and it should not attempt to access files outside the repository.
@@ -49,11 +51,11 @@ The `SKILLS.md` file should, at any commit in this repo, contain exactly the ful
 
 ## Rule 6: Visualization and topology
 
-The `VIZ.md` file should, at any commit in this repo, contain exactly the full list of the skills, and a complete list of what skill can invoke what other skill.
+The `.ai/VIZ.md` file should, at any commit in this repo, contain exactly the full list of the skills, and a complete list of what skill can invoke what other skill.
 
-"The full list" here means that every skill in the repo must be present in `VIZ.md`, and every skill present in `VIZ.md` is present in the repo. Same with invocation relationships: every invocation relationship between two skills must be present in `VIZ.md`, and every relation that is listed in `VIZ.md` must be actual in the repo.
+"The full list" here means that every skill in the repo must be present in `.ai/VIZ.md`, and every skill present in `.ai/VIZ.md` is present in the repo. Same with invocation relationships: every invocation relationship between two skills must be present in `.ai/VIZ.md`, and every relation that is listed in `.ai/VIZ.md` must be actual in the repo.
 
-Besides the textual list (two markdown tables, Skills and SkillInvocations), the `VIZ.md` file should also contain a Mermaid diagram outlining the above graphically: skills as nodes, skill invocation relationships as arrows, where an arrow from A to B means skill A can, under some circumstances, invoke skill B.
+Besides the textual list (two markdown tables, Skills and SkillInvocations), the `.ai/VIZ.md` file should also contain a Mermaid diagram outlining the above graphically: skills as nodes, skill invocation relationships as arrows, where an arrow from A to B means skill A can, under some circumstances, invoke skill B.
 
 ## Rule 7: Use of scripts
 
