@@ -72,7 +72,33 @@ The Python scripts under `.skills/MakePRForIssue/scripts/` are executable and be
 
 10. **Commit and push.** Stage and commit every change on the branch with a clear commit message referencing the issue (for example, `Implement feature for #<IssueIndex>`). If the work required multiple commits during the fix loop, that is fine — journal every new commit SHA on the branch. Run `git push -u origin <branch>`.
 
-11. **Create the pull request.** Build a PR body that summarizes what was implemented, links the issue with `Closes #<IssueIndex>`, and notes the design document path. Save it to `tmp/<SkillRunId>-pr-body.md`. Run `.skills/MakePRForIssue/scripts/create-pr.py` with `--title TITLE` (the issue title, or a concise variant), `--body-file tmp/<SkillRunId>-pr-body.md`, and `--head <branch>`. The script creates a PR with the `theloop` label and prints JSON with `pr_number` and `pr_url`. Journal: `created PR #<pr_number> — <pr_url>`.
+11. **Create the pull request.** Build a PR body and save it to `tmp/<SkillRunId>-pr-body.md`. The body **must** include all of the following:
+   - A prominent notice that **this pull request was created by theloop** (for example, a blockquote near the top: `> This pull request was created by **theloop**.`).
+   - A statement that **this PR implements issue #\<IssueIndex\>** (substitute the issue number), with a Markdown link to the issue URL from step 3.
+   - A pointer that the **problem statement, acceptance criteria, and design decisions** are recorded in that issue — reviewers should read the issue for full context rather than duplicating the entire spec in the PR.
+   - `Closes #<IssueIndex>` so merging closes the issue.
+   - A brief summary of what was implemented in this PR.
+   - The path to the feature design document written in step 5.
+
+   Use this structure (adapt placeholders; keep the theloop notice and issue pointer):
+
+   ```markdown
+   > This pull request was created by **theloop**.
+
+   This PR implements issue #<IssueIndex> — [<issue title>](<issue_url>).
+
+   The problem statement, acceptance criteria, and design decisions are recorded in that issue; read it for full context.
+
+   Closes #<IssueIndex>
+
+   ## Summary
+   One or two paragraphs on what this PR changes.
+
+   ## Design document
+   `<feature_doc_path>`
+   ```
+
+   Run `.skills/MakePRForIssue/scripts/create-pr.py` with `--title TITLE` (the issue title, or a concise variant), `--body-file tmp/<SkillRunId>-pr-body.md`, and `--head <branch>`. The script creates a PR with the `theloop` label and prints JSON with `pr_number` and `pr_url`. Journal: `created PR #<pr_number> — <pr_url>`.
 
 12. **Final report.** Tell the user:
     - That the pull request was created successfully
