@@ -32,6 +32,8 @@ If either parameter is missing, or extra parameters are passed, stop and report 
      - **begins** its instruction body with the instruction to write `tmp/<SkillRunId>.json` upon completion, success or error alike;
      - **ends** its instruction body with that same instruction;
      - describes the fixed JSON schema of the object written to `tmp/<SkillRunId>.json`.
+   - For the rule on the universal directory for skills, verify that the target skill lives under `.skills/` in the root of the repo. (Step 1 already enforces this structurally: a skill anywhere else is not found at all.)
+   - For the rule on the `SKILLS.md` file and the rule on visualization and topology, verify their per-skill projection: the target skill is listed in `SKILLS.md`, and is listed in `VIZ.md` together with all of its actual invocation relationships. Checking the other direction — that nothing extra is listed — is a whole-repo property and is out of scope for this single-skill check.
    - For the rule on use of scripts, verify that any non-trivial code the target skill runs is provided under `.skills/<SkillNameToCheck>/scripts/` rather than written as ad-hoc temporary files.
    - For the rule on taste and style, verify that the target skill's text is free of grammatical errors and easy to read.
    - For the rule on referring to rules by name, verify that the target skill never references a rule by its number.
