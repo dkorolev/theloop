@@ -7,14 +7,13 @@ This file contains exactly the full list of the skills in this repository and a 
 | Skill | Description |
 |---|---|
 | [`ValidateSkill`](.skills/ValidateSkill/SKILL.md) | Meta-skill that validates another skill in this repository against `RULES.md`. |
+| [`ValidateAllSkills`](.skills/ValidateAllSkills/SKILL.md) | Meta-skill that validates every skill in this repository against `RULES.md`, by invoking `ValidateSkill` once per skill and then performing the whole-repo checks. |
 
 ## SkillInvocations
 
 | Invoker | Invokee |
 |---|---|
-| _(none yet)_ | _(none yet)_ |
-
-No skill in this repository currently invokes another skill.
+| `ValidateAllSkills` | `ValidateSkill` |
 
 ## Diagram
 
@@ -22,5 +21,5 @@ An arrow from A to B means skill A can, under some circumstances, invoke skill B
 
 ```mermaid
 graph TD
-    ValidateSkill["ValidateSkill"]
+    ValidateAllSkills["ValidateAllSkills"] --> ValidateSkill["ValidateSkill"]
 ```
