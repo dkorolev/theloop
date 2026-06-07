@@ -13,7 +13,7 @@ This file lives at `.ai/VIZ.md`, under the `.ai/` directory in the root of the r
 | [`InternalSkillPreCommitSkillWithRunId`](../.skills/InternalSkillPreCommitSkillWithRunId/SKILL.md) | Meta-skill that performs the pre-commit gate under a caller-supplied `SkillRunId`: receipt-hygiene checks, directory rules via `InternalSkillCheckAllRulesWithRunId`, optional `PRECOMMIT.md` checks, then `InternalSkillValidateAllSkills` for full compliance. |
 | [`PreCommitSkill`](../.skills/PreCommitSkill/SKILL.md) | Meta-skill that gates a commit to this repository: takes no parameters, generates a fresh `SkillRunId` in the default format, and delegates to `InternalSkillPreCommitSkillWithRunId`. |
 | [`ImplementWhatWeJustDiscussed`](../.skills/ImplementWhatWeJustDiscussed/SKILL.md) | Summarizes the current conversation to extract the feature request, implements the feature with a design document, then invokes `PreCommitSkill` and iterates on any failures until all pre-commit checks pass. |
-| [`InternalSkillCheckGhRepoAccessWithRunId`](../.skills/InternalSkillCheckGhRepoAccessWithRunId/SKILL.md) | Checks that the GitHub CLI (`gh`) is installed, authenticated, and can access the repository URL in `.ai/repo.txt`. |
+| [`InternalSkillCheckGhRepoAccessWithRunId`](../.skills/InternalSkillCheckGhRepoAccessWithRunId/SKILL.md) | Checks that the GitHub CLI (`gh`) is installed, authenticated, and can access the repository URL in `.ai/repo.txt`, and ensures the `theloop` label exists for bugs and pull requests. |
 
 ## SkillInvocations
 

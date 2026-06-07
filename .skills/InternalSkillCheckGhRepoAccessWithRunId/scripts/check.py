@@ -2,8 +2,10 @@
 """Check gh CLI availability and repository access per .ai/repo.txt.
 
 Usage: .skills/InternalSkillCheckGhRepoAccessWithRunId/scripts/check.py   (from the repository root)
-Output: JSON object with repo_url and a checks array; each check has check, status,
-detail, and suggestion (both null unless the check fails or is skipped with context).
+Output: JSON object with repo_url, a checks array, and an actions array. Each check
+has check, status, detail, and suggestion (both null unless the check fails or is
+skipped with context). actions lists human-readable side effects (for example, a
+label that was created); it is [] when nothing was changed.
 Exit code: 0 when all non-skipped checks pass, 1 otherwise.
 """
 import json
@@ -23,6 +25,8 @@ REPO_CONFIG_SUGGESTION = (
     "Create `.ai/repo.txt` containing a single line with the GitHub repository URL "
     "this project needs to access (for example, `https://github.com/owner/repo`)."
 )
+THELOOP_LABEL = "theloop"
+THELOOP_LABEL_DESCRIPTION = "Issues and pull requests tracked by theloop"
 
 
 def run(cmd, **kwargs):
@@ -73,8 +77,32 @@ def git_ls_remote(url):
     return True, None
 
 
+def gh_label_exists(slug, name):
+    proc = run(["gh", "api", f"repos/{slug}/labels/{name}"])
+    return proc.returncode == 0
+
+
+def ensure_theloop_label(slug):
+    if gh_label_exists(slug, THELOOP_LABEL):
+        return True, None, False
+    proc = run([
+        "gh", "label", "create", THELOOP_LABEL,
+        "-R", slug,
+        "-d", THELOOP_LABEL_DESCRIPTION,
+    ])
+    if proc.returncode != 0:
+        detail = (proc.stderr or proc.stdout or "gh label create failed").strip()
+        return False, detail, False
+    return True, None, True
+
+
+def skip_label_checks(checks, reason):
+    add(checks, "gh-label-theloop", "skipped", reason, None)
+
+
 def main():
     checks = []
+    actions = []
     repo_url = None
     slug = None
     can_use_gh = False
@@ -124,6 +152,7 @@ def main():
         add(checks, "gh-authenticated", "skipped", "Skipped because `gh` is not installed.", None)
         add(checks, "gh-repo-access", "skipped", "Skipped because `gh` is not installed.", None)
         add(checks, "gh-repo-pull", "skipped", "Skipped because `gh` is not installed.", None)
+        skip_label_checks(checks, "Skipped because `gh` is not installed.")
     else:
         add(checks, "gh-installed", "pass")
         can_use_gh = True
@@ -146,6 +175,7 @@ def main():
                 "Skipped because `gh` is not authenticated.",
                 None,
             )
+            skip_label_checks(checks, "Skipped because `gh` is not authenticated.")
         else:
             add(checks, "gh-authenticated", "pass")
 
@@ -164,10 +194,29 @@ def main():
                     "Skipped because the repository URL is not configured.",
                     None,
                 )
+                skip_label_checks(checks, "Skipped because the repository URL is not configured.")
             else:
                 ok, detail = gh_repo_view(slug)
                 if ok:
                     add(checks, "gh-repo-access", "pass")
+                    label_ok, label_detail, created = ensure_theloop_label(slug)
+                    if label_ok:
+                        add(checks, "gh-label-theloop", "pass")
+                        if created:
+                            actions.append(
+                                f"Created label `{THELOOP_LABEL}` on {slug} for bugs and pull requests."
+                            )
+                    else:
+                        add(
+                            checks,
+                            "gh-label-theloop",
+                            "fail",
+                            f"Cannot ensure label `{THELOOP_LABEL}` on {slug}: {label_detail}",
+                            (
+                                f"Verify that your GitHub account can manage labels on {repo_url} "
+                                f"(for example, run `gh label create {THELOOP_LABEL} -R {slug}`)."
+                            ),
+                        )
                     pull_ok, pull_detail = git_ls_remote(clone_url(slug))
                     if pull_ok:
                         add(checks, "gh-repo-pull", "pass")
@@ -200,8 +249,9 @@ def main():
                         "Skipped because repository access via `gh` failed.",
                         None,
                     )
+                    skip_label_checks(checks, "Skipped because repository access via `gh` failed.")
 
-    result = {"repo_url": repo_url, "checks": checks}
+    result = {"repo_url": repo_url, "checks": checks, "actions": actions}
     print(json.dumps(result, indent=2))
     passed = all(c["status"] in {"pass", "skipped"} for c in checks)
     return 0 if passed else 1
