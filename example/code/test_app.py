@@ -54,3 +54,9 @@ def test_add_wrong_type():
 def test_subtract_empty_body():
     r = client.post("/subtract", json={})
     assert r.status_code == 422
+
+
+def test_add_2_and_3():
+    r = client.post("/add", json={"a": 2, "b": 3})
+    assert r.status_code == 200
+    assert r.json() == {"result": 5.0}
