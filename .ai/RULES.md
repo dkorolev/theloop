@@ -59,7 +59,9 @@ Besides the textual list (two markdown tables, Skills and SkillInvocations), the
 
 ## Rule 7: Use of scripts
 
-It is undesirable that skills write temporary Python files to run themselves. If a skill may need to execute a piece of code that is non-trivial, the skill should provide the respective scripts under `.skills/${SkillName}/scripts/`.
+It is undesirable that skills write temporary Python files to run themselves. If a skill may need to execute a piece of code that is non-trivial, the skill should provide the respective scripts under `.skills/${SkillName}/scripts/`, and the runner should execute the provided scripts rather than improvise equivalent shell or Python on the spot. The mechanical parts of a run — generating identifiers, performing fixed checks, validating and writing run receipts — belong in such scripts; judgment calls stay with the runner.
+
+Scripts are deliberately duplicated rather than shared: when several skills need the same helper, each skill carries its own copy under its own `scripts/` directory. Every skill directory is self-contained, and there is no shared script location in this repository.
 
 ## Rule 8: Taste and style
 

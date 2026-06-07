@@ -21,17 +21,17 @@ If the parameter is missing, or extra parameters are passed, stop and report an 
 ## Steps
 
 1. **Check the sub-run precondition.** The sub-run identifier is `<SkillRunId>-ValidateAllSkills`. If the file `tmp/<SkillRunId>-ValidateAllSkills.json` already exists, this run is an error: report it, write the run receipt with `"status": "error"`, and stop. (Deeper sub-run identifiers, derived in turn by `ValidateAllSkills`, are checked by `ValidateAllSkills` itself.)
-2. **Check the receipt hygiene.** The rule on run receipts requires that run receipts are never committed. Perform these three checks, recording each one's outcome:
-   - `tmp-gitignored` — the `tmp/` directory is gitignored: `git check-ignore -q tmp/probe` exits with `0`. (No `tmp/probe` file needs to exist for this check.)
-   - `no-tracked-receipts` — no file under `tmp/` is tracked: `git ls-files -- tmp/` prints nothing.
-   - `no-staged-receipts` — no file under `tmp/` is staged: `git diff --cached --name-only -- tmp/` prints nothing.
+2. **Check the receipt hygiene.** The rule on run receipts requires that run receipts are never committed. Run `.skills/PreCommitSkillWithRunId/scripts/hygiene.py` from the repository root: it performs the three checks below and prints their outcomes as JSON, exiting non-zero when at least one fails. Record each check's outcome.
+   - `tmp-gitignored` — the `tmp/` directory is gitignored;
+   - `no-tracked-receipts` — no file under `tmp/` is tracked by git;
+   - `no-staged-receipts` — no file under `tmp/` is staged.
 3. **Apply `PRECOMMIT.md`, when present.** If a `PRECOMMIT.md` file exists at the root of the repository, read it and perform every check it describes, in addition to the checks above, recording each one's outcome. If no such file exists, skip this step.
 
    > **A hint to the rule reviewer:** treat `PRECOMMIT.md` as this skill's extension point. The checks in the previous step are the floor; whenever `PRECOMMIT.md` exists, this skill must cover at least everything it describes. Consequently, the `extra_checks` field of the run receipt is open-ended by design — its entries are determined by `PRECOMMIT.md`, not enumerated here. This is intentional and does not violate the rule on run receipts: the schema of each entry is fixed, even though the set of checks is not.
 4. **Validate the repository.** Invoke the `ValidateAllSkills` skill, passing exactly one parameter: the sub-run identifier `<SkillRunId>-ValidateAllSkills`. Invoke it through the configured skill runner if one is available; otherwise execute it by reading `.skills/ValidateAllSkills/SKILL.md` and following its instructions literally. After the invocation, read the sub-run receipt `tmp/<SkillRunId>-ValidateAllSkills.json` and record its `status`. The sub-run receipt is write-once like any run receipt: leave it in place, never overwrite or delete it.
 5. **Verdict.** The commit may proceed — `"status": "pass"` — only when all three hygiene checks pass, every check prescribed by `PRECOMMIT.md` passes (trivially true when the file does not exist), and the `ValidateAllSkills` sub-run reports `"pass"`. Otherwise the commit must be blocked: `"status": "fail"` when at least one check fails or the sub-run reports anything other than `"pass"`, and `"status": "error"` when this skill could not perform the checks at all (bad parameters or a pre-existing receipt file).
 6. **Report.** Tell the user the verdict: that the commit may proceed, or every reason it is blocked — each failing check, and the sub-run status if it is not `"pass"` (the details of the validation failures are in the sub-run receipts).
-7. **Write the run receipt** as described below.
+7. **Write the run receipt** as described below: assemble the receipt object and pipe it to `.skills/PreCommitSkillWithRunId/scripts/write-receipt.py`, which validates the schema and refuses to overwrite an existing receipt.
 
 ## Run receipt schema
 

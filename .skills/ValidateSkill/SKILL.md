@@ -23,23 +23,22 @@ If either parameter is missing, or extra parameters are passed, stop and report 
 
 1. **Confirm the target skill exists.** Look for `.skills/<SkillNameToCheck>/SKILL.md` in this repository. If it does not exist, this run is an error: report it to the user, write the run receipt with `"status": "error"` and an explanatory `"error"` message, and stop.
 2. **Read the rules.** Read `.ai/RULES.md`, under the `.ai/` directory at the repository root. Every rule in that file applies to the target skill.
-3. **Validate.** Read the target skill's `SKILL.md` and check it against each rule in `.ai/RULES.md`. In particular:
-   - For the rule on containment within the repo, verify that the target skill states that running it is fully contained within the repository directory.
-   - For the rule on strict parameters, verify that the target skill declares exactly which parameters it takes and instructs the runner to validate them before executing, and that any invocations of other skills pass exactly the right parameters.
-   - For the rule on run receipts, verify that the target skill declares `SkillRunId` as its first parameter, or explicitly states that it is an exception that takes no `SkillRunId`. When the target skill takes the `SkillRunId` parameter, also verify that it:
-     - refuses to run, with an error, if `tmp/<SkillRunId>.json` exists prior to the run;
-     - **begins** its instruction body with the instruction to write `tmp/<SkillRunId>.json` upon completion, success or error alike;
-     - **ends** its instruction body with that same instruction;
-     - describes the fixed JSON schema of the object written to `tmp/<SkillRunId>.json`.
-   - Still for the rule on run receipts: when the target skill generates a `SkillRunId` itself, rather than receiving it from its caller, verify that it prescribes the default format codified in that rule.
-   - For the rule on the universal directory for skills, verify that the target skill lives under `.skills/` in the root of the repo. (Step 1 already enforces this structurally: a skill anywhere else is not found at all.)
-   - For the rule on the `SKILLS.md` file and the rule on visualization and topology, verify their per-skill projection: the target skill is listed in `SKILLS.md`, and is listed in `.ai/VIZ.md` together with all of its actual invocation relationships. Checking the other direction — that nothing extra is listed — is a whole-repo property and is out of scope for this single-skill check.
-   - For the rule on use of scripts, verify that any non-trivial code the target skill runs is provided under `.skills/<SkillNameToCheck>/scripts/` rather than written as ad-hoc temporary files.
-   - For the rule on taste and style, verify that the target skill's text is free of grammatical errors and easy to read.
-   - For the rule on referring to rules by name, verify that the target skill never references a rule by its number.
+3. **Run the mechanical checks.** Run `.skills/ValidateSkill/scripts/mechanical-checks.py <SkillNameToCheck>` from the repository root. It checks the mechanically verifiable projections of the rules and prints the outcomes as JSON:
+   - for the rule on containment within the repo, that the target skill states that running it is fully contained within the repository directory;
+   - for the rule on run receipts, that the target skill declares `SkillRunId` as its first parameter or explicitly states that it is an exception that takes no `SkillRunId`; when it takes the parameter, that its instruction body **begins** and **ends** with the instruction to write but never overwrite `tmp/<SkillRunId>.json`, and that it describes the fixed JSON schema of that receipt; and when it generates a `SkillRunId` itself, rather than receiving it from its caller, that it prescribes the default format codified in that rule;
+   - for the rule on the `SKILLS.md` file and the rule on visualization and topology, their per-skill projection: the target skill is listed in `SKILLS.md`, and is listed in `.ai/VIZ.md` together with all of its actual invocation relationships. Checking the other direction — that nothing extra is listed — is a whole-repo property and is out of scope for this single-skill check;
+   - for the rule on referring to rules by name, that the target skill never references a rule by its number;
+   - for the rule on use of scripts, that every script the target skill references exists at the referenced path.
+
+   The script matches fixed phrasings, so confirm each reported failure against the target skill's text before recording it as a violation; treat compliant-but-differently-worded text as a reason to read closer, not as an automatic violation.
+4. **Judge the remaining rules.** Read the target skill's `SKILL.md` and check what the script cannot:
+   - For the rule on strict parameters, verify that the target skill declares exactly which parameters it takes and instructs the runner to validate them before executing, and that any invocations of other skills pass exactly the right parameters. In particular, verify that it refuses to run, with an error, if `tmp/<SkillRunId>.json` exists prior to the run.
+   - For the rule on the universal directory for skills, note that the first step already enforces it structurally: a skill anywhere else than under `.skills/` is not found at all.
+   - For the rule on use of scripts, verify that any non-trivial code the target skill runs is provided as scripts under `.skills/<SkillNameToCheck>/scripts/` rather than written as ad-hoc temporary files.
+   - For the rule on taste and style, verify that the target skill's text is free of grammatical errors and easy to read, and that any provided scripts are understandable, follow simple input/output formats, perform no surprising operations, and keep their error messages short yet complete.
    - For the rule on parallel invocation of spawned skills, verify that if the target skill invokes other skills: when it starts two or more independent sub-runs, it instructs the runner to launch them concurrently and aggregate receipts after all complete; when parallel execution is undesirable, it explains in detail why; when it invokes exactly one other skill, no parallelism wording is required.
-4. **Report.** Tell the user whether the skill passes, listing each violation (rule and detail) if it does not.
-5. **Write the run receipt** as described below.
+5. **Report.** Tell the user whether the skill passes, listing each violation (rule and detail) if it does not.
+6. **Write the run receipt** as described below: assemble the receipt object and pipe it to `.skills/ValidateSkill/scripts/write-receipt.py`, which validates the schema and refuses to overwrite an existing receipt.
 
 ## Run receipt schema
 
