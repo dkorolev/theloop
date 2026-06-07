@@ -72,7 +72,6 @@ def main():
             "--title", title,
             "--body-file", body_path,
             "--label", THELOOP_LABEL,
-            "--json", "number,url",
         ],
         capture_output=True,
         text=True,
@@ -81,15 +80,12 @@ def main():
         detail = (proc.stderr or proc.stdout or "gh issue create failed").strip()
         die(detail)
 
-    try:
-        payload = json.loads(proc.stdout)
-    except json.JSONDecodeError as exc:
-        die(f"gh issue create returned invalid JSON: {exc}")
-
-    number = payload.get("number")
-    url = payload.get("url")
-    if not isinstance(number, int) or not isinstance(url, str) or not url:
-        die("gh issue create did not return issue number and url")
+    output = (proc.stdout or proc.stderr or "").strip()
+    match = re.search(r"github\.com/[^/\s]+/[^/\s]+/issues/(\d+)", output)
+    if not match:
+        die(f"gh issue create did not return an issue URL: {output or '(empty output)'}")
+    number = int(match.group(1))
+    url = output if output.startswith("http") else f"https://{output.lstrip('/')}"
 
     print(json.dumps({"issue_number": number, "issue_url": url}, indent=2))
     return 0
