@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and write the run receipt of CheckSingleRuleWithRunId, write-once."""
+"""Validate and write the run receipt of InternalSkillCheckSingleRuleWithRunId, write-once."""
 import argparse
 import json
 import os
@@ -7,7 +7,7 @@ import re
 import sys
 from typing import NoReturn
 
-SKILL = "CheckSingleRuleWithRunId"
+SKILL = "InternalSkillCheckSingleRuleWithRunId"
 FIELDS = {"skill_run_id", "skill", "rule", "status", "source", "detail", "error"}
 STATUSES = {"pass", "fail", "error"}
 SOURCES = {"cache", "regenerated"}

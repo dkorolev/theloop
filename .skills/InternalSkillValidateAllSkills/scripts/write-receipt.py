@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Validate and write the run receipt of ValidateAllSkills, write-once.
+"""Validate and write the run receipt of InternalSkillValidateAllSkills, write-once.
 
 Usage (CLI — preferred):
   write-receipt.py --skill-run-id ID --sub-run-ids "id1 id2 ..." [--repo-violations-json '[...]']
   write-receipt.py --skill-run-id ID --status error --error "REASON"
 
-  --sub-run-ids is a space-separated list of ValidateSkill sub-run identifiers.
+  --sub-run-ids is a space-separated list of InternalSkillValidateSkill sub-run identifiers.
   The script reads each sub-run receipt from tmp/, derives the overall status and cache_summary,
   and refuses to overwrite an existing file.
 
@@ -22,7 +22,7 @@ import re
 import sys
 from typing import NoReturn
 
-SKILL = "ValidateAllSkills"
+SKILL = "InternalSkillValidateAllSkills"
 FIELDS = {"skill_run_id", "skill", "status", "skills_checked", "repo_violations", "cache_summary", "error"}
 STATUSES = {"pass", "fail", "error"}
 SOURCES = {"cache", "regenerated"}

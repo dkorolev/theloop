@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and write the run receipt of PreCommitSkillWithRunId, write-once.
+"""Validate and write the run receipt of InternalSkillPreCommitSkillWithRunId, write-once.
 
 Usage (CLI — preferred):
   write-receipt.py --skill-run-id ID \
@@ -20,7 +20,7 @@ import re
 import sys
 from typing import NoReturn
 
-SKILL = "PreCommitSkillWithRunId"
+SKILL = "InternalSkillPreCommitSkillWithRunId"
 FIELDS = {"skill_run_id", "skill", "status", "hygiene_checks", "rules", "extra_checks", "validation", "cache_summary", "error"}
 STATUSES = {"pass", "fail", "error"}
 SOURCES = {"cache", "regenerated"}

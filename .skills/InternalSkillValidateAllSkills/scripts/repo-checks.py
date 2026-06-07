@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Whole-repo checks of ValidateAllSkills.
+"""Whole-repo checks of InternalSkillValidateAllSkills.
 
-Usage: .skills/ValidateAllSkills/scripts/repo-checks.py   (from the repository root)
+Usage: .skills/InternalSkillValidateAllSkills/scripts/repo-checks.py   (from the repository root)
 Enumerates the skills (the directories .skills/<SkillName>/ that contain a
 SKILL.md file), reads the invocation relationships from the `invokes` field in
 each skill's SKILL.md frontmatter, and checks that SKILLS.md, the two tables
