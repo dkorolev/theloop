@@ -65,6 +65,8 @@ Scripts are deliberately duplicated rather than shared: when several skills need
 
 Run receipts are a concrete case of this principle: every skill that writes a run receipt must have a dedicated `write-receipt.py` script under `.skills/${SkillName}/scripts/`, and the skill's instructions must direct the runner to call that script with CLI flags — passing `--skill-run-id` and other structured arguments — rather than constructing a JSON object inline (whether via shell `echo`, `python -c`, or any other ad-hoc technique). For aggregate receipts whose content depends on sub-run outcomes, the `write-receipt.py` script must accept sub-run identifiers as flags and read the sub-run receipts itself, so the runner is never asked to extract and re-pass data from those receipts.
 
+Every Python script provided by a skill must begin with `#!/usr/bin/env python3` as its very first line, and must be committed as executable (mode `+x`). The runner must always invoke such scripts directly by path — for example, `.skills/${SkillName}/scripts/write-receipt.py --flag value` — and must never pass them to an explicit interpreter such as `python` or `python3`. The shebang line ensures the shell selects the correct interpreter automatically.
+
 ## Rule 8: Taste and style
 
 The repo should not contain grammatical errors.

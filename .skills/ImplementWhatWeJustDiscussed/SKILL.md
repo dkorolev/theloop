@@ -15,6 +15,8 @@ This skill takes no parameters. If any parameters are passed, stop immediately a
 
 ## Steps
 
+The Python script under `.skills/ImplementWhatWeJustDiscussed/scripts/` is executable and begins with `#!/usr/bin/env python3`; run it directly by path — never prefix it with `python` or `python3`.
+
 1. **Generate the run identifier.** Run `.skills/ImplementWhatWeJustDiscussed/scripts/new-run-id.sh` from the repository root: it prints a fresh `SkillRunId` in the default format codified in the rule on run receipts, `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}` — the local date and time at which the run started, followed by six random lowercase Latin letters (for example, `20260607-153012-kqzwxy`). Tell the user which identifier was generated. Then confirm that `tmp/<SkillRunId>.json` does not already exist; if it does, stop immediately and report an error without touching the file.
 
 2. **Summarize the conversation.** Review the entire current conversation — all turns visible to the outer shell running this skill — and produce a feature specification:

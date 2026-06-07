@@ -21,6 +21,8 @@ If either parameter is missing, or extra parameters are passed, stop and report 
 
 ## Steps
 
+All scripts under `.skills/CheckSingleInvariantWithRunId/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
+
 1. **Probe the cache.** Run `.skills/CheckSingleInvariantWithRunId/scripts/invariants.py probe-one <InvariantPath>` from the repository root. The script fingerprints the invariant's directory subtree per `.ai/CACHING.md` under the check name `invariant:<InvariantPath>` and reports whether a cache entry exists for that fingerprint.
    - If the script exits non-zero (e.g. `InvariantPath` is not a non-ignored `*-INVARIANT.md` file), treat this as an error: record the detail, write the run receipt with `"status": "error"`, and stop.
    - If the result reports `"cached": true`: this invariant has already passed over byte-identical content. Record `"status": "pass"` and `"source": "cache"`. Proceed directly to writing the run receipt.

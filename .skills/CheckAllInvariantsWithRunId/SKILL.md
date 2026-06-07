@@ -20,6 +20,8 @@ If the parameter is missing, or extra parameters are passed, stop and report an 
 
 ## Steps
 
+All scripts under `.skills/CheckAllInvariantsWithRunId/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
+
 1. **Check the registry and enumerate invariants.** Run `.skills/CheckAllInvariantsWithRunId/scripts/invariants.py probe` from the repository root. The script verifies that `ai-invariants.yml` lists exactly the non-ignored `*-INVARIANT.md` files of the repository, fingerprints each invariant's directory subtree per `.ai/CACHING.md`, and reports the registry status and the full list of invariants — each with its path and the `sub_run_suffix` to use when forming its sub-run identifier.
    - If the registry check fails (unlisted invariant files or listed paths that do not exist), this is a blocking failure: record `registry.status = "fail"` with the detail, set `invariants = []`, and proceed to the verdict without running any invariant.
    - If the registry check passes and no invariants are listed, `invariants = []` and proceed to the verdict.

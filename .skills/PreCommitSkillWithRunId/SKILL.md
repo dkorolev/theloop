@@ -20,6 +20,8 @@ If the parameter is missing, or extra parameters are passed, stop and report an 
 
 ## Steps
 
+All scripts under `.skills/PreCommitSkillWithRunId/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
+
 1. **Check the sub-run preconditions.** The sub-run identifiers are `<SkillRunId>-CheckAllInvariantsWithRunId` and `<SkillRunId>-ValidateAllSkills`. If either file `tmp/<SkillRunId>-CheckAllInvariantsWithRunId.json` or `tmp/<SkillRunId>-ValidateAllSkills.json` already exists, this run is an error: report which files are in the way, write the run receipt with `"status": "error"`, and stop. (Deeper sub-run identifiers, derived in turn by `CheckAllInvariantsWithRunId` and `ValidateAllSkills`, are checked by those skills themselves.)
 2. **Check the receipt hygiene.** The rule on run receipts requires that run receipts are never committed. Run `.skills/PreCommitSkillWithRunId/scripts/hygiene.py` from the repository root: it performs the three checks below and prints their outcomes as JSON, exiting non-zero when at least one fails. Record each check's outcome.
    - `tmp-gitignored` — the `tmp/` directory is gitignored;

@@ -21,6 +21,8 @@ If either parameter is missing, or extra parameters are passed, stop and report 
 
 ## Steps
 
+All scripts under `.skills/ValidateSkill/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
+
 1. **Confirm the target skill exists.** Look for `.skills/<SkillNameToCheck>/SKILL.md` in this repository. If it does not exist, this run is an error: report it to the user, write the run receipt with `"status": "error"` and an explanatory `"error"` message, and stop.
 2. **Probe the validation cache.** Per the rule on hashing and caching of slow checks, run `.skills/ValidateSkill/scripts/cache.py probe <SkillNameToCheck>` from the repository root. It computes the fingerprint described in `.ai/CACHING.md` — the input set is every non-ignored file under `.skills/<SkillNameToCheck>/` plus `.ai/RULES.md`, `SKILLS.md`, and `.ai/VIZ.md`, under the check name `ValidateSkill:<SkillNameToCheck>` — and reports whether a cache entry exists. On a cache hit (`"cached": true`), this exact validation has already passed over byte-identical inputs: skip the remaining validation steps entirely — do not read the rules or the target skill — report to the user that the skill is compliant per the cache, and proceed directly to writing the run receipt with `"status": "pass"` and `"source": "cache"`.
 3. **Read the rules.** Read `.ai/RULES.md`, under the `.ai/` directory at the repository root. Every rule in that file applies to the target skill.
