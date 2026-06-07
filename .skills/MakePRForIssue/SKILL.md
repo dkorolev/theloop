@@ -33,13 +33,18 @@ Throughout this run, record progress on the GitHub issue by posting comments via
 
 Use `--body-file` when the comment is long; otherwise `--body TEXT`.
 
+## Sub-skill execution
+
+Do **not** invoke sub-skills via the Skill tool runner. Execute each sub-skill **inline** by reading its `.skills/<SkillName>/SKILL.md` and following it directly. The Skill tool presents its result as a conversational endpoint; inline execution keeps control in this skill. **Never treat a sub-skill completion as the end of this run** — always continue to the next step unless this skill explicitly says to stop.
+
 ## Steps
 
 The Python scripts under `.skills/MakePRForIssue/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
 
 1. **Generate the run identifier.** Run `.skills/MakePRForIssue/scripts/new-run-id.sh` from the repository root: it prints a fresh `SkillRunId` in the default format codified in the rule on run receipts, `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}` — the local date and time at which the run started, followed by six random lowercase Latin letters (for example, `20260607-153012-kqzwxy`). Tell the user which identifier was generated. Then confirm that `tmp/<SkillRunId>.json` does not already exist; if it does, stop immediately and report an error without touching the file.
 
-2. **Verify GitHub access.** Invoke the `InternalSkillCheckGhRepoAccessWithRunId` skill with exactly one parameter: the sub-run identifier `<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId`. Invoke it through the configured skill runner if one is available; otherwise execute it by reading `.skills/InternalSkillCheckGhRepoAccessWithRunId/SKILL.md` and following its instructions literally. Read the sub-run receipt at `tmp/<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId.json`. If its `status` is not `"pass"`, relay every failing check and its remediation suggestion to the user, write the run receipt with `"status": "fail"`, and stop.
+2. **Verify GitHub access.** Execute `InternalSkillCheckGhRepoAccessWithRunId` **inline** (see Sub-skill execution above): read `.skills/InternalSkillCheckGhRepoAccessWithRunId/SKILL.md` and follow it directly with exactly one parameter — the sub-run identifier `<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId`. Read the sub-run receipt at `tmp/<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId.json`. If its `status` is not `"pass"`, relay every failing check and its remediation suggestion to the user, write the run receipt with `"status": "fail"`, and stop.
+   - When the check **passes**, immediately tell the user `GitHub access confirmed — loading issue #<IssueIndex>` and **continue to step 3 without pausing**. Do not end the run here.
 
 3. **Load the issue.** Run `.skills/MakePRForIssue/scripts/fetch-issue.py --issue-number <IssueIndex>` from the repository root. The script prints a JSON object with `number`, `title`, `body`, `url`, and `labels`. If the issue does not exist or cannot be read, write the run receipt with `"status": "error"` and stop. Treat the issue `body` as the authoritative feature specification (the same Markdown structure written by `IssueWhatWeJustDiscussed`). Warn the user if the `theloop` label is missing, but continue unless the issue body is empty.
 
@@ -59,7 +64,7 @@ The Python scripts under `.skills/MakePRForIssue/scripts/` are executable and be
 
 7. **Implement the feature.** Using the issue body and the design document as the specification, write or modify the source files needed to realize the feature. Keep code, configuration, and tests consistent with the design document.
 
-8. **Run PreCommitSkill.** Journal: `running the checks`. Invoke the `PreCommitSkill` skill, passing no parameters. Invoke it through the configured skill runner if one is available; otherwise execute it by reading `.skills/PreCommitSkill/SKILL.md` and following its instructions literally. Record the `SkillRunId` that `PreCommitSkill` generates and whether its final verdict was `"pass"`.
+8. **Run PreCommitSkill.** Journal: `running the checks`. Execute `PreCommitSkill` **inline** (see Sub-skill execution above): read `.skills/PreCommitSkill/SKILL.md` and follow it directly, passing no parameters. Record the `SkillRunId` that `PreCommitSkill` generates and whether its final verdict was `"pass"`. When it finishes, continue to step 9 — do not treat PreCommitSkill completion as the end of this run.
 
 9. **Evaluate the outcome.**
    - If `PreCommitSkill` reported `"pass"`, proceed to step 11.
