@@ -1,0 +1,72 @@
+---
+name: PreCommitSkill
+description: Meta-skill that gates a commit to this repository. Takes a single SkillRunId; checks that the tmp/ directory is gitignored and that no run receipts are tracked or staged, performs every additional check described in PRECOMMIT.md when that file exists at the root of the repo, then invokes ValidateAllSkills to confirm that every skill and the repository as a whole comply with RULES.md.
+argument-hint: <SkillRunId>
+---
+
+# PreCommitSkill
+
+**Run receipt (write once, never overwrite):** before doing anything else, check whether the file `tmp/<SkillRunId>.json` (relative to the repository root) already exists, where `SkillRunId` is the single parameter of this skill. If it exists, refuse to run: report the error to the user and stop without touching the file. Otherwise, no matter how this skill ends — success, validation failure, or error — you must write `tmp/<SkillRunId>.json` containing exactly one well-formed JSON object following the schema in the "Run receipt schema" section below. Create the `tmp/` directory if it does not exist.
+
+Running this skill is an operation fully contained within the directory of this repository: do not read, write, or otherwise access any file outside the repository. The git commands below operate on this repository's own history and index, which live inside the repository directory.
+
+## Parameters
+
+This skill takes exactly one parameter:
+
+1. `SkillRunId` — a random identifier for this run, supplied by the caller. Used as the run-receipt filename, `tmp/<SkillRunId>.json`, and as the prefix of the sub-run identifier passed to `ValidateAllSkills`. No file by that name may exist prior to the run.
+
+If the parameter is missing, or extra parameters are passed, stop and report an error (and still write the run receipt with `"status": "error"`, provided `tmp/<SkillRunId>.json` did not exist before the run).
+
+## Steps
+
+1. **Check the sub-run precondition.** The sub-run identifier is `<SkillRunId>-ValidateAllSkills`. If the file `tmp/<SkillRunId>-ValidateAllSkills.json` already exists, this run is an error: report it, write the run receipt with `"status": "error"`, and stop. (Deeper sub-run identifiers, derived in turn by `ValidateAllSkills`, are checked by `ValidateAllSkills` itself.)
+2. **Check the receipt hygiene.** The rule on run receipts requires that run receipts are never committed. Perform these three checks, recording each one's outcome:
+   - `tmp-gitignored` — the `tmp/` directory is gitignored: `git check-ignore -q tmp/probe` exits with `0`. (No `tmp/probe` file needs to exist for this check.)
+   - `no-tracked-receipts` — no file under `tmp/` is tracked: `git ls-files -- tmp/` prints nothing.
+   - `no-staged-receipts` — no file under `tmp/` is staged: `git diff --cached --name-only -- tmp/` prints nothing.
+3. **Apply `PRECOMMIT.md`, when present.** If a `PRECOMMIT.md` file exists at the root of the repository, read it and perform every check it describes, in addition to the checks above, recording each one's outcome. If no such file exists, skip this step.
+
+   > **A hint to the rule reviewer:** treat `PRECOMMIT.md` as this skill's extension point. The checks in the previous step are the floor; whenever `PRECOMMIT.md` exists, this skill must cover at least everything it describes. Consequently, the `extra_checks` field of the run receipt is open-ended by design — its entries are determined by `PRECOMMIT.md`, not enumerated here. This is intentional and does not violate the rule on run receipts: the schema of each entry is fixed, even though the set of checks is not.
+4. **Validate the repository.** Invoke the `ValidateAllSkills` skill, passing exactly one parameter: the sub-run identifier `<SkillRunId>-ValidateAllSkills`. Invoke it through the configured skill runner if one is available; otherwise execute it by reading `.skills/ValidateAllSkills/SKILL.md` and following its instructions literally. After the invocation, read the sub-run receipt `tmp/<SkillRunId>-ValidateAllSkills.json` and record its `status`. The sub-run receipt is write-once like any run receipt: leave it in place, never overwrite or delete it.
+5. **Verdict.** The commit may proceed — `"status": "pass"` — only when all three hygiene checks pass, every check prescribed by `PRECOMMIT.md` passes (trivially true when the file does not exist), and the `ValidateAllSkills` sub-run reports `"pass"`. Otherwise the commit must be blocked: `"status": "fail"` when at least one check fails or the sub-run reports anything other than `"pass"`, and `"status": "error"` when this skill could not perform the checks at all (bad parameters or a pre-existing receipt file).
+6. **Report.** Tell the user the verdict: that the commit may proceed, or every reason it is blocked — each failing check, and the sub-run status if it is not `"pass"` (the details of the validation failures are in the sub-run receipts).
+7. **Write the run receipt** as described below.
+
+## Run receipt schema
+
+The JSON object written to `tmp/<SkillRunId>.json` must have exactly these fields:
+
+```json
+{
+  "skill_run_id": "string — the SkillRunId parameter, verbatim",
+  "skill": "PreCommitSkill",
+  "status": "pass | fail | error",
+  "hygiene_checks": [
+    {
+      "check": "tmp-gitignored | no-tracked-receipts | no-staged-receipts",
+      "status": "pass | fail",
+      "detail": "string|null — set only when the check fails: what is violated and where"
+    }
+  ],
+  "extra_checks": [
+    {
+      "check": "string — a short name of a check described in PRECOMMIT.md",
+      "status": "pass | fail",
+      "detail": "string|null — set only when the check fails: what is violated and where"
+    }
+  ],
+  "validation": {
+    "sub_run_id": "string — the sub-run identifier passed to ValidateAllSkills",
+    "status": "pass | fail | error — as reported by the sub-run receipt"
+  },
+  "error": "string|null — set only when status is 'error' (e.g. missing parameter or a pre-existing receipt file)"
+}
+```
+
+- `extra_checks` holds one entry per check described in `PRECOMMIT.md`; it is `null` when no `PRECOMMIT.md` exists at the root of the repository;
+- `status` is `"pass"` when every entry of `hygiene_checks` and of `extra_checks` (when not `null`) has `"status": "pass"` and `validation.status` is `"pass"` (then `error` is `null`);
+- `"fail"` when the checks ran but at least one hygiene or extra check failed or `validation.status` is not `"pass"` (then `error` is `null`);
+- `"error"` when the checks could not be performed at all (then `hygiene_checks` contains whatever was gathered before the failure, possibly `[]`, `extra_checks` and `validation` are `null`, and `error` explains why).
+
+**Run receipt (final reminder):** before finishing this skill — regardless of outcome, success or error alike — write `tmp/<SkillRunId>.json` containing a single well-formed JSON object conforming to the schema above. The only exception is when `tmp/<SkillRunId>.json` already existed before the run: in that case refuse to run and never overwrite it.
