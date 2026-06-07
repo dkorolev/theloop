@@ -62,3 +62,7 @@ It is undesirable that skills write temporary Python files to run themselves. If
 The repo should not contain grammatical errors.
 
 The Markdown texts should be easy to read. The scripts should not be excessive, they should be understandable, they should follow simple input/output formats, they should not perform any surprising operations, and their error message must be short yet complete, and easy to parse by humans and/or other skills.
+
+# Rule 9: Refer to rules by name, not by number
+
+Skills must not refer to the rules in this file by their numbers. The set of rules is expected to stay stable, but their numbering may change as rules are added, removed, or reordered. Whenever a skill needs to reference a rule — in its instructions or in its run receipts — it must use the rule's name (its heading in this file) or a short description of it.
