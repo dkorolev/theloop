@@ -23,13 +23,13 @@ The registry exists so that no run ever has to crawl the repository looking for 
 
 ## When invariants run
 
-Invariants are checked by `PreCommitSkillWithRunId` as part of the pre-commit gate. To keep model usage minimal, each invariant is cached using the technique documented in [`.ai/CACHING.md`](CACHING.md):
+Invariants are checked by `CheckAllInvariantsWithRunId`, which is invoked by `PreCommitSkillWithRunId` as part of the pre-commit gate. Individual invariants are each checked by `CheckSingleInvariantWithRunId`. To keep model usage minimal, each invariant check is cached using the technique documented in [`.ai/CACHING.md`](CACHING.md):
 
 * the invariant's input set is its directory subtree (which includes the invariant file itself, so editing the rule invalidates the cache);
 * the check name is `invariant:<path-to-INVARIANT.md>`, so the invariant's identity is part of the fingerprint;
-* the probe step runs first — a single Python script call that classifies every invariant as **cached** (pass already on record for byte-identical content) or **stale** (must run);
-* cached invariants are skipped entirely; stale invariants are run concurrently, since they are independent of each other;
-* on a cache miss the runner reads the invariant file, judges the subtree against the rule it states, and writes the cache entry only when the invariant passes.
+* `CheckSingleInvariantWithRunId` probes the cache first — a single Python script call that classifies the invariant as **cached** (pass already on record for byte-identical content) or **stale** (must run);
+* cached invariants are skipped entirely; stale invariants are run concurrently by `CheckAllInvariantsWithRunId`, since they are independent of each other;
+* on a cache miss `CheckSingleInvariantWithRunId` reads the invariant file, judges the subtree against the rule it states, and writes the cache entry only when the invariant passes.
 
 A failing invariant blocks the commit, and its failure is never cached.
 
