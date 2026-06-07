@@ -35,17 +35,17 @@ Concretely, a skill complies with this rule when all of the following hold:
 
 Note that the `tmp/` directory is `.gitignore`-d, so skill run receipts are never committed. The `PreCommitSkill` skill must check this.
 
-# Rule 4: Universal directory for skills
+## Rule 4: Universal directory for skills
 
 The skills live under the `.skills/` directory in the root of the repo.
 
-# Rule 5: The `SKILLS.md` file should be up to date
+## Rule 5: The `SKILLS.md` file should be up to date
 
 The `SKILLS.md` file should, at any commit in this repo, contain exactly the full list of the skills.
 
-"The full list" here means that every skill in the repo must be present in `SKILLS.md`, and every skill present in `SKILLS.md` is present in the repo. Same with invocation relationships: every invocation relationship between two skills must be present in `VIZ.md`, and every relation that is listed in `VIZ.md` must be actual in the repo.
+"The full list" here means that every skill in the repo must be present in `SKILLS.md`, and every skill present in `SKILLS.md` is present in the repo.
 
-# Rule 6: Visualization and topology
+## Rule 6: Visualization and topology
 
 The `VIZ.md` file should, at any commit in this repo, contain exactly the full list of the skills, and a complete list of what skill can invoke what other skill.
 
@@ -53,16 +53,16 @@ The `VIZ.md` file should, at any commit in this repo, contain exactly the full l
 
 Besides the textual list (two markdown tables, Skills and SkillInvocations), the `VIZ.md` file should also contain a Mermaid diagram outlining the above graphically: skills as nodes, skill invocation relationships as arrows, where an arrow from A to B means skill A can, under some circumstances, invoke skill B.
 
-# Rule 7: Use of scripts
+## Rule 7: Use of scripts
 
 It is undesirable that skills write temporary Python files to run themselves. If a skill may need to execute a piece of code that is non-trivial, the skill should provide the respective scripts under `.skills/${SkillName}/scripts/`.
 
-# Rule 8: Taste and style
+## Rule 8: Taste and style
 
 The repo should not contain grammatical errors.
 
 The Markdown texts should be easy to read. The scripts should not be excessive, they should be understandable, they should follow simple input/output formats, they should not perform any surprising operations, and their error message must be short yet complete, and easy to parse by humans and/or other skills.
 
-# Rule 9: Refer to rules by name, not by number
+## Rule 9: Refer to rules by name, not by number
 
 Skills must not refer to the rules in this file by their numbers. The set of rules is expected to stay stable, but their numbering may change as rules are added, removed, or reordered. Whenever a skill needs to reference a rule — in its instructions or in its run receipts — it must use the rule's name (its heading in this file) or a short description of it.
