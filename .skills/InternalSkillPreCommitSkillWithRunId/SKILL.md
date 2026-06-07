@@ -1,6 +1,6 @@
 ---
 name: InternalSkillPreCommitSkillWithRunId
-description: Meta-skill that performs the pre-commit gate for this repository under a caller-supplied run identifier. Takes a single SkillRunId; checks receipt hygiene, then concurrently runs InternalSkillCheckAllRulesWithRunId, InternalSkillValidateAllSkills, and any extra checks described in PRECOMMIT.md.
+description: Meta-skill that performs the pre-commit gate for this repository under a caller-supplied run identifier. Takes a single SkillRunId; checks receipt hygiene, then fans out subagents to run InternalSkillCheckAllRulesWithRunId and InternalSkillValidateAllSkills alongside any extra checks described in PRECOMMIT.md.
 argument-hint: <SkillRunId>
 invokes: [InternalSkillCheckAllRulesWithRunId, InternalSkillValidateAllSkills]
 ---
@@ -28,10 +28,10 @@ All scripts under `.skills/InternalSkillPreCommitSkillWithRunId/scripts/` are ex
    - `tmp-gitignored` — the `tmp/` directory is gitignored;
    - `no-tracked-receipts` — no file under `tmp/` is tracked by git;
    - `no-staged-receipts` — no file under `tmp/` is staged.
-3. **Run the directory rules and validate the repository.** Per the rule on parallel invocation of spawned skills, launch the `InternalSkillCheckAllRulesWithRunId` and `InternalSkillValidateAllSkills` sub-runs concurrently — they are fully independent of each other. At the same time, run `.skills/InternalSkillPreCommitSkillWithRunId/scripts/precommit.py` from the repository root (see step 4). Wait for all three to complete before reading any of their outputs.
+3. **Run the directory rules and validate the repository.** Per the rule on parallel invocation of spawned skills, fan out subagents to run the `InternalSkillCheckAllRulesWithRunId` and `InternalSkillValidateAllSkills` sub-runs — they are fully independent of each other. At the same time, run `.skills/InternalSkillPreCommitSkillWithRunId/scripts/precommit.py` from the repository root (see step 4). Wait for all fan-out subagents and the precommit script to complete before reading any of their outputs.
    - For `InternalSkillCheckAllRulesWithRunId`: invoke with exactly one parameter, the sub-run identifier `<SkillRunId>-InternalSkillCheckAllRulesWithRunId`. Invoke through the configured skill runner if one is available; otherwise execute by reading `.skills/InternalSkillCheckAllRulesWithRunId/SKILL.md` and following its instructions literally.
    - For `InternalSkillValidateAllSkills`: invoke with exactly one parameter, the sub-run identifier `<SkillRunId>-InternalSkillValidateAllSkills`. Invoke through the configured skill runner if one is available; otherwise execute by reading `.skills/InternalSkillValidateAllSkills/SKILL.md` and following its instructions literally.
-4. **Collect the results.** After all three concurrent operations from step 3 have completed:
+4. **Collect the results.** After all fan-out subagents and the precommit script from step 3 have completed:
    - Read the sub-run receipt `tmp/<SkillRunId>-InternalSkillCheckAllRulesWithRunId.json` and record its `registry` and `rules` data: map each entry of the sub-run's `rules` array to the `"rules.checks"` field of this skill's receipt (dropping the `sub_run_id` field from each entry, and mapping `"status": "error"` to `"status": "fail"` with an appropriate detail). Record the sub-run's `cache_summary` for use in the top-level `cache_summary` computation.
    - Record the `precommit.py` output: if `PRECOMMIT.md` exists at the root of the repository, the script reads the checks listed there, runs each command from its directory, prints their outcomes as JSON, and exits non-zero when at least one fails; record each check in `extra_checks`. If the file does not exist, the script prints `null` and exits 0 — record `extra_checks` as `null`.
 

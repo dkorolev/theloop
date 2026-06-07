@@ -1,6 +1,6 @@
 ---
 name: InternalSkillCheckAllRulesWithRunId
-description: Meta-skill that checks all directory rules listed in ai-rules.yml. Takes a single SkillRunId; verifies the registry, then invokes InternalSkillCheckSingleRuleWithRunId once per rule in parallel (each handles its own caching per .theloop/CACHING.md).
+description: Meta-skill that checks all directory rules listed in ai-rules.yml. Takes a single SkillRunId; verifies the registry, then fans out subagents to invoke InternalSkillCheckSingleRuleWithRunId once per rule (each handles its own caching per .theloop/CACHING.md).
 argument-hint: <SkillRunId>
 invokes: [InternalSkillCheckSingleRuleWithRunId]
 ---
@@ -29,7 +29,7 @@ All scripts under `.skills/InternalSkillCheckAllRulesWithRunId/scripts/` are exe
 
 2. **Check the sub-run preconditions.** For each rule, the sub-run identifier is `<SkillRunId>-<sub_run_suffix>`, where `sub_run_suffix` is the value provided by the script for that rule. If the file `tmp/<SkillRunId>-<sub_run_suffix>.json` already exists for any rule, this run is an error: report which files are in the way, write the run receipt with `"status": "error"`, and stop before invoking any sub-run.
 
-3. **Check each rule.** Per the rule on parallel invocation of spawned skills, launch every `InternalSkillCheckSingleRuleWithRunId` sub-run concurrently — one per rule, with sub-run identifier `<SkillRunId>-<sub_run_suffix>` and `RulePath` as the path to the rule file. Invoke through the configured skill runner if one is available; otherwise execute by reading `.skills/InternalSkillCheckSingleRuleWithRunId/SKILL.md` and following its instructions literally. After all sub-runs have completed, read each sub-run receipt `tmp/<SkillRunId>-<sub_run_suffix>.json` and record its `status`, `source`, and `detail`. Each sub-run handles its own YAML parsing, cache probe, and cache write per `.theloop/CACHING.md`: sub-runs reported as `"source": "cache"` were skipped entirely, those with `"source": "regenerated"` were judged in full.
+3. **Check each rule.** Per the rule on parallel invocation of spawned skills, fan out subagents — one per rule — to invoke `InternalSkillCheckSingleRuleWithRunId`, each with sub-run identifier `<SkillRunId>-<sub_run_suffix>` and `RulePath` as the path to the rule file. Invoke through the configured skill runner if one is available; otherwise execute by reading `.skills/InternalSkillCheckSingleRuleWithRunId/SKILL.md` and following its instructions literally. After all subagents have completed, read each sub-run receipt `tmp/<SkillRunId>-<sub_run_suffix>.json` and record its `status`, `source`, and `detail`. Each sub-run handles its own YAML parsing, cache probe, and cache write per `.theloop/CACHING.md`: sub-runs reported as `"source": "cache"` were skipped entirely, those with `"source": "regenerated"` were judged in full.
 
 4. **Verdict.** The status is `"pass"` only when `registry.status` is `"pass"` and every sub-run reports `"status": "pass"`. Otherwise `"status": "fail"` when at least one check failed, or `"status": "error"` when this skill could not perform the checks at all (bad parameters or a pre-existing receipt file).
 

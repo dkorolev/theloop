@@ -4,7 +4,7 @@
 Usage: .skills/InternalSkillValidateSkill/scripts/mechanical-checks.py <SkillNameToCheck>   (from the repository root)
 Checks the mechanically verifiable projections of the rules in .theloop/SKILLS-META-RULES.md
 against .skills/<SkillNameToCheck>/SKILL.md; the judgment-based rules (strict
-parameter semantics, taste and style, parallel invocation wording) are left to
+parameter semantics, taste and style, fan-out subagents wording) are left to
 the agentic runner.
 Output: one JSON object {"skill", "checks"} on stdout, where each check is
 {"rule", "check", "status", "detail"}; "rule" is the rule's name as titled in

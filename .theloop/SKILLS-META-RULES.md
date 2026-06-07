@@ -99,7 +99,9 @@ Whether two operations are "logically distinct" is determined by whether it is n
 
 When a skill invokes other skills, its definition must state clearly whether those invocations may and should run in parallel.
 
-By default, when a skill starts two or more independent sub-runs — distinct sub-run identifiers, no step depends on another sub-run's receipt — it must instruct the runner to launch them concurrently and to read and aggregate their receipts only after all have completed.
+Prefer the **fan out subagents** phrasing to tell the runner to launch independent sub-runs in parallel — for example, "Fan out subagents — one per rule — to invoke `InternalSkillCheckSingleRuleWithRunId`" rather than "launch sub-runs concurrently" or "run in parallel". This vocabulary maps directly to agent runners (such as Cursor) that spawn subagents via a Task tool. Meta-skills that orchestrate multiple sub-runs must use this phrasing in their step instructions and descriptions when parallel execution is intended.
+
+By default, when a skill starts two or more independent sub-runs — distinct sub-run identifiers, no step depends on another sub-run's receipt — it must instruct the runner to fan out subagents (one subagent per sub-run) and to read and aggregate their receipts only after all have completed.
 
 If parallel execution is undesirable, the skill must explain in detail why (for example, a strict ordering requirement, shared mutable state, or each sub-run needing the previous sub-run's receipt).
 

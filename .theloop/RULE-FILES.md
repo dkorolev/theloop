@@ -40,7 +40,7 @@ Rules are checked by `InternalSkillCheckAllRulesWithRunId`, which is invoked by 
 * the check name is `rule:<path-to-rule.yml>`, so the rule's identity is part of the fingerprint;
 * `InternalSkillCheckSingleRuleWithRunId` parses and validates the YAML first — invalid syntax or schema fails mechanically with a precise error;
 * then it probes the cache — a single Python script call that classifies the rule as **cached** (pass already on record for byte-identical content) or **stale** (must run);
-* cached rules are skipped entirely; stale rules are run concurrently by `InternalSkillCheckAllRulesWithRunId`, since they are independent of each other;
+* cached rules are skipped entirely; stale rules are checked by fanning out subagents in `InternalSkillCheckAllRulesWithRunId`, since they are independent of each other;
 * on a cache miss `InternalSkillCheckSingleRuleWithRunId` reads the `rule:` text and judges only the scoped files, then writes the cache entry only when the rule passes.
 
 A failing rule blocks the commit, and its failure is never cached.
