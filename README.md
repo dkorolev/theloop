@@ -1,9 +1,71 @@
-# `agent`
+# `theloop`
 
 Dima's proposal on how to use AI for cleaner code and better code reviews.
 
-This repository ultimately describes a set of skills, compatible with Claude Code, Opencode, Cursor, etc.
+This repository describes a set of skills, compatible with Claude Code, Opencode, Cursor, etc. It also defines the rules those skills must follow, and the meta-skills that check that every skill is compliant.
 
-There are also rules and meta-skills. The rules are how the skills should be written. Meta-skills are the skills that confirm that all the skills are compliant with rules.
+If your coding agent is configured to run a skill from the command line, the skills are compatible with that. But often that mode is not configured, or is more expensive to run. So the skills are designed so you can start a new agentic shell and tell it to "Run skill …", perhaps with parameters.
 
-If the user has their coding agent configured to run a skill from the command line, the skills should be compatible with this. But oftentimes this operational mode is either not configured, or is more expensive to run. In this case, the skills are very much designed so that the user can start a new agentic shell and instruct it to "Run skill ...", perhaps with parameters.
+## Using theloop in your own repository
+
+theloop gives you a **discuss → issue → implement → PR** loop in your own repo, without dragging in theloop's own maintenance machinery. The core idea is **one feature per fresh clone**: you instrument a clean clone once, and that working tree is then dedicated to a single feature.
+
+**Prerequisites:** the GitHub CLI (`gh`) installed and authenticated, a coding agent (Claude Code, Cursor, Codex, …), and a GitHub remote on your repo (or the URL ready to enter when prompted).
+
+1. **Clone** your target repository fresh — one clone, one feature.
+
+2. **Run `theloopify`** from your theloop checkout, pointing at the clone:
+
+   ```sh
+   /path/to/theloop/theloopify                 # instrument the current directory
+   /path/to/theloop/theloopify /path/to/clone  # or instrument an explicit path
+   ```
+
+   `theloopify` is mechanical and **never commits**. It copies the skill bundle into `.theloop/skills/`, symlinks it into every supported agent directory (`.cursor/`, `.claude/`, `.codex/`, `.agents/`), writes the `.theloop/` scaffolding, detects (or asks for) your GitHub remote, and ensures `tmp/` is gitignored. It refuses to run on the theloop repo itself, and refuses a second run (clone again to start another feature).
+
+3. **Review** the uncommitted changes it produced.
+
+4. **Run `/ConfigureTheLoop`** in your coding agent — required once. The agent reads your repo's docs, test/lint tooling, and CI gates and writes a repo-root **`PRECOMMIT.md`**, then marks configuration complete. Until this finishes, the other skills refuse to run.
+
+5. **Use the workflow skills:**
+   - `/IssueWhatWeJustDiscussed` — capture a design discussion as a GitHub issue
+   - `/MakePRForIssue <n>` — implement an issue and open a pull request
+   - `/ImplementWhatWeJustDiscussed` — implement straight from the conversation, no issue
+   - `/PreCommitSkill` — run the pre-commit checks before any commit
+
+6. **Open a PR.** The committing skills stage your changes through `.theloop/do_not_commit.txt`, so feature PRs contain **only your code** (and your feature design docs) — never the `.theloop/` scaffolding or agent symlinks.
+
+### What lands in your repo, and what stays local
+
+| Path | Committed in feature PRs? |
+|---|---|
+| `.theloop/skills/`, `.theloop/repo.txt`, `.theloop/*` markers | **No** — listed in `.theloop/do_not_commit.txt` |
+| `.cursor/skills/`, `.claude/skills/`, `.codex/skills/`, `.agents/skills/` (symlinks) | **No** — local-only |
+| `tmp/` (run receipts and caches) | **No** — gitignored |
+| `PRECOMMIT.md` | **Yes** — once written it is your file, committed as normal repo maintenance |
+| `FEATURE.md` / `docs/<Feature>.md` (design docs) | **Yes** — they are your feature artifacts |
+
+### What `PRECOMMIT.md` is
+
+`PRECOMMIT.md` is a **free-form Markdown checklist** written by `/ConfigureTheLoop`, not a YAML config file. It lists your repo's pre-commit checks — tests, linters, CI gates — each with a name, where to run it, and the command. The client `PreCommitSkill` reads it, runs the checks, and gates the commit alongside basic run-receipt hygiene. Edit it freely; it is yours.
+
+### Supported agents
+
+The same canonical skill copy under `.theloop/skills/` is symlinked into `.cursor/skills/`, `.claude/skills/`, `.codex/skills/`, and `.agents/skills/`, so whichever agent you use sees the same skills.
+
+## For theloop contributors
+
+A few skills are **developed and validated in this repo under a `…ForClientRepos` name** and **installed into client repos under their client-facing name**:
+
+| Developed here (`.skills/`) | Installed in clients as |
+|---|---|
+| `PreCommitSkillForClientRepos` | `PreCommitSkill` |
+| `ConfigureTheLoopForClientRepos` | `ConfigureTheLoop` |
+
+The client never sees the `ForClientRepos` suffix — `theloopify` renames these and rewrites every `.skills/…` reference to `.theloop/skills/…` during the copy. The suffix lets these skills coexist with theloop's own full-strength `PreCommitSkill` (which stays here and is never shipped). `theloopify` also installs the internal sub-skill `InternalSkillPreCommitForClientWithRunId` that the client `PreCommitSkill` delegates to.
+
+The **meta-skills** (`InternalSkillValidateAllSkills`, `InternalSkillCheckAllRulesWithRunId`, `InternalSkillPreCommitSkillWithRunId`, and friends) exist to maintain theloop itself and are **never** installed into client repos; client repos get the slim workflow bundle only.
+
+`theloopify.sh` (with the `theloopify` symlink) and its helper `theloopify-install.py` live at the repo root; `theloopify-test.sh` is a deterministic smoke test of the whole install, run as part of this repo's own pre-commit checks. `theloopify` is structured so it can later be wrapped as a Claude Code skill with minimal change.
+
+The full feature design lives in [`FEATURE.md`](FEATURE.md).
