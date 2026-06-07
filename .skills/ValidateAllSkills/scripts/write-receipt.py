@@ -15,13 +15,30 @@ import sys
 from typing import NoReturn
 
 SKILL = "ValidateAllSkills"
-FIELDS = {"skill_run_id", "skill", "status", "skills_checked", "repo_violations", "error"}
+FIELDS = {"skill_run_id", "skill", "status", "skills_checked", "repo_violations", "cache_summary", "error"}
 STATUSES = {"pass", "fail", "error"}
+SOURCES = {"cache", "regenerated"}
+ENTRY_FIELDS = {"skill", "sub_run_id", "status", "source", "violations"}
+SUMMARY_FIELDS = {"cached", "regenerated"}
 
 
 def die(message) -> NoReturn:
     print(f"error: {message}", file=sys.stderr)
     sys.exit(1)
+
+
+def summarize_sources(entries):
+    cached = sum(1 for entry in entries if entry.get("source") == "cache")
+    regenerated = sum(1 for entry in entries if entry.get("source") == "regenerated")
+    return {"cached": cached, "regenerated": regenerated}
+
+
+def validate_cache_summary(summary):
+    if not isinstance(summary, dict) or set(summary) != SUMMARY_FIELDS:
+        die(f'"cache_summary" must be an object with exactly the fields {sorted(SUMMARY_FIELDS)}')
+    for key in SUMMARY_FIELDS:
+        if not isinstance(summary[key], int) or summary[key] < 0:
+            die(f'"cache_summary.{key}" must be a non-negative integer')
 
 
 def main():
@@ -43,10 +60,18 @@ def main():
         die('"skills_checked" and "repo_violations" must be lists')
     if (receipt["status"] == "error") != (receipt["error"] is not None):
         die('"error" must be set when and only when status is "error"')
-    entry_fields = {"skill", "sub_run_id", "status", "cached", "violations"}
     for entry in receipt["skills_checked"]:
-        if not isinstance(entry, dict) or set(entry) != entry_fields:
-            die(f'each entry of "skills_checked" must have exactly the fields {sorted(entry_fields)}')
+        if not isinstance(entry, dict) or set(entry) != ENTRY_FIELDS:
+            die(f'each entry of "skills_checked" must have exactly the fields {sorted(ENTRY_FIELDS)}')
+        if entry["status"] == "error":
+            if entry["source"] is not None:
+                die('each entry of "skills_checked" must have "source" null when status is "error"')
+        elif entry["source"] not in SOURCES:
+            die('each entry of "skills_checked" must have "source" set to "cache" or "regenerated" when status is not "error"')
+    validate_cache_summary(receipt["cache_summary"])
+    expected = summarize_sources(receipt["skills_checked"])
+    if receipt["cache_summary"] != expected:
+        die(f'"cache_summary" must match skills_checked: expected {expected}, got {receipt["cache_summary"]}')
     failing = [s.get("skill") for s in receipt["skills_checked"]
                if not (isinstance(s, dict) and s.get("status") == "pass")]
     if receipt["status"] == "pass" and (failing or receipt["repo_violations"]):
