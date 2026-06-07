@@ -13,3 +13,4 @@ The test suite in `test_app.py` must contain exactly the following test cases:
 - `test_add_missing_field` — POST /add with `{"a": 5}` (missing `b`) returns HTTP 422
 - `test_add_wrong_type` — POST /add with `{"a": "hello", "b": 1}` (string instead of number) returns HTTP 422
 - `test_subtract_empty_body` — POST /subtract with `{}` returns HTTP 422
+- `test_add_2_and_3` — POST /add 2+3 to match 5
