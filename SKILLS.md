@@ -5,3 +5,4 @@ This file contains exactly the full list of the skills in this repository: every
 | Skill | Description |
 |---|---|
 | [`ValidateSkill`](.skills/ValidateSkill/SKILL.md) | Meta-skill that validates another skill in this repository against `RULES.md`. Takes a `SkillRunId` and the name of the skill to check; errors if the target skill does not exist, otherwise reports whether it complies with every rule. |
+| [`ValidateAllSkills`](.skills/ValidateAllSkills/SKILL.md) | Meta-skill that validates every skill in this repository against `RULES.md`. Takes a single `SkillRunId`; invokes `ValidateSkill` once per skill, then performs the whole-repo checks that `SKILLS.md` and `VIZ.md` exactly match the repository. |
