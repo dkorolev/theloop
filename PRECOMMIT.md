@@ -11,4 +11,7 @@ This file extends `InternalSkillPreCommitSkillWithRunId` with repository-specifi
 - check: example/code-pytest
   directory: example/code
   command: uv run pytest
+- check: theloopify-smoke-test
+  directory: .
+  command: ./theloopify-test.sh
 ```

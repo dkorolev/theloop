@@ -16,9 +16,9 @@ This skill takes no parameters. If any parameters are passed, stop immediately a
 
 ## Steps
 
-The Python script under `.skills/ImplementWhatWeJustDiscussed/scripts/` is executable and begins with `#!/usr/bin/env python3`; run it directly by path — never prefix it with `python` or `python3`.
+The Python scripts under `.skills/ImplementWhatWeJustDiscussed/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
 
-1. **Generate the run identifier.** Run `.skills/ImplementWhatWeJustDiscussed/scripts/new-run-id.sh` from the repository root: it prints a fresh `SkillRunId` in the default format codified in the rule on run receipts, `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}` — the local date and time at which the run started, followed by six random lowercase Latin letters (for example, `20260607-153012-kqzwxy`). Tell the user which identifier was generated. Then confirm that `tmp/<SkillRunId>.json` does not already exist; if it does, stop immediately and report an error without touching the file.
+1. **Check the configuration gate, then generate the run identifier.** First run `.skills/ImplementWhatWeJustDiscussed/scripts/check-configured.py` from the repository root. If it exits non-zero (the repository has been theloopified but `ConfigureTheLoop` has not completed), stop immediately: tell the user they must run `ConfigureTheLoop` before implementing, and do not generate an identifier. When it reports configured — including the not-applicable case in a non-theloopified repository, such as the theloop repository itself — continue. Then run `.skills/ImplementWhatWeJustDiscussed/scripts/new-run-id.sh` from the repository root: it prints a fresh `SkillRunId` in the default format codified in the rule on run receipts, `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}` — the local date and time at which the run started, followed by six random lowercase Latin letters (for example, `20260607-153012-kqzwxy`). Tell the user which identifier was generated. Then confirm that `tmp/<SkillRunId>.json` does not already exist; if it does, stop immediately and report an error without touching the file.
 
 2. **Summarize the conversation.** Review the entire current conversation — all turns visible to the outer shell running this skill — and produce a feature specification:
    - The feature the user wants built, expressed as a concrete, unambiguous goal
@@ -41,7 +41,7 @@ The Python script under `.skills/ImplementWhatWeJustDiscussed/scripts/` is execu
 5. **Run PreCommitSkill.** Invoke the `PreCommitSkill` skill, passing no parameters. Invoke it through the configured skill runner if one is available; otherwise execute it by reading `.skills/PreCommitSkill/SKILL.md` and following its instructions literally. Record the `SkillRunId` that `PreCommitSkill` generates (it reports this identifier at the start of its run), and record whether its final verdict was `"pass"` or not.
 
 6. **Evaluate the outcome.**
-   - If `PreCommitSkill` reported `"pass"`, proceed to the final report (step 8).
+   - If `PreCommitSkill` reported `"pass"`, proceed to staging the changes (step 8).
    - If it reported `"fail"` or `"error"`, proceed to the fix loop (step 7).
 
 7. **Fix loop.** While `PreCommitSkill` has not reported `"pass"`, and fewer than five total `PreCommitSkill` invocations have occurred in this run:
@@ -52,13 +52,15 @@ The Python script under `.skills/ImplementWhatWeJustDiscussed/scripts/` is execu
 
    If `PreCommitSkill` has still not reported `"pass"` after five total invocations, write the run receipt with `"status": "fail"` and stop: report every remaining blocking issue to the user in full.
 
-8. **Final report.** Tell the user:
+8. **Stage the implemented changes.** Run `.skills/ImplementWhatWeJustDiscussed/scripts/stage-allowed.py` from the repository root: it stages every change except the paths listed in `.theloop/do_not_commit.txt`, so theloop instrumentation (the `.theloop/` scaffolding, the agent skill symlinks, and `tmp/`) is hard-excluded and can never be staged for a feature commit. In the theloop repository itself there is no `.theloop/do_not_commit.txt`, so it stages everything. Feature design documents are user artifacts and are not excluded. Leave the changes staged but uncommitted for the user to review and commit.
+
+9. **Final report.** Tell the user:
    - That the implementation is complete and all pre-commit checks pass
    - The path of the feature design document
    - The `SkillRunId` of this run and the `SkillRunId` of the final `PreCommitSkill` run
    - A brief summary of what was implemented
 
-9. **Write the run receipt** by calling `.skills/ImplementWhatWeJustDiscussed/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--status pass|fail|error`; when status is not `error`: `--feature-summary TEXT`, `--feature-doc-path PATH`, `--implementation-attempts N`, `--pre-commit-skill-run-id ID`; when status is `error`: `--error TEXT`. The script validates the schema and refuses to overwrite an existing receipt.
+10. **Write the run receipt** by calling `.skills/ImplementWhatWeJustDiscussed/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--status pass|fail|error`; when status is not `error`: `--feature-summary TEXT`, `--feature-doc-path PATH`, `--implementation-attempts N`, `--pre-commit-skill-run-id ID`; when status is `error`: `--error TEXT`. The script validates the schema and refuses to overwrite an existing receipt.
 
 ## Run receipt schema
 
