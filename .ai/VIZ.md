@@ -6,8 +6,8 @@ This file lives at `.ai/VIZ.md`, under the `.ai/` directory in the root of the r
 
 | Skill | Description |
 |---|---|
-| [`InternalSkillValidateSkill`](../.skills/InternalSkillValidateSkill/SKILL.md) | Meta-skill that validates another skill in this repository against `.ai/RULES.md`. |
-| [`InternalSkillValidateAllSkills`](../.skills/InternalSkillValidateAllSkills/SKILL.md) | Meta-skill that validates every skill in this repository against `.ai/RULES.md`, by invoking `InternalSkillValidateSkill` once per skill and then performing the whole-repo checks. |
+| [`InternalSkillValidateSkill`](../.skills/InternalSkillValidateSkill/SKILL.md) | Meta-skill that validates another skill in this repository against `.ai/SKILLS-META-RULES.md`. |
+| [`InternalSkillValidateAllSkills`](../.skills/InternalSkillValidateAllSkills/SKILL.md) | Meta-skill that validates every skill in this repository against `.ai/SKILLS-META-RULES.md`, by invoking `InternalSkillValidateSkill` once per skill and then performing the whole-repo checks. |
 | [`InternalSkillCheckSingleRuleWithRunId`](../.skills/InternalSkillCheckSingleRuleWithRunId/SKILL.md) | Meta-skill that checks a single directory rule against its scoped files, with caching per `.ai/CACHING.md`. |
 | [`InternalSkillCheckAllRulesWithRunId`](../.skills/InternalSkillCheckAllRulesWithRunId/SKILL.md) | Meta-skill that checks all directory rules listed in `ai-rules.yml` by invoking `InternalSkillCheckSingleRuleWithRunId` once per rule in parallel. |
 | [`InternalSkillPreCommitSkillWithRunId`](../.skills/InternalSkillPreCommitSkillWithRunId/SKILL.md) | Meta-skill that performs the pre-commit gate under a caller-supplied `SkillRunId`: receipt-hygiene checks, directory rules via `InternalSkillCheckAllRulesWithRunId`, optional `PRECOMMIT.md` checks, then `InternalSkillValidateAllSkills` for full compliance. |

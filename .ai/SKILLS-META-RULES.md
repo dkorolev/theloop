@@ -1,8 +1,8 @@
-# Rules for Skills
+# Skills meta-rules
 
-Every skill in this repository must comply with all of the rules below. The `InternalSkillValidateSkill` skill checks compliance. The `InternalSkillValidateAllSkills` skill checks compliance of all skills.
+Every skill in this repository must comply with all of the meta-rules below. The `InternalSkillValidateSkill` skill checks compliance. The `InternalSkillValidateAllSkills` skill checks compliance of all skills.
 
-This file lives at `.ai/RULES.md`, under the `.ai/` directory in the root of the repo. All file paths in this file are relative to the root of the repo.
+This file lives at `.ai/SKILLS-META-RULES.md`, under the `.ai/` directory in the root of the repo. All file paths in this file are relative to the root of the repo. These meta-rules govern skills in this repository; eventually, the fruits of applying them here will be used to instrument other repositories.
 
 ## Rule 1: Contained within the repo
 

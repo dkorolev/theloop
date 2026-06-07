@@ -1,6 +1,6 @@
 ---
 name: InternalSkillValidateAllSkills
-description: Meta-skill that validates every skill in this repository against .ai/RULES.md. Takes a single SkillRunId; invokes InternalSkillValidateSkill once per skill in parallel, then performs the whole-repo checks that SKILLS.md and .ai/VIZ.md exactly match the repository.
+description: Meta-skill that validates every skill in this repository against .ai/SKILLS-META-RULES.md. Takes a single SkillRunId; invokes InternalSkillValidateSkill once per skill in parallel, then performs the whole-repo checks that SKILLS.md and .ai/VIZ.md exactly match the repository.
 argument-hint: <SkillRunId>
 invokes: [InternalSkillValidateSkill]
 ---
@@ -30,7 +30,7 @@ All scripts under `.skills/InternalSkillValidateAllSkills/scripts/` are executab
    - For the rule on the `SKILLS.md` file: `SKILLS.md` lists exactly the skills enumerated in the first step — every skill in the repo appears in `SKILLS.md`, and every skill listed in `SKILLS.md` exists in the repo.
    - For the rule on visualization and topology: `.ai/VIZ.md` lists exactly the skills enumerated in the first step, and exactly the invocation relationships that actually exist. Also, the Mermaid diagram in `.ai/VIZ.md` contains exactly the same skills as nodes and the same invocation relationships as arrows as the two tables do.
 
-   The script reads the `invokes` field from each skill's `SKILL.md` frontmatter to build the set of actual invocation relationships. Record every violation the script reports as a pair of the rule's name, as it is titled in `.ai/RULES.md`, and a detail of what is violated and where.
+   The script reads the `invokes` field from each skill's `SKILL.md` frontmatter to build the set of actual invocation relationships. Record every violation the script reports as a pair of the rule's name, as it is titled in `.ai/SKILLS-META-RULES.md`, and a detail of what is violated and where.
 5. **Report.** Tell the user whether the repository passes: `"pass"` when every sub-run reports `"pass"` and the whole-repo checks find no violations; `"fail"` when at least one sub-run reports `"fail"` or `"error"`, or at least one whole-repo violation is found; `"error"` when this skill could not perform the validation at all (bad parameters, a pre-existing receipt file, or no skills found). List each failing skill and each violation.
 6. **Write the run receipt** by calling `.skills/InternalSkillValidateAllSkills/scripts/write-receipt.py` with CLI flags: `--skill-run-id` and `--sub-run-ids "id1 id2 ..."` listing every `InternalSkillValidateSkill` sub-run identifier separated by spaces; optionally `--repo-violations-json '[...]'` (defaults to `[]`). The script reads the sub-run receipts, derives the overall status, computes `cache_summary`, validates the schema, and refuses to overwrite an existing receipt. For an error exit: `--status error --error TEXT` (omit `--sub-run-ids`).
 
@@ -50,12 +50,12 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
       "status": "pass | fail | error — as reported by the sub-run receipt",
       "source": "cache | regenerated | null — as reported by the sub-run receipt; null when status is error",
       "violations": [
-        { "rule": "string — the name of the violated rule, as it is titled in .ai/RULES.md", "detail": "string — what is violated and where" }
+        { "rule": "string — the name of the violated rule, as it is titled in .ai/SKILLS-META-RULES.md", "detail": "string — what is violated and where" }
       ]
     }
   ],
   "repo_violations": [
-    { "rule": "string — the name of the violated rule, as it is titled in .ai/RULES.md", "detail": "string — what is violated and where" }
+    { "rule": "string — the name of the violated rule, as it is titled in .ai/SKILLS-META-RULES.md", "detail": "string — what is violated and where" }
   ],
   "cache_summary": {
     "cached": "integer — count of skills_checked entries whose source is cache",

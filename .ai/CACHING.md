@@ -9,7 +9,7 @@ Some checks in this repository are slow or token-consuming: they require an agen
 Every cached check declares its **input set**: the files whose contents fully determine the check's outcome. An input set consists of:
 
 * a **directory subtree** — every file under a given directory, recursively, that is not gitignored; both tracked files and untracked-but-not-ignored files count, so the enumeration is `git ls-files --cached --others --exclude-standard -- <directory>`, filtered to files that exist in the working tree;
-* optionally, **extra files** outside that directory that the check also reads (for example, a check of one skill also reads `.ai/RULES.md`, `SKILLS.md`, and `.ai/VIZ.md`).
+* optionally, **extra files** outside that directory that the check also reads (for example, a check of one skill also reads `.ai/SKILLS-META-RULES.md`, `SKILLS.md`, and `.ai/VIZ.md`).
 
 A check whose outcome is not fully determined by a fixed set of files cannot be cached with this technique and must not pretend otherwise.
 
@@ -58,8 +58,8 @@ Because the input set includes the file that states the rule being checked (a sk
 
 ## Who uses this
 
-* The rule on hashing and caching of slow checks in [`RULES.md`](RULES.md) requires every skill with slow or token-consuming, content-determined checks to use this technique.
-* `InternalSkillValidateSkill` caches its verdict per skill: the input set is the skill's directory subtree plus `.ai/RULES.md`, `SKILLS.md`, and `.ai/VIZ.md`, under the check name `InternalSkillValidateSkill:<SkillName>`.
+* The rule on hashing and caching of slow checks in [`SKILLS-META-RULES.md`](SKILLS-META-RULES.md) requires every skill with slow or token-consuming, content-determined checks to use this technique.
+* `InternalSkillValidateSkill` caches its verdict per skill: the input set is the skill's directory subtree plus `.ai/SKILLS-META-RULES.md`, `SKILLS.md`, and `.ai/VIZ.md`, under the check name `InternalSkillValidateSkill:<SkillName>`.
 * `InternalSkillPreCommitSkillWithRunId` caches every directory rule, as described in [`.ai/RULE-FILES.md`](RULE-FILES.md): the input set is the rule's resolved scope (the rule file plus every in-scope file), under the check name `rule:<path-to-rule.yml>`.
 
 The scripts that implement the technique are deliberately duplicated per skill, under each skill's own `scripts/` directory, per the rule on use of scripts. An agentic runner must call the provided scripts rather than reproduce the fingerprint algorithm in ad-hoc shell or Python — only the scripts are authoritative.

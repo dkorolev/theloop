@@ -1,6 +1,6 @@
 ---
 name: InternalSkillValidateSkill
-description: Meta-skill that validates another skill in this repository against .ai/RULES.md. Takes a SkillRunId and the name of the skill to check; errors if the target skill does not exist, skips the validation when the cache described in .ai/CACHING.md records a pass over unchanged inputs, otherwise reports whether the skill complies with every rule.
+description: Meta-skill that validates another skill in this repository against .ai/SKILLS-META-RULES.md. Takes a SkillRunId and the name of the skill to check; errors if the target skill does not exist, skips the validation when the cache described in .ai/CACHING.md records a pass over unchanged inputs, otherwise reports whether the skill complies with every rule.
 argument-hint: <SkillRunId> <SkillNameToCheck>
 ---
 
@@ -24,8 +24,8 @@ If either parameter is missing, or extra parameters are passed, stop and report 
 All scripts under `.skills/InternalSkillValidateSkill/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
 
 1. **Confirm the target skill exists.** Look for `.skills/<SkillNameToCheck>/SKILL.md` in this repository. If it does not exist, this run is an error: report it to the user, write the run receipt with `"status": "error"` and an explanatory `"error"` message, and stop.
-2. **Probe the validation cache.** Per the rule on hashing and caching of slow checks, run `.skills/InternalSkillValidateSkill/scripts/cache.py probe <SkillNameToCheck>` from the repository root. It computes the fingerprint described in `.ai/CACHING.md` — the input set is every non-ignored file under `.skills/<SkillNameToCheck>/` plus `.ai/RULES.md`, `SKILLS.md`, and `.ai/VIZ.md`, under the check name `InternalSkillValidateSkill:<SkillNameToCheck>` — and reports whether a cache entry exists. On a cache hit (`"cached": true`), this exact validation has already passed over byte-identical inputs: skip the remaining validation steps entirely — do not read the rules or the target skill — report to the user that the skill is compliant per the cache, and proceed directly to writing the run receipt with `"status": "pass"` and `"source": "cache"`.
-3. **Read the rules.** Read `.ai/RULES.md`, under the `.ai/` directory at the repository root. Every rule in that file applies to the target skill.
+2. **Probe the validation cache.** Per the rule on hashing and caching of slow checks, run `.skills/InternalSkillValidateSkill/scripts/cache.py probe <SkillNameToCheck>` from the repository root. It computes the fingerprint described in `.ai/CACHING.md` — the input set is every non-ignored file under `.skills/<SkillNameToCheck>/` plus `.ai/SKILLS-META-RULES.md`, `SKILLS.md`, and `.ai/VIZ.md`, under the check name `InternalSkillValidateSkill:<SkillNameToCheck>` — and reports whether a cache entry exists. On a cache hit (`"cached": true`), this exact validation has already passed over byte-identical inputs: skip the remaining validation steps entirely — do not read the rules or the target skill — report to the user that the skill is compliant per the cache, and proceed directly to writing the run receipt with `"status": "pass"` and `"source": "cache"`.
+3. **Read the skills meta-rules.** Read `.ai/SKILLS-META-RULES.md`, under the `.ai/` directory at the repository root. Every meta-rule in that file applies to the target skill.
 4. **Run the mechanical checks.** Run `.skills/InternalSkillValidateSkill/scripts/mechanical-checks.py <SkillNameToCheck>` from the repository root. It checks the mechanically verifiable projections of the rules and prints the outcomes as JSON:
    - for the rule on containment within the repo, that the target skill states that running it is fully contained within the repository directory;
    - for the rule on run receipts, that the target skill declares `SkillRunId` as its first parameter or explicitly states that it is an exception that takes no `SkillRunId`; when it takes the parameter, that its instruction body **begins** and **ends** with the instruction to write but never overwrite `tmp/<SkillRunId>.json`, and that it describes the fixed JSON schema of that receipt; and when it generates a `SkillRunId` itself, rather than receiving it from its caller, that it prescribes the default format codified in that rule;
@@ -59,7 +59,7 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
   "status": "pass | fail | error",
   "source": "cache | regenerated | null — cache when the pass verdict was served from the cache, regenerated when validation ran in full, null when status is error",
   "violations": [
-    { "rule": "string — the name of the violated rule, as it is titled in .ai/RULES.md", "detail": "string — what is violated and where" }
+    { "rule": "string — the name of the violated rule, as it is titled in .ai/SKILLS-META-RULES.md", "detail": "string — what is violated and where" }
   ],
   "error": "string|null — set only when status is 'error' (e.g. target skill not found)"
 }

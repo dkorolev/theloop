@@ -4,7 +4,7 @@
 Usage: .skills/InternalSkillValidateSkill/scripts/cache.py probe <SkillNameToCheck>   (from the repository root)
        .skills/InternalSkillValidateSkill/scripts/cache.py write <SkillNameToCheck>
 The input set is every non-ignored file under .skills/<SkillNameToCheck>/ plus
-.ai/RULES.md, SKILLS.md, and .ai/VIZ.md; the check name is
+.ai/SKILLS-META-RULES.md, SKILLS.md, and .ai/VIZ.md; the check name is
 "InternalSkillValidateSkill:<SkillNameToCheck>".
 Output of probe: one JSON object {"check", "fingerprint", "cached", "cache_path"} on stdout.
 Output of write: the path of the written cache entry on stdout (written only after
@@ -18,7 +18,7 @@ import os
 import subprocess
 import sys
 
-EXTRA_FILES = [os.path.join(".ai", "RULES.md"), "SKILLS.md", os.path.join(".ai", "VIZ.md")]
+EXTRA_FILES = [os.path.join(".ai", "SKILLS-META-RULES.md"), "SKILLS.md", os.path.join(".ai", "VIZ.md")]
 CACHE_DIR = os.path.join("tmp", "caches")
 
 

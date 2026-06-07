@@ -8,7 +8,7 @@ each skill's SKILL.md frontmatter, and checks that SKILLS.md, the two tables
 of .ai/VIZ.md, and the Mermaid diagram of .ai/VIZ.md all list exactly those
 skills and relationships.
 Output: one JSON object {"skills", "invocations", "violations"} on stdout;
-each violation is {"rule", "detail"} with the rule named as titled in .ai/RULES.md.
+each violation is {"rule", "detail"} with the rule named as titled in .ai/SKILLS-META-RULES.md.
 Exit code: 0 with no violations, 1 with violations, 2 when no skills are found.
 """
 import json
