@@ -16,6 +16,7 @@ CHECK_NAMES = {
     "gh-installed",
     "gh-authenticated",
     "gh-repo-access",
+    "gh-issues-enabled",
     "gh-repo-pull",
     "gh-label-theloop",
 }

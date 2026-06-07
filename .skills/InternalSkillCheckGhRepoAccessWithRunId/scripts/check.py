@@ -27,6 +27,10 @@ REPO_CONFIG_SUGGESTION = (
 )
 THELOOP_LABEL = "theloop"
 THELOOP_LABEL_DESCRIPTION = "Issues and pull requests tracked by theloop"
+ISSUES_ENABLED_SUGGESTION = (
+    "Enable Issues for this repository on GitHub: open the repo → Settings → General → "
+    "Features → check Issues."
+)
 
 
 def run(cmd, **kwargs):
@@ -66,6 +70,21 @@ def gh_repo_view(slug):
     return True, None
 
 
+def gh_repo_issues_enabled(slug):
+    proc = run(
+        ["gh", "repo", "view", slug, "--json", "hasIssuesEnabled", "-q", ".hasIssuesEnabled"]
+    )
+    if proc.returncode != 0:
+        detail = (proc.stderr or proc.stdout or "gh repo view failed").strip()
+        return None, detail
+    value = proc.stdout.strip().lower()
+    if value == "true":
+        return True, None
+    if value == "false":
+        return False, "Issues are disabled for this repository."
+    return None, f"unexpected hasIssuesEnabled value: {proc.stdout.strip()!r}"
+
+
 def git_ls_remote(url):
     env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
     proc = run(["git", "ls-remote", url, "HEAD"], env=env)
@@ -98,6 +117,10 @@ def ensure_theloop_label(slug):
 
 def skip_label_checks(checks, reason):
     add(checks, "gh-label-theloop", "skipped", reason, None)
+
+
+def skip_issues_check(checks, reason):
+    add(checks, "gh-issues-enabled", "skipped", reason, None)
 
 
 def main():
@@ -152,6 +175,7 @@ def main():
         add(checks, "gh-authenticated", "skipped", "Skipped because `gh` is not installed.", None)
         add(checks, "gh-repo-access", "skipped", "Skipped because `gh` is not installed.", None)
         add(checks, "gh-repo-pull", "skipped", "Skipped because `gh` is not installed.", None)
+        skip_issues_check(checks, "Skipped because `gh` is not installed.")
         skip_label_checks(checks, "Skipped because `gh` is not installed.")
     else:
         add(checks, "gh-installed", "pass")
@@ -175,6 +199,7 @@ def main():
                 "Skipped because `gh` is not authenticated.",
                 None,
             )
+            skip_issues_check(checks, "Skipped because `gh` is not authenticated.")
             skip_label_checks(checks, "Skipped because `gh` is not authenticated.")
         else:
             add(checks, "gh-authenticated", "pass")
@@ -194,11 +219,31 @@ def main():
                     "Skipped because the repository URL is not configured.",
                     None,
                 )
+                skip_issues_check(checks, "Skipped because the repository URL is not configured.")
                 skip_label_checks(checks, "Skipped because the repository URL is not configured.")
             else:
                 ok, detail = gh_repo_view(slug)
                 if ok:
                     add(checks, "gh-repo-access", "pass")
+                    issues_enabled, issues_detail = gh_repo_issues_enabled(slug)
+                    if issues_enabled is True:
+                        add(checks, "gh-issues-enabled", "pass")
+                    elif issues_enabled is False:
+                        add(
+                            checks,
+                            "gh-issues-enabled",
+                            "fail",
+                            issues_detail,
+                            ISSUES_ENABLED_SUGGESTION,
+                        )
+                    else:
+                        add(
+                            checks,
+                            "gh-issues-enabled",
+                            "fail",
+                            f"Cannot determine whether issues are enabled on {slug}: {issues_detail}",
+                            ISSUES_ENABLED_SUGGESTION,
+                        )
                     label_ok, label_detail, created = ensure_theloop_label(slug)
                     if label_ok:
                         add(checks, "gh-label-theloop", "pass")
@@ -249,6 +294,7 @@ def main():
                         "Skipped because repository access via `gh` failed.",
                         None,
                     )
+                    skip_issues_check(checks, "Skipped because repository access via `gh` failed.")
                     skip_label_checks(checks, "Skipped because repository access via `gh` failed.")
 
     result = {"repo_url": repo_url, "checks": checks, "actions": actions}
