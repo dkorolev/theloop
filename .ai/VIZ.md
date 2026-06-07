@@ -8,7 +8,7 @@ This file lives at `.ai/VIZ.md`, under the `.ai/` directory in the root of the r
 |---|---|
 | [`ValidateSkill`](../.skills/ValidateSkill/SKILL.md) | Meta-skill that validates another skill in this repository against `.ai/RULES.md`. |
 | [`ValidateAllSkills`](../.skills/ValidateAllSkills/SKILL.md) | Meta-skill that validates every skill in this repository against `.ai/RULES.md`, by invoking `ValidateSkill` once per skill and then performing the whole-repo checks. |
-| [`PreCommitSkillWithRunId`](../.skills/PreCommitSkillWithRunId/SKILL.md) | Meta-skill that performs the pre-commit gate under a caller-supplied `SkillRunId`: receipt-hygiene checks, the additional checks of `PRECOMMIT.md` when it exists, then `ValidateAllSkills` for full compliance. |
+| [`PreCommitSkillWithRunId`](../.skills/PreCommitSkillWithRunId/SKILL.md) | Meta-skill that performs the pre-commit gate under a caller-supplied `SkillRunId`: receipt-hygiene checks, directory invariants from `ai-invariants.yml` (stale ones in parallel, cached ones skipped), optional `PRECOMMIT.md` checks, then `ValidateAllSkills` for full compliance. |
 | [`PreCommitSkill`](../.skills/PreCommitSkill/SKILL.md) | Meta-skill that gates a commit to this repository: takes no parameters, generates a fresh `SkillRunId` in the default format, and delegates to `PreCommitSkillWithRunId`. |
 
 ## SkillInvocations
