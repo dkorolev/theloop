@@ -14,6 +14,7 @@ This file lives at `.theloop/VIZ.md`, under the `.theloop/` directory in the roo
 | [`PreCommitSkill`](../.skills/PreCommitSkill/SKILL.md) | Meta-skill that gates a commit to this repository: takes no parameters, generates a fresh `SkillRunId` in the default format, and delegates to `InternalSkillPreCommitSkillWithRunId`. |
 | [`ImplementWhatWeJustDiscussed`](../.skills/ImplementWhatWeJustDiscussed/SKILL.md) | Summarizes the current conversation to extract the feature request, implements the feature with a design document, then invokes `PreCommitSkill` and iterates on any failures until all pre-commit checks pass. |
 | [`InternalSkillCheckGhRepoAccessWithRunId`](../.skills/InternalSkillCheckGhRepoAccessWithRunId/SKILL.md) | Checks that the GitHub CLI (`gh`) is installed, authenticated, and can access the repository URL in `.theloop/repo.txt`, and ensures the `theloop` label exists for bugs and pull requests. |
+| [`IssueWhatWeJustDiscussed`](../.skills/IssueWhatWeJustDiscussed/SKILL.md) | Summarizes the current conversation into a feature specification, clarifies with the human until the picture is clear, then creates a GitHub issue tagged with `theloop`. |
 
 ## SkillInvocations
 
@@ -25,6 +26,7 @@ This file lives at `.theloop/VIZ.md`, under the `.theloop/` directory in the roo
 | `InternalSkillCheckAllRulesWithRunId` | `InternalSkillCheckSingleRuleWithRunId` |
 | `InternalSkillValidateAllSkills` | `InternalSkillValidateSkill` |
 | `ImplementWhatWeJustDiscussed` | `PreCommitSkill` |
+| `IssueWhatWeJustDiscussed` | `InternalSkillCheckGhRepoAccessWithRunId` |
 
 ## Diagram
 
@@ -33,6 +35,7 @@ An arrow from A to B means skill A can, under some circumstances, invoke skill B
 ```mermaid
 graph TD
     InternalSkillCheckGhRepoAccessWithRunId["InternalSkillCheckGhRepoAccessWithRunId"]
+    IssueWhatWeJustDiscussed["IssueWhatWeJustDiscussed"] --> InternalSkillCheckGhRepoAccessWithRunId
     ImplementWhatWeJustDiscussed["ImplementWhatWeJustDiscussed"] --> PreCommitSkill["PreCommitSkill"]
     PreCommitSkill --> InternalSkillPreCommitSkillWithRunId["InternalSkillPreCommitSkillWithRunId"]
     InternalSkillPreCommitSkillWithRunId --> InternalSkillCheckAllRulesWithRunId["InternalSkillCheckAllRulesWithRunId"]
