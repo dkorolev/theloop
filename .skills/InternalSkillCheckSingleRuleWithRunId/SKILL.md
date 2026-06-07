@@ -1,10 +1,10 @@
 ---
-name: CheckSingleRuleWithRunId
+name: InternalSkillCheckSingleRuleWithRunId
 description: Meta-skill that checks a single directory rule against its scoped files. Takes a SkillRunId and a RulePath; parses the YAML rule file, probes the cache (per .ai/CACHING.md), skips if cached, or judges the scoped files if stale; writes the cache entry on a pass.
 argument-hint: <SkillRunId> <RulePath>
 ---
 
-# CheckSingleRuleWithRunId
+# InternalSkillCheckSingleRuleWithRunId
 
 **Run receipt (write once, never overwrite):** before doing anything else, check whether the file `tmp/<SkillRunId>.json` (relative to the repository root) already exists, where `SkillRunId` is the first parameter of this skill. If it exists, refuse to run: report the error to the user and stop without touching the file. Otherwise, no matter how this skill ends — success, validation failure, or error — you must write `tmp/<SkillRunId>.json` containing exactly one well-formed JSON object following the schema in the "Run receipt schema" section below. Create the `tmp/` directory if it does not exist.
 
@@ -21,19 +21,19 @@ If either parameter is missing, or extra parameters are passed, stop and report 
 
 ## Steps
 
-All scripts under `.skills/CheckSingleRuleWithRunId/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
+All scripts under `.skills/InternalSkillCheckSingleRuleWithRunId/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
 
-1. **Parse and probe the cache.** Run `.skills/CheckSingleRuleWithRunId/scripts/rules.py probe-one <RulePath>` from the repository root. The script validates the YAML syntax and schema, resolves the scoped file set per `.ai/RULE-FILES.md`, fingerprints that scope per `.ai/CACHING.md` under the check name `rule:<RulePath>`, and reports whether a cache entry exists.
+1. **Parse and probe the cache.** Run `.skills/InternalSkillCheckSingleRuleWithRunId/scripts/rules.py probe-one <RulePath>` from the repository root. The script validates the YAML syntax and schema, resolves the scoped file set per `.ai/RULE-FILES.md`, fingerprints that scope per `.ai/CACHING.md` under the check name `rule:<RulePath>`, and reports whether a cache entry exists.
    - If the script exits with code 2 (e.g. `RulePath` is not a non-ignored `*-rule.yml` file), treat this as an error: record the detail, write the run receipt with `"status": "error"`, and stop.
    - If the result reports `"parse_status": "fail"`: the rule file is invalid. Record `"status": "fail"`, `"source": "regenerated"`, and `"detail"` from the script output. Proceed to writing the run receipt without judging or caching.
    - If the result reports `"cached": true`: this rule has already passed over byte-identical scoped content. Record `"status": "pass"` and `"source": "cache"`. Proceed directly to writing the run receipt.
    - If the result reports `"cached": false` and `"parse_status": "pass"`: proceed to the next step to judge the rule.
 
-2. **Judge the rule.** Run `.skills/CheckSingleRuleWithRunId/scripts/rules.py parse <RulePath>` to obtain the `rule_text` and `scope_files` list. Read only the files listed in `scope_files` (which always includes the rule file itself). Judge whether the `rule_text` holds for those files. Do not read any file outside `scope_files`. This step may be token-consuming: take the time needed to read and assess the scoped files.
-   - If the rule holds: record `"status": "pass"` and `"source": "regenerated"`, then run `.skills/CheckSingleRuleWithRunId/scripts/rules.py write <RulePath>` from the repository root to write the cache entry so the next run skips this rule.
+2. **Judge the rule.** Run `.skills/InternalSkillCheckSingleRuleWithRunId/scripts/rules.py parse <RulePath>` to obtain the `rule_text` and `scope_files` list. Read only the files listed in `scope_files` (which always includes the rule file itself). Judge whether the `rule_text` holds for those files. Do not read any file outside `scope_files`. This step may be token-consuming: take the time needed to read and assess the scoped files.
+   - If the rule holds: record `"status": "pass"` and `"source": "regenerated"`, then run `.skills/InternalSkillCheckSingleRuleWithRunId/scripts/rules.py write <RulePath>` from the repository root to write the cache entry so the next run skips this rule.
    - If the rule does not hold: record `"status": "fail"`, `"source": "regenerated"`, and a short `"detail"` describing what the rule requires and what violated it. Do not write the cache entry.
 
-3. **Write the run receipt** by calling `.skills/CheckSingleRuleWithRunId/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--rule`, `--status`, and (when status is not `error`) `--source cache|regenerated`; add `--detail TEXT` when status is `fail`; add `--error TEXT` when status is `error`. The script validates the schema and refuses to overwrite an existing receipt.
+3. **Write the run receipt** by calling `.skills/InternalSkillCheckSingleRuleWithRunId/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--rule`, `--status`, and (when status is not `error`) `--source cache|regenerated`; add `--detail TEXT` when status is `fail`; add `--error TEXT` when status is `error`. The script validates the schema and refuses to overwrite an existing receipt.
 
 ## Run receipt schema
 
@@ -42,7 +42,7 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
 ```json
 {
   "skill_run_id": "string — the SkillRunId parameter, verbatim",
-  "skill": "CheckSingleRuleWithRunId",
+  "skill": "InternalSkillCheckSingleRuleWithRunId",
   "rule": "string — the RulePath parameter, verbatim",
   "status": "pass | fail | error",
   "source": "cache | regenerated | null — null only when status is 'error'",

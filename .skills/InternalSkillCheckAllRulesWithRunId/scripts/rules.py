@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 REGISTRY = "ai-rules.yml"
-PROBE_SCRIPT = ".skills/CheckSingleRuleWithRunId/scripts/rules.py"
+PROBE_SCRIPT = ".skills/InternalSkillCheckSingleRuleWithRunId/scripts/rules.py"
 
 
 def non_ignored_files(pathspec=None):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Run the three receipt-hygiene checks of PreCommitSkillWithRunId.
+"""Run the three receipt-hygiene checks of InternalSkillPreCommitSkillWithRunId.
 
-Usage: .skills/PreCommitSkillWithRunId/scripts/hygiene.py   (from the repository root)
+Usage: .skills/InternalSkillPreCommitSkillWithRunId/scripts/hygiene.py   (from the repository root)
 Output: a JSON array of {"check", "status", "detail"} objects, one per check;
 "detail" is null unless the check fails.
 Exit code: 0 when all checks pass, 1 when at least one fails.

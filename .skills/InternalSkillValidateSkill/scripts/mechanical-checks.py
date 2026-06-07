@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Mechanical rule checks of ValidateSkill against one target skill.
+"""Mechanical rule checks of InternalSkillValidateSkill against one target skill.
 
-Usage: .skills/ValidateSkill/scripts/mechanical-checks.py <SkillNameToCheck>   (from the repository root)
+Usage: .skills/InternalSkillValidateSkill/scripts/mechanical-checks.py <SkillNameToCheck>   (from the repository root)
 Checks the mechanically verifiable projections of the rules in .ai/RULES.md
 against .skills/<SkillNameToCheck>/SKILL.md; the judgment-based rules (strict
 parameter semantics, taste and style, parallel invocation wording) are left to
@@ -23,6 +23,8 @@ RULE_SKILLS_MD = "The `SKILLS.md` file should be up to date"
 RULE_VIZ = "Visualization and topology"
 RULE_SCRIPTS = "Use of scripts"
 RULE_BY_NAME = "Refer to rules by name, not by number"
+RULE_INTERNAL_NAMING = "Internal skill naming"
+INTERNAL_PREFIX = "InternalSkill"
 
 
 def main():
@@ -54,6 +56,12 @@ def main():
         return "tmp/<SkillRunId>.json" in paragraph and "writ" in paragraph.lower()
 
     takes_run_id = re.search(r"^\s*1\.\s+`SkillRunId`", body, re.M) is not None
+    if takes_run_id:
+        add(RULE_INTERNAL_NAMING, "internal-prefix-required", skill.startswith(INTERNAL_PREFIX),
+            f"{path} takes SkillRunId but its name does not begin with {INTERNAL_PREFIX}")
+    else:
+        add(RULE_INTERNAL_NAMING, "no-internal-prefix", not skill.startswith(INTERNAL_PREFIX),
+            f"{path} does not take SkillRunId but its name begins with {INTERNAL_PREFIX}")
     if takes_run_id:
         add(RULE_RECEIPTS, "receipt-instruction-first", has_receipt_instruction(paragraphs[0]),
             f"{path} does not begin its body with the write-once receipt instruction")

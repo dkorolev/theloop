@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and write the run receipt of ValidateSkill, write-once.
+"""Validate and write the run receipt of InternalSkillValidateSkill, write-once.
 
 Usage (CLI — preferred):
   write-receipt.py --skill-run-id ID --checked-skill SKILL --status pass --source cache|regenerated
@@ -21,7 +21,7 @@ import re
 import sys
 from typing import NoReturn
 
-SKILL = "ValidateSkill"
+SKILL = "InternalSkillValidateSkill"
 FIELDS = {"skill_run_id", "skill", "checked_skill", "status", "source", "violations", "error"}
 STATUSES = {"pass", "fail", "error"}
 SOURCES = {"cache", "regenerated"}

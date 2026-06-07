@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Probe and write the validation cache of ValidateSkill, per .ai/CACHING.md.
+"""Probe and write the validation cache of InternalSkillValidateSkill, per .ai/CACHING.md.
 
-Usage: .skills/ValidateSkill/scripts/cache.py probe <SkillNameToCheck>   (from the repository root)
-       .skills/ValidateSkill/scripts/cache.py write <SkillNameToCheck>
+Usage: .skills/InternalSkillValidateSkill/scripts/cache.py probe <SkillNameToCheck>   (from the repository root)
+       .skills/InternalSkillValidateSkill/scripts/cache.py write <SkillNameToCheck>
 The input set is every non-ignored file under .skills/<SkillNameToCheck>/ plus
 .ai/RULES.md, SKILLS.md, and .ai/VIZ.md; the check name is
-"ValidateSkill:<SkillNameToCheck>".
+"InternalSkillValidateSkill:<SkillNameToCheck>".
 Output of probe: one JSON object {"check", "fingerprint", "cached", "cache_path"} on stdout.
 Output of write: the path of the written cache entry on stdout (written only after
 a passing verdict; idempotent when the entry already exists).
@@ -33,7 +33,7 @@ def manifest_of(skill):
         capture_output=True, text=True, check=True,
     ).stdout.splitlines()
     paths = sorted(p for p in set(listed) | set(EXTRA_FILES) if os.path.isfile(p))
-    check = f"ValidateSkill:{skill}"
+    check = f"InternalSkillValidateSkill:{skill}"
     lines = [f"{sha256_of(p)}  {p}" for p in paths]
     return check, f"check: {check}\n" + "".join(line + "\n" for line in lines), lines
 

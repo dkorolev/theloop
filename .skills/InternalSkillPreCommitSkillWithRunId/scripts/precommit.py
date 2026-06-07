@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run the checks listed in PRECOMMIT.md.
 
-Usage: .skills/PreCommitSkillWithRunId/scripts/precommit.py   (from the repository root)
+Usage: .skills/InternalSkillPreCommitSkillWithRunId/scripts/precommit.py   (from the repository root)
 If PRECOMMIT.md does not exist, prints null on stdout and exits 0.
 Otherwise reads the YAML list in PRECOMMIT.md (inside a ```yaml fenced block, or the
 whole file when no fence is present), runs each command from its directory, and prints
