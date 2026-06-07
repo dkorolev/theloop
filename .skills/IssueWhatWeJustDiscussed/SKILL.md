@@ -61,6 +61,7 @@ The Python scripts under `.skills/IssueWhatWeJustDiscussed/scripts/` are executa
    - The issue number (ID) and the full issue URL — both prominently, on their own lines
    - A one-sentence summary of the feature captured in the issue
    - The `SkillRunId` of this run
+   - That they can implement the feature and open a pull request by running `/MakePRForIssue <issue_number>` (substitute the issue number just created)
 
 8. **Write the run receipt** by calling `.skills/IssueWhatWeJustDiscussed/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--status pass|fail|error`; when status is `pass`: `--feature-title TITLE`, `--feature-summary TEXT`, `--issue-number N`, `--issue-url URL`, `--gh-check-sub-run-id ID`; when status is `fail`: `--gh-check-sub-run-id ID` if the GitHub access sub-run completed, plus any of `--issue-number` and `--issue-url` if an issue was partially created; when status is `error`: `--error TEXT`. The script validates the schema and refuses to overwrite an existing receipt.
 
