@@ -81,6 +81,12 @@ The fingerprint must be computed by the skill's provided Python script, never re
 
 Cache entries live under `tmp/caches/`, are written only on passing verdicts, and are never committed. Skills whose own checks are all fast and mechanical are unaffected by this rule, even when they invoke skills that cache.
 
+## Rule 12: Single responsibility per skill
+
+Each skill must have a single, well-defined responsibility. Logically distinct operations — operations that can be independently named, independently cached, independently retried, or independently reasoned about — must not be bundled into the same skill. When a skill handles multiple distinct concerns, each concern must be extracted into its own dedicated skill, and the original skill delegates to the extracted skills via the sub-run mechanism.
+
+Whether two operations are "logically distinct" is determined by whether it is natural to name, invoke, or reason about them independently. For example, checking a single directory invariant and orchestrating the checking of all invariants are two distinct responsibilities, as are performing hygiene checks and performing invariant checks.
+
 ## Rule 11: Parallel invocation of spawned skills
 
 When a skill invokes other skills, its definition must state clearly whether those invocations may and should run in parallel.
