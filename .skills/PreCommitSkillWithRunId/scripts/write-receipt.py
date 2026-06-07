@@ -15,7 +15,7 @@ import sys
 from typing import NoReturn
 
 SKILL = "PreCommitSkillWithRunId"
-FIELDS = {"skill_run_id", "skill", "status", "hygiene_checks", "extra_checks", "validation", "error"}
+FIELDS = {"skill_run_id", "skill", "status", "hygiene_checks", "invariants", "extra_checks", "validation", "error"}
 STATUSES = {"pass", "fail", "error"}
 
 
@@ -41,6 +41,16 @@ def main():
         die('"status" must be "pass", "fail", or "error"')
     if not isinstance(receipt["hygiene_checks"], list):
         die('"hygiene_checks" must be a list')
+    if receipt["status"] == "error":
+        if receipt["invariants"] is not None:
+            die('"invariants" must be null when status is "error"')
+    else:
+        if not isinstance(receipt["invariants"], dict):
+            die('"invariants" must be an object when status is "pass" or "fail"')
+        if not isinstance(receipt["invariants"].get("registry"), dict):
+            die('"invariants.registry" must be an object')
+        if not isinstance(receipt["invariants"].get("checks"), list):
+            die('"invariants.checks" must be a list')
     if receipt["extra_checks"] is not None and not isinstance(receipt["extra_checks"], list):
         die('"extra_checks" must be a list or null')
     if (receipt["status"] == "error") != (receipt["error"] is not None):
@@ -48,9 +58,11 @@ def main():
     if receipt["status"] == "pass":
         failing = [c.get("check") for c in receipt["hygiene_checks"] + (receipt["extra_checks"] or [])
                    if c.get("status") != "pass"]
+        inv_reg_ok = receipt["invariants"]["registry"].get("status") == "pass"
+        inv_checks_ok = all(c.get("status") == "pass" for c in receipt["invariants"]["checks"])
         validation = receipt["validation"]
-        if failing or not (isinstance(validation, dict) and validation.get("status") == "pass"):
-            die('status "pass" requires every check to pass and the validation sub-run to report "pass"')
+        if failing or not inv_reg_ok or not inv_checks_ok or not (isinstance(validation, dict) and validation.get("status") == "pass"):
+            die('status "pass" requires every hygiene, invariant, and extra check to pass and the validation sub-run to report "pass"')
 
     path = os.path.join("tmp", receipt["skill_run_id"] + ".json")
     if os.path.exists(path):
