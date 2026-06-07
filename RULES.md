@@ -2,15 +2,15 @@
 
 Every skill in this repository must comply with all of the rules below. The `ValidateSkill` skill checks compliance. The `ValidateAllSkills` skill checks compliance of all skills.
 
-## Rule 1: Contained withint the repo
+## Rule 1: Contained within the repo
 
-Every skill should mention that running the skill is an operation that is fully contained within the directory of the reposirory. The agentic runner of the skill should not need to access files outside the reposirory, and it should not attempt to access files outside the repository.
+Every skill should mention that running the skill is an operation that is fully contained within the directory of the repository. The agentic runner of the skill should not need to access files outside the repository, and it should not attempt to access files outside the repository.
 
 ## Rule 2: Strict with parameters
 
 Every skill should have strict run semantics, such as "this skill takes two arguments, the `SkillRunId` and the `OtherSkillName`. Prior to executing itself, every skill must check that the parameters are correctly passed along.
 
-Moreover, validation should take place beyond the number of parameters. For instance, the skill should instruct the runner that for a given `SkillRunId`, no `tmp/${SkillRunId}.json` file should exist in the repository, and for the 
+Moreover, validation should take place beyond the number of parameters. For instance, the skill should instruct the runner that for a given `SkillRunId`, no `tmp/${SkillRunId}.json` file should exist in the repository.
 
 Furthermore, when a skill is executing other skills, it should make sure to pass just the right parameters, in the right quantity and order.
 
