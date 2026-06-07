@@ -55,7 +55,7 @@ This skill takes no parameters. If any parameters are passed, stop immediately a
    - The `SkillRunId` of this run and the `SkillRunId` of the final `PreCommitSkill` run
    - A brief summary of what was implemented
 
-9. **Write the run receipt** as described below: assemble the receipt object and pipe it to `.skills/ImplementWhatWeJustDiscussed/scripts/write-receipt.py`, which validates the schema and refuses to overwrite an existing receipt.
+9. **Write the run receipt** by calling `.skills/ImplementWhatWeJustDiscussed/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--status pass|fail|error`; when status is not `error`: `--feature-summary TEXT`, `--feature-doc-path PATH`, `--implementation-attempts N`, `--pre-commit-skill-run-id ID`; when status is `error`: `--error TEXT`. The script validates the schema and refuses to overwrite an existing receipt.
 
 ## Run receipt schema
 

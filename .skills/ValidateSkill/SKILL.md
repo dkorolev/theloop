@@ -41,7 +41,7 @@ If either parameter is missing, or extra parameters are passed, stop and report 
    - For the rule on hashing and caching of slow checks, verify that if the target skill performs checks that are slow or token-consuming and fully determined by a fixed set of files, it uses the caching technique from `.ai/CACHING.md` with a provided Python script — not an inline reimplementation — to compute fingerprints.
 6. **Write the validation cache.** If the verdict is `"pass"` (no violations), run `.skills/ValidateSkill/scripts/cache.py write <SkillNameToCheck>` from the repository root. It recomputes the fingerprint and writes the cache entry under `tmp/caches/`; it is idempotent if the entry already exists.
 7. **Report.** Tell the user whether the skill passes, listing each violation (rule and detail) if it does not. When the verdict came from the cache (step 2), report that clearly.
-8. **Write the run receipt** as described below: assemble the receipt object and pipe it to `.skills/ValidateSkill/scripts/write-receipt.py`, which validates the schema and refuses to overwrite an existing receipt.
+8. **Write the run receipt** by calling `.skills/ValidateSkill/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--checked-skill`, `--status`, and (when status is not `error`) `--source cache|regenerated`; add `--violations-json '[...]'` when status is `fail`; add `--error TEXT` when status is `error`. The script validates the schema and refuses to overwrite an existing receipt.
 
 ## Run receipt schema
 

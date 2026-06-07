@@ -30,7 +30,7 @@ If either parameter is missing, or extra parameters are passed, stop and report 
    - If the rule holds: record `"status": "pass"` and `"source": "regenerated"`, then run `.skills/CheckSingleInvariantWithRunId/scripts/invariants.py write <InvariantPath>` from the repository root to write the cache entry so the next run skips this invariant.
    - If the rule does not hold: record `"status": "fail"`, `"source": "regenerated"`, and a short `"detail"` describing what the rule requires and what violated it. Do not write the cache entry.
 
-3. **Write the run receipt** as described below: assemble the receipt object and pipe it to `.skills/CheckSingleInvariantWithRunId/scripts/write-receipt.py`, which validates the schema and refuses to overwrite an existing receipt.
+3. **Write the run receipt** by calling `.skills/CheckSingleInvariantWithRunId/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--invariant`, `--status`, and (when status is not `error`) `--source cache|regenerated`; add `--detail TEXT` when status is `fail`; add `--error TEXT` when status is `error`. The script validates the schema and refuses to overwrite an existing receipt.
 
 ## Run receipt schema
 

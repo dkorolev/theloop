@@ -29,7 +29,7 @@ If the parameter is missing, or extra parameters are passed, stop and report an 
 
    The script extracts the actual relationships from the explicit invocation phrases in the skills' `SKILL.md` files; spot-check its extracted list against the texts and record a violation yourself if a real relationship is phrased in a way the script missed. Record every violation as a pair of the rule's name, as it is titled in `.ai/RULES.md`, and a detail of what is violated and where.
 5. **Report.** Tell the user whether the repository passes: `"pass"` when every sub-run reports `"pass"` and the whole-repo checks find no violations; `"fail"` when at least one sub-run reports `"fail"` or `"error"`, or at least one whole-repo violation is found; `"error"` when this skill could not perform the validation at all (bad parameters, a pre-existing receipt file, or no skills found). List each failing skill and each violation.
-6. **Write the run receipt** as described below: assemble the receipt object and pipe it to `.skills/ValidateAllSkills/scripts/write-receipt.py`, which validates the schema and refuses to overwrite an existing receipt.
+6. **Write the run receipt** by calling `.skills/ValidateAllSkills/scripts/write-receipt.py` with CLI flags: `--skill-run-id` and `--sub-run-ids "id1 id2 ..."` listing every `ValidateSkill` sub-run identifier separated by spaces; optionally `--repo-violations-json '[...]'` (defaults to `[]`). The script reads the sub-run receipts, derives the overall status, computes `cache_summary`, validates the schema, and refuses to overwrite an existing receipt. For an error exit: `--status error --error TEXT` (omit `--sub-run-ids`).
 
 ## Run receipt schema
 

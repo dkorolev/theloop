@@ -1,13 +1,29 @@
 #!/usr/bin/env python3
 """Validate and write the run receipt of PreCommitSkillWithRunId, write-once.
 
-Usage: .skills/PreCommitSkillWithRunId/scripts/write-receipt.py < receipt.json   (from the repository root)
-Reads one JSON object on stdin, checks it against the fixed receipt schema of
-PreCommitSkillWithRunId, and writes it to tmp/<skill_run_id>.json, refusing to
-overwrite an existing file.
+Usage (CLI — preferred):
+  write-receipt.py --skill-run-id ID \
+      --hygiene-json '[{"check":"tmp-gitignored","status":"pass","detail":null},...]' \
+      --invariants-sub-run-id ID \
+      --extra-checks-json '[...]'|null \
+      --validation-sub-run-id ID
+
+  write-receipt.py --skill-run-id ID --status error --error "REASON" [--hygiene-json '[...]']
+
+  --invariants-sub-run-id  CheckAllInvariantsWithRunId sub-run identifier (its receipt is read from tmp/)
+  --extra-checks-json      JSON array from precommit.py, or the string "null" when PRECOMMIT.md is absent
+  --validation-sub-run-id  ValidateAllSkills sub-run identifier (its receipt is read from tmp/)
+
+  The script reads the sub-run receipts, computes cache_summary, derives the overall status,
+  validates the schema, and refuses to overwrite an existing file.
+
+Usage (stdin — fallback):
+  write-receipt.py < receipt.json
+
 Output: the path of the written receipt on stdout.
 Exit code: 0 on success, 1 on any error (one-line message on stderr).
 """
+import argparse
 import json
 import os
 import re
@@ -26,6 +42,14 @@ VALIDATION_FIELDS = {"sub_run_id", "status", "source", "cache_summary"}
 def die(message) -> NoReturn:
     print(f"error: {message}", file=sys.stderr)
     sys.exit(1)
+
+
+def read_sub_run_receipt(sub_run_id):
+    path = os.path.join("tmp", sub_run_id + ".json")
+    if not os.path.exists(path):
+        die(f"sub-run receipt not found: {path}")
+    with open(path) as f:
+        return json.load(f)
 
 
 def summarize_sources(entries):
@@ -71,11 +95,7 @@ def validate_validation(validation):
         die('"validation.source" must be "cache" or "regenerated" when validation.status is not "error"')
 
 
-def main():
-    try:
-        receipt = json.load(sys.stdin)
-    except json.JSONDecodeError as exc:
-        die(f"stdin is not valid JSON: {exc}")
+def validate(receipt):
     if not isinstance(receipt, dict):
         die("the receipt must be a JSON object")
     if set(receipt) != FIELDS:
@@ -126,6 +146,97 @@ def main():
         if failing or not inv_reg_ok or not inv_checks_ok or not (isinstance(validation, dict) and validation.get("status") == "pass"):
             die('status "pass" requires every hygiene, invariant, and extra check to pass and the validation sub-run to report "pass"')
 
+
+def build_from_args(args):
+    # Parse hygiene checks
+    hygiene_checks = []
+    if args.hygiene_json:
+        try:
+            hygiene_checks = json.loads(args.hygiene_json)
+        except json.JSONDecodeError as exc:
+            die(f"--hygiene-json is not valid JSON: {exc}")
+        if not isinstance(hygiene_checks, list):
+            die("--hygiene-json must be a JSON array")
+
+    if args.status == "error":
+        if not args.error:
+            die("--error is required when --status error")
+        return {
+            "skill_run_id": args.skill_run_id,
+            "skill": SKILL,
+            "status": "error",
+            "hygiene_checks": hygiene_checks,
+            "invariants": None,
+            "extra_checks": None,
+            "validation": None,
+            "cache_summary": {"cached": 0, "regenerated": 0},
+            "error": args.error,
+        }
+
+    if not args.invariants_sub_run_id:
+        die("--invariants-sub-run-id is required when status is not 'error'")
+    if not args.validation_sub_run_id:
+        die("--validation-sub-run-id is required when status is not 'error'")
+
+    # Read invariants sub-run receipt
+    inv_sub = read_sub_run_receipt(args.invariants_sub_run_id)
+    registry = inv_sub.get("registry", {"status": "fail", "detail": "missing"})
+    inv_checks = []
+    for entry in (inv_sub.get("invariants") or []):
+        inv_checks.append({
+            "invariant": entry["invariant"],
+            "status": entry["status"],
+            "source": entry["source"],
+            "detail": entry.get("detail"),
+        })
+
+    # Parse extra checks
+    extra_checks = None
+    if args.extra_checks_json and args.extra_checks_json.strip().lower() != "null":
+        try:
+            extra_checks = json.loads(args.extra_checks_json)
+        except json.JSONDecodeError as exc:
+            die(f"--extra-checks-json is not valid JSON: {exc}")
+        if not isinstance(extra_checks, list):
+            die("--extra-checks-json must be a JSON array or null")
+
+    # Read validation sub-run receipt
+    val_sub = read_sub_run_receipt(args.validation_sub_run_id)
+    val_cache_summary = val_sub.get("cache_summary", {"cached": 0, "regenerated": 0})
+    val_source = validation_source(val_cache_summary)
+    validation = {
+        "sub_run_id": args.validation_sub_run_id,
+        "status": val_sub["status"],
+        "source": val_source,
+        "cache_summary": val_cache_summary,
+    }
+
+    # Compute overall cache_summary
+    inv_summary = summarize_sources(inv_checks)
+    cache_summary = merge_summaries(inv_summary, val_cache_summary)
+
+    # Derive overall status
+    hygiene_ok = all(c.get("status") == "pass" for c in hygiene_checks)
+    inv_reg_ok = registry.get("status") == "pass"
+    inv_checks_ok = all(c.get("status") == "pass" for c in inv_checks)
+    extra_ok = extra_checks is None or all(c.get("status") == "pass" for c in extra_checks)
+    val_ok = val_sub["status"] == "pass"
+    status = "pass" if (hygiene_ok and inv_reg_ok and inv_checks_ok and extra_ok and val_ok) else "fail"
+
+    return {
+        "skill_run_id": args.skill_run_id,
+        "skill": SKILL,
+        "status": status,
+        "hygiene_checks": hygiene_checks,
+        "invariants": {"registry": registry, "checks": inv_checks},
+        "extra_checks": extra_checks,
+        "validation": validation,
+        "cache_summary": cache_summary,
+        "error": None,
+    }
+
+
+def write_receipt(receipt):
     path = os.path.join("tmp", receipt["skill_run_id"] + ".json")
     if os.path.exists(path):
         die(f"{path} already exists; run receipts are write-once")
@@ -134,6 +245,28 @@ def main():
         json.dump(receipt, f, indent=2)
         f.write("\n")
     print(path)
+
+
+def main():
+    if len(sys.argv) > 1:
+        parser = argparse.ArgumentParser(add_help=False)
+        parser.add_argument("--skill-run-id", required=True)
+        parser.add_argument("--status", default=None)
+        parser.add_argument("--hygiene-json")
+        parser.add_argument("--invariants-sub-run-id")
+        parser.add_argument("--extra-checks-json")
+        parser.add_argument("--validation-sub-run-id")
+        parser.add_argument("--error")
+        args = parser.parse_args()
+        receipt = build_from_args(args)
+    else:
+        try:
+            receipt = json.load(sys.stdin)
+        except json.JSONDecodeError as exc:
+            die(f"stdin is not valid JSON: {exc}")
+
+    validate(receipt)
+    write_receipt(receipt)
     return 0
 
 

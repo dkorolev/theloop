@@ -32,7 +32,7 @@ If the parameter is missing, or extra parameters are passed, stop and report an 
 
 5. **Report.** Tell the user the verdict: that all invariants passed, or every reason they did not — the registry failure detail if any, and each failing invariant with its detail. Also report `cache_summary`: how many invariant checks were served from the cache versus re-run in full.
 
-6. **Write the run receipt** as described below: assemble the receipt object and pipe it to `.skills/CheckAllInvariantsWithRunId/scripts/write-receipt.py`, which validates the schema and refuses to overwrite an existing receipt.
+6. **Write the run receipt** by calling `.skills/CheckAllInvariantsWithRunId/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--registry-status pass|fail` (with `--registry-detail TEXT` when the registry fails), and `--sub-run-ids "id1 id2 ..."` listing every `CheckSingleInvariantWithRunId` sub-run identifier separated by spaces. The script reads the sub-run receipts, derives the overall status, computes `cache_summary`, validates the schema, and refuses to overwrite an existing receipt. For an error exit: `--status error --error TEXT` (omit `--registry-status` and `--sub-run-ids`).
 
 ## Run receipt schema
 

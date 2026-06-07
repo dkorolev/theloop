@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
 """Validate and write the run receipt of CheckAllInvariantsWithRunId, write-once.
 
-Usage: .skills/CheckAllInvariantsWithRunId/scripts/write-receipt.py < receipt.json   (from the repository root)
-Reads one JSON object on stdin, checks it against the fixed receipt schema of
-CheckAllInvariantsWithRunId, and writes it to tmp/<skill_run_id>.json, refusing to
-overwrite an existing file.
+Usage (CLI — preferred):
+  write-receipt.py --skill-run-id ID --registry-status pass|fail [--registry-detail TEXT] \
+      --sub-run-ids "id1 id2 ..."
+  write-receipt.py --skill-run-id ID --status error --error "REASON"
+
+  --sub-run-ids is a space-separated list of CheckSingleInvariantWithRunId sub-run identifiers.
+  The script reads each sub-run receipt from tmp/, derives the overall status and cache_summary,
+  and refuses to overwrite an existing file.
+
+Usage (stdin — fallback):
+  write-receipt.py < receipt.json
+
 Output: the path of the written receipt on stdout.
 Exit code: 0 on success, 1 on any error (one-line message on stderr).
 """
+import argparse
 import json
 import os
 import re
@@ -28,11 +37,15 @@ def die(message) -> NoReturn:
     sys.exit(1)
 
 
-def main():
-    try:
-        receipt = json.load(sys.stdin)
-    except json.JSONDecodeError as exc:
-        die(f"stdin is not valid JSON: {exc}")
+def read_sub_run_receipt(sub_run_id):
+    path = os.path.join("tmp", sub_run_id + ".json")
+    if not os.path.exists(path):
+        die(f"sub-run receipt not found: {path}")
+    with open(path) as f:
+        return json.load(f)
+
+
+def validate(receipt):
     if not isinstance(receipt, dict):
         die("the receipt must be a JSON object")
     if set(receipt) != FIELDS:
@@ -87,6 +100,58 @@ def main():
             if any(e.get("status") != "pass" for e in receipt["invariants"]):
                 die('status "pass" requires every invariant entry to have status "pass"')
 
+
+def build_from_args(args):
+    if args.status == "error":
+        if not args.error:
+            die("--error is required when --status error")
+        return {
+            "skill_run_id": args.skill_run_id,
+            "skill": SKILL,
+            "status": "error",
+            "registry": None,
+            "invariants": None,
+            "cache_summary": None,
+            "error": args.error,
+        }
+
+    if not args.registry_status:
+        die("--registry-status is required when status is not 'error'")
+    registry = {
+        "status": args.registry_status,
+        "detail": args.registry_detail,
+    }
+
+    invariants = []
+    if args.sub_run_ids:
+        for sub_run_id in args.sub_run_ids.split():
+            sub = read_sub_run_receipt(sub_run_id)
+            invariants.append({
+                "invariant": sub["invariant"],
+                "sub_run_id": sub_run_id,
+                "status": sub["status"],
+                "source": sub.get("source"),
+                "detail": sub.get("detail"),
+            })
+
+    cached = sum(1 for e in invariants if e.get("source") == "cache")
+    regenerated = sum(1 for e in invariants if e.get("source") == "regenerated")
+
+    all_pass = registry["status"] == "pass" and all(e["status"] == "pass" for e in invariants)
+    status = "pass" if all_pass else "fail"
+
+    return {
+        "skill_run_id": args.skill_run_id,
+        "skill": SKILL,
+        "status": status,
+        "registry": registry,
+        "invariants": invariants,
+        "cache_summary": {"cached": cached, "regenerated": regenerated},
+        "error": None,
+    }
+
+
+def write_receipt(receipt):
     path = os.path.join("tmp", receipt["skill_run_id"] + ".json")
     if os.path.exists(path):
         die(f"{path} already exists; run receipts are write-once")
@@ -95,6 +160,27 @@ def main():
         json.dump(receipt, f, indent=2)
         f.write("\n")
     print(path)
+
+
+def main():
+    if len(sys.argv) > 1:
+        parser = argparse.ArgumentParser(add_help=False)
+        parser.add_argument("--skill-run-id", required=True)
+        parser.add_argument("--status", default=None)
+        parser.add_argument("--registry-status")
+        parser.add_argument("--registry-detail")
+        parser.add_argument("--sub-run-ids")
+        parser.add_argument("--error")
+        args = parser.parse_args()
+        receipt = build_from_args(args)
+    else:
+        try:
+            receipt = json.load(sys.stdin)
+        except json.JSONDecodeError as exc:
+            die(f"stdin is not valid JSON: {exc}")
+
+    validate(receipt)
+    write_receipt(receipt)
     return 0
 
 

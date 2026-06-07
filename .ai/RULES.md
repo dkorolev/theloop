@@ -63,6 +63,8 @@ It is undesirable that skills write temporary Python files to run themselves. If
 
 Scripts are deliberately duplicated rather than shared: when several skills need the same helper, each skill carries its own copy under its own `scripts/` directory. Every skill directory is self-contained, and there is no shared script location in this repository.
 
+Run receipts are a concrete case of this principle: every skill that writes a run receipt must have a dedicated `write-receipt.py` script under `.skills/${SkillName}/scripts/`, and the skill's instructions must direct the runner to call that script with CLI flags — passing `--skill-run-id` and other structured arguments — rather than constructing a JSON object inline (whether via shell `echo`, `python -c`, or any other ad-hoc technique). For aggregate receipts whose content depends on sub-run outcomes, the `write-receipt.py` script must accept sub-run identifiers as flags and read the sub-run receipts itself, so the runner is never asked to extract and re-pass data from those receipts.
+
 ## Rule 8: Taste and style
 
 The repo should not contain grammatical errors.

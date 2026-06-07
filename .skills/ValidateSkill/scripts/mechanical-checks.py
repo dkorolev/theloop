@@ -93,6 +93,14 @@ def main():
             os.path.isfile(f".skills/{owner}/scripts/{script}"),
             f"{path} references .skills/{owner}/scripts/{script}, which does not exist")
 
+    has_write_receipt = os.path.isfile(f".skills/{skill}/scripts/write-receipt.py")
+    if takes_run_id:
+        add(RULE_SCRIPTS, "write-receipt-script-present", has_write_receipt,
+            f"{path} takes SkillRunId but has no write-receipt.py under .skills/{skill}/scripts/")
+    if has_write_receipt:
+        add(RULE_SCRIPTS, "receipt-written-via-cli", "--skill-run-id" in body,
+            f"{path} has write-receipt.py but does not instruct the runner to call it with --skill-run-id CLI flags")
+
     print(json.dumps({"skill": skill, "checks": checks}, indent=2))
     return 0 if all(c["status"] == "pass" for c in checks) else 1
 
