@@ -33,7 +33,7 @@ All scripts under `.skills/ValidateSkill/scripts/` are executable and begin with
    - for the rule on referring to rules by name, that the target skill never references a rule by its number;
    - for the rule on use of scripts, that every script the target skill references exists at the referenced path.
 
-   The script matches fixed phrasings, so confirm each reported failure against the target skill's text before recording it as a violation; treat compliant-but-differently-worded text as a reason to read closer, not as an automatic violation.
+   The script reads invocations from the `invokes` field in the target skill's frontmatter, so its output is unambiguous; treat every reported failure as a genuine violation.
 5. **Judge the remaining rules.** Read the target skill's `SKILL.md` and check what the script cannot:
    - For the rule on strict parameters, verify that the target skill declares exactly which parameters it takes and instructs the runner to validate them before executing, and that any invocations of other skills pass exactly the right parameters. In particular, verify that it refuses to run, with an error, if `tmp/<SkillRunId>.json` exists prior to the run.
    - For the rule on the universal directory for skills, note that the first step already enforces it structurally: a skill anywhere else than under `.skills/` is not found at all.

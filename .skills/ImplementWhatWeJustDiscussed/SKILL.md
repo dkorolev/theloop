@@ -1,6 +1,7 @@
 ---
 name: ImplementWhatWeJustDiscussed
 description: Summarizes the current conversation to extract the feature request, implements the feature with a design document, then runs PreCommitSkill and iterates on any failures until the implementation is complete and all pre-commit checks pass.
+invokes: [PreCommitSkill]
 ---
 
 # ImplementWhatWeJustDiscussed

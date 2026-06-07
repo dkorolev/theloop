@@ -57,6 +57,8 @@ The `.ai/VIZ.md` file should, at any commit in this repo, contain exactly the fu
 
 Besides the textual list (two markdown tables, Skills and SkillInvocations), the `.ai/VIZ.md` file should also contain a Mermaid diagram outlining the above graphically: skills as nodes, skill invocation relationships as arrows, where an arrow from A to B means skill A can, under some circumstances, invoke skill B.
 
+A skill that invokes one or more other skills must declare those invocations in its `SKILL.md` frontmatter using the `invokes` key — a YAML inline list of skill names (for example, `invokes: [SkillA, SkillB]`). A skill with no invocations omits the key entirely. This structured frontmatter declaration is the sole authoritative source of invocation relationships: the `repo-checks.py` and `mechanical-checks.py` scripts read `invokes` directly from the frontmatter. Parsing free text or natural language for invocation detection is prohibited.
+
 ## Rule 7: Use of scripts
 
 It is undesirable that skills write temporary Python files to run themselves. If a skill may need to execute a piece of code that is non-trivial, the skill should provide the respective scripts under `.skills/${SkillName}/scripts/`, and the runner should execute the provided scripts rather than improvise equivalent shell or Python on the spot. The mechanical parts of a run — generating identifiers, performing fixed checks, validating and writing run receipts — belong in such scripts; judgment calls stay with the runner.

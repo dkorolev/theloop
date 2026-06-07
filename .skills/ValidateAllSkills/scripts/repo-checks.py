@@ -3,9 +3,8 @@
 
 Usage: .skills/ValidateAllSkills/scripts/repo-checks.py   (from the repository root)
 Enumerates the skills (the directories .skills/<SkillName>/ that contain a
-SKILL.md file), extracts the invocation relationships that actually exist from
-the skills' SKILL.md files (an explicit phrase of the form
-invoke/invokes [the] `OtherSkill`), and checks that SKILLS.md, the two tables
+SKILL.md file), reads the invocation relationships from the `invokes` field in
+each skill's SKILL.md frontmatter, and checks that SKILLS.md, the two tables
 of .ai/VIZ.md, and the Mermaid diagram of .ai/VIZ.md all list exactly those
 skills and relationships.
 Output: one JSON object {"skills", "invocations", "violations"} on stdout;
@@ -34,9 +33,13 @@ def main():
     edges = set()
     for skill in skills:
         text = open(os.path.join(".skills", skill, "SKILL.md")).read()
-        for invoked in re.findall(r"[Ii]nvokes?(?:\s+the)?\s+`(\w+)`", text):
-            if invoked in skill_set and invoked != skill:
-                edges.add((skill, invoked))
+        fm = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+        if fm:
+            inv = re.search(r"^invokes:\s*\[([^\]]*)\]", fm.group(1), re.M)
+            if inv:
+                for invoked in [s.strip() for s in inv.group(1).split(",") if s.strip()]:
+                    if invoked in skill_set and invoked != skill:
+                        edges.add((skill, invoked))
 
     violations = []
 

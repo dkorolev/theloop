@@ -77,8 +77,13 @@ def main():
     add(RULE_VIZ, "listed-in-viz-md", f"[`{skill}`]" in viz,
         f"`{skill}` is not listed in the Skills table of .ai/VIZ.md")
 
-    all_skills = {d for d in os.listdir(".skills") if os.path.isfile(os.path.join(".skills", d, "SKILL.md"))}
-    invoked = {m for m in re.findall(r"[Ii]nvokes?(?:\s+the)?\s+`(\w+)`", body) if m in all_skills and m != skill}
+    fm_match = re.match(r"^---\n(.*?)\n---\n", open(path).read(), re.S)
+    invoked = []
+    if fm_match:
+        inv = re.search(r"^invokes:\s*\[([^\]]*)\]", fm_match.group(1), re.M)
+        if inv:
+            all_skills = {d for d in os.listdir(".skills") if os.path.isfile(os.path.join(".skills", d, "SKILL.md"))}
+            invoked = [s.strip() for s in inv.group(1).split(",") if s.strip() and s.strip() in all_skills and s.strip() != skill]
     for other in sorted(invoked):
         add(RULE_VIZ, f"invocation-listed-{other}",
             re.search(rf"^\|\s*`{skill}`\s*\|\s*`{other}`\s*\|", viz, re.M) is not None,

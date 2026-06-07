@@ -2,6 +2,7 @@
 name: PreCommitSkillWithRunId
 description: Meta-skill that performs the pre-commit gate for this repository under a caller-supplied run identifier. Takes a single SkillRunId; checks receipt hygiene, then concurrently runs CheckAllInvariantsWithRunId, ValidateAllSkills, and any extra checks described in PRECOMMIT.md.
 argument-hint: <SkillRunId>
+invokes: [CheckAllInvariantsWithRunId, ValidateAllSkills]
 ---
 
 # PreCommitSkillWithRunId

@@ -2,6 +2,7 @@
 name: ValidateAllSkills
 description: Meta-skill that validates every skill in this repository against .ai/RULES.md. Takes a single SkillRunId; invokes ValidateSkill once per skill in parallel, then performs the whole-repo checks that SKILLS.md and .ai/VIZ.md exactly match the repository.
 argument-hint: <SkillRunId>
+invokes: [ValidateSkill]
 ---
 
 # ValidateAllSkills
@@ -29,7 +30,7 @@ All scripts under `.skills/ValidateAllSkills/scripts/` are executable and begin 
    - For the rule on the `SKILLS.md` file: `SKILLS.md` lists exactly the skills enumerated in the first step — every skill in the repo appears in `SKILLS.md`, and every skill listed in `SKILLS.md` exists in the repo.
    - For the rule on visualization and topology: `.ai/VIZ.md` lists exactly the skills enumerated in the first step, and exactly the invocation relationships that actually exist. Also, the Mermaid diagram in `.ai/VIZ.md` contains exactly the same skills as nodes and the same invocation relationships as arrows as the two tables do.
 
-   The script extracts the actual relationships from the explicit invocation phrases in the skills' `SKILL.md` files; spot-check its extracted list against the texts and record a violation yourself if a real relationship is phrased in a way the script missed. Record every violation as a pair of the rule's name, as it is titled in `.ai/RULES.md`, and a detail of what is violated and where.
+   The script reads the `invokes` field from each skill's `SKILL.md` frontmatter to build the set of actual invocation relationships. Record every violation the script reports as a pair of the rule's name, as it is titled in `.ai/RULES.md`, and a detail of what is violated and where.
 5. **Report.** Tell the user whether the repository passes: `"pass"` when every sub-run reports `"pass"` and the whole-repo checks find no violations; `"fail"` when at least one sub-run reports `"fail"` or `"error"`, or at least one whole-repo violation is found; `"error"` when this skill could not perform the validation at all (bad parameters, a pre-existing receipt file, or no skills found). List each failing skill and each violation.
 6. **Write the run receipt** by calling `.skills/ValidateAllSkills/scripts/write-receipt.py` with CLI flags: `--skill-run-id` and `--sub-run-ids "id1 id2 ..."` listing every `ValidateSkill` sub-run identifier separated by spaces; optionally `--repo-violations-json '[...]'` (defaults to `[]`). The script reads the sub-run receipts, derives the overall status, computes `cache_summary`, validates the schema, and refuses to overwrite an existing receipt. For an error exit: `--status error --error TEXT` (omit `--sub-run-ids`).
 

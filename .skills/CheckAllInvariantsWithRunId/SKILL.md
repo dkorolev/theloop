@@ -2,6 +2,7 @@
 name: CheckAllInvariantsWithRunId
 description: Meta-skill that checks all directory invariants listed in ai-invariants.yml. Takes a single SkillRunId; verifies the registry, then invokes CheckSingleInvariantWithRunId once per invariant in parallel (each handles its own caching per .ai/CACHING.md).
 argument-hint: <SkillRunId>
+invokes: [CheckSingleInvariantWithRunId]
 ---
 
 # CheckAllInvariantsWithRunId

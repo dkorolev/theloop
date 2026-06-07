@@ -1,6 +1,7 @@
 ---
 name: PreCommitSkill
 description: Meta-skill that gates a commit to this repository. Takes no parameters and errors if any are passed; generates a fresh SkillRunId in the default format codified in .ai/RULES.md and delegates the entire pre-commit gate to PreCommitSkillWithRunId under that identifier.
+invokes: [PreCommitSkillWithRunId]
 ---
 
 # PreCommitSkill
