@@ -37,6 +37,7 @@ If either parameter is missing, or extra parameters are passed, stop and report 
    - For the rule on use of scripts, verify that any non-trivial code the target skill runs is provided under `.skills/<SkillNameToCheck>/scripts/` rather than written as ad-hoc temporary files.
    - For the rule on taste and style, verify that the target skill's text is free of grammatical errors and easy to read.
    - For the rule on referring to rules by name, verify that the target skill never references a rule by its number.
+   - For the rule on parallel invocation of spawned skills, verify that if the target skill invokes other skills: when it starts two or more independent sub-runs, it instructs the runner to launch them concurrently and aggregate receipts after all complete; when parallel execution is undesirable, it explains in detail why; when it invokes exactly one other skill, no parallelism wording is required.
 4. **Report.** Tell the user whether the skill passes, listing each violation (rule and detail) if it does not.
 5. **Write the run receipt** as described below.
 

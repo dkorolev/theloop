@@ -66,3 +66,13 @@ The Markdown texts should be easy to read. The scripts should not be excessive, 
 ## Rule 9: Refer to rules by name, not by number
 
 Skills must not refer to the rules in this file by their numbers. The set of rules is expected to stay stable, but their numbering may change as rules are added, removed, or reordered. Whenever a skill needs to reference a rule — in its instructions or in its run receipts — it must use the rule's name (its heading in this file) or a short description of it.
+
+## Rule 10: Parallel invocation of spawned skills
+
+When a skill invokes other skills, its definition must state clearly whether those invocations may and should run in parallel.
+
+By default, when a skill starts two or more independent sub-runs — distinct sub-run identifiers, no step depends on another sub-run's receipt — it must instruct the runner to launch them concurrently and to read and aggregate their receipts only after all have completed.
+
+If parallel execution is undesirable, the skill must explain in detail why (for example, a strict ordering requirement, shared mutable state, or each sub-run needing the previous sub-run's receipt).
+
+A skill that invokes exactly one other skill need not include parallelism wording; there is nothing to parallelize.
