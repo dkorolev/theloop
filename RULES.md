@@ -8,7 +8,7 @@ Every skill should mention that running the skill is an operation that is fully 
 
 ## Rule 2: Strict with parameters
 
-Every skill should have strict run semantics, such as "this skill takes two arguments, the `SkillRunId` and the `OtherSkillName`. Prior to executing itself, every skill must check that the parameters are correctly passed along.
+Every skill should have strict run semantics, such as "this skill takes two arguments, the `SkillRunId` and the `OtherSkillName`". Prior to executing itself, every skill must check that the parameters are correctly passed along.
 
 Moreover, validation should take place beyond the number of parameters. For instance, the skill should instruct the runner that for a given `SkillRunId`, no `tmp/${SkillRunId}.json` file should exist in the repository.
 
@@ -24,7 +24,7 @@ For skills with the `SkillRunId` parameter, the skill should explicitly mention 
 * Except the very error that the `tmp/${SkillRunId}.json` file exists prior to running the skill, running the skill, no matter whether it results in success or in error, must produce the `tmp/${SkillRunId}.json` file, in addition to providing English-first output.
 * The resulting `tmp/${SkillRunId}.json` receipt file should be of fixed schema, which is either `{"error":"..."}`, or other valid schemas provided exhaustively in the definition of the skill.
 
-Specifically, for every skill that does take the `SkillRunId` as the parameter, the very rule to write but not overwrite the `tmp/${SkillRunId}.json` file must be present in the skill definition at least twice: once closer to the beginning of the skill, and one towards the very end of it.
+Specifically, for every skill that does take the `SkillRunId` as the parameter, the very rule to write but not overwrite the `tmp/${SkillRunId}.json` file must be present in the skill definition at least twice: once closer to the beginning of the skill, and once towards the very end of it.
 
 Concretely, a skill complies with this rule when all of the following hold:
 
