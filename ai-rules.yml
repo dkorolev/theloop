@@ -1,0 +1,5 @@
+- example/code/code-rule.yml
+- example/math/add/add-rule.yml
+- example/math/subtract/subtract-rule.yml
+- example/math/multiply/multiply-rule.yml
+- example/math/divide/divide-rule.yml

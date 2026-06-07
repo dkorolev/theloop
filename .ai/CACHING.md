@@ -60,6 +60,6 @@ Because the input set includes the file that states the rule being checked (a sk
 
 * The rule on hashing and caching of slow checks in [`RULES.md`](RULES.md) requires every skill with slow or token-consuming, content-determined checks to use this technique.
 * `ValidateSkill` caches its verdict per skill: the input set is the skill's directory subtree plus `.ai/RULES.md`, `SKILLS.md`, and `.ai/VIZ.md`, under the check name `ValidateSkill:<SkillName>`.
-* `PreCommitSkillWithRunId` caches every directory invariant, as described in [`.ai/INVARIANTS.md`](INVARIANTS.md): the input set is the invariant's directory subtree, under the check name `invariant:<path-to-INVARIANT.md>`.
+* `PreCommitSkillWithRunId` caches every directory rule, as described in [`.ai/RULE-FILES.md`](RULE-FILES.md): the input set is the rule's resolved scope (the rule file plus every in-scope file), under the check name `rule:<path-to-rule.yml>`.
 
 The scripts that implement the technique are deliberately duplicated per skill, under each skill's own `scripts/` directory, per the rule on use of scripts. An agentic runner must call the provided scripts rather than reproduce the fingerprint algorithm in ad-hoc shell or Python — only the scripts are authoritative.

@@ -4,21 +4,11 @@
 Usage (CLI — preferred):
   write-receipt.py --skill-run-id ID \
       --hygiene-json '[{"check":"tmp-gitignored","status":"pass","detail":null},...]' \
-      --invariants-sub-run-id ID \
+      --rules-sub-run-id ID \
       --extra-checks-json '[...]'|null \
       --validation-sub-run-id ID
 
   write-receipt.py --skill-run-id ID --status error --error "REASON" [--hygiene-json '[...]']
-
-  --invariants-sub-run-id  CheckAllInvariantsWithRunId sub-run identifier (its receipt is read from tmp/)
-  --extra-checks-json      JSON array from precommit.py, or the string "null" when PRECOMMIT.md is absent
-  --validation-sub-run-id  ValidateAllSkills sub-run identifier (its receipt is read from tmp/)
-
-  The script reads the sub-run receipts, computes cache_summary, derives the overall status,
-  validates the schema, and refuses to overwrite an existing file.
-
-Usage (stdin — fallback):
-  write-receipt.py < receipt.json
 
 Output: the path of the written receipt on stdout.
 Exit code: 0 on success, 1 on any error (one-line message on stderr).
@@ -31,11 +21,11 @@ import sys
 from typing import NoReturn
 
 SKILL = "PreCommitSkillWithRunId"
-FIELDS = {"skill_run_id", "skill", "status", "hygiene_checks", "invariants", "extra_checks", "validation", "cache_summary", "error"}
+FIELDS = {"skill_run_id", "skill", "status", "hygiene_checks", "rules", "extra_checks", "validation", "cache_summary", "error"}
 STATUSES = {"pass", "fail", "error"}
 SOURCES = {"cache", "regenerated"}
 SUMMARY_FIELDS = {"cached", "regenerated"}
-INVARIANT_CHECK_FIELDS = {"invariant", "status", "source", "detail"}
+RULE_CHECK_FIELDS = {"rule", "status", "source", "detail"}
 VALIDATION_FIELDS = {"sub_run_id", "status", "source", "cache_summary"}
 
 
@@ -109,20 +99,20 @@ def validate(receipt):
     if not isinstance(receipt["hygiene_checks"], list):
         die('"hygiene_checks" must be a list')
     if receipt["status"] == "error":
-        if receipt["invariants"] is not None:
-            die('"invariants" must be null when status is "error"')
+        if receipt["rules"] is not None:
+            die('"rules" must be null when status is "error"')
     else:
-        if not isinstance(receipt["invariants"], dict):
-            die('"invariants" must be an object when status is "pass" or "fail"')
-        if not isinstance(receipt["invariants"].get("registry"), dict):
-            die('"invariants.registry" must be an object')
-        if not isinstance(receipt["invariants"].get("checks"), list):
-            die('"invariants.checks" must be a list')
-        for check in receipt["invariants"]["checks"]:
-            if not isinstance(check, dict) or set(check) != INVARIANT_CHECK_FIELDS:
-                die(f'each entry of "invariants.checks" must have exactly the fields {sorted(INVARIANT_CHECK_FIELDS)}')
+        if not isinstance(receipt["rules"], dict):
+            die('"rules" must be an object when status is "pass" or "fail"')
+        if not isinstance(receipt["rules"].get("registry"), dict):
+            die('"rules.registry" must be an object')
+        if not isinstance(receipt["rules"].get("checks"), list):
+            die('"rules.checks" must be a list')
+        for check in receipt["rules"]["checks"]:
+            if not isinstance(check, dict) or set(check) != RULE_CHECK_FIELDS:
+                die(f'each entry of "rules.checks" must have exactly the fields {sorted(RULE_CHECK_FIELDS)}')
             if check["source"] not in SOURCES:
-                die('each invariant check must have "source" set to "cache" or "regenerated"')
+                die('each rule check must have "source" set to "cache" or "regenerated"')
         validate_validation(receipt["validation"])
     if receipt["extra_checks"] is not None and not isinstance(receipt["extra_checks"], list):
         die('"extra_checks" must be a list or null')
@@ -130,25 +120,24 @@ def validate(receipt):
         die('"error" must be set when and only when status is "error"')
     if receipt["status"] != "error":
         validate_cache_summary(receipt["cache_summary"])
-        invariant_summary = summarize_sources(receipt["invariants"]["checks"])
-        expected = merge_summaries(invariant_summary, receipt["validation"]["cache_summary"])
+        rule_summary = summarize_sources(receipt["rules"]["checks"])
+        expected = merge_summaries(rule_summary, receipt["validation"]["cache_summary"])
         if receipt["cache_summary"] != expected:
-            die(f'"cache_summary" must merge invariants and validation: expected {expected}, got {receipt["cache_summary"]}')
+            die(f'"cache_summary" must merge rules and validation: expected {expected}, got {receipt["cache_summary"]}')
         expected_validation_source = validation_source(receipt["validation"]["cache_summary"])
         if receipt["validation"]["source"] != expected_validation_source:
             die(f'"validation.source" must match validation.cache_summary: expected {expected_validation_source!r}, got {receipt["validation"]["source"]!r}')
     if receipt["status"] == "pass":
         failing = [c.get("check") for c in receipt["hygiene_checks"] + (receipt["extra_checks"] or [])
                    if c.get("status") != "pass"]
-        inv_reg_ok = receipt["invariants"]["registry"].get("status") == "pass"
-        inv_checks_ok = all(c.get("status") == "pass" for c in receipt["invariants"]["checks"])
+        rules_reg_ok = receipt["rules"]["registry"].get("status") == "pass"
+        rules_checks_ok = all(c.get("status") == "pass" for c in receipt["rules"]["checks"])
         validation = receipt["validation"]
-        if failing or not inv_reg_ok or not inv_checks_ok or not (isinstance(validation, dict) and validation.get("status") == "pass"):
-            die('status "pass" requires every hygiene, invariant, and extra check to pass and the validation sub-run to report "pass"')
+        if failing or not rules_reg_ok or not rules_checks_ok or not (isinstance(validation, dict) and validation.get("status") == "pass"):
+            die('status "pass" requires every hygiene, rule, and extra check to pass and the validation sub-run to report "pass"')
 
 
 def build_from_args(args):
-    # Parse hygiene checks
     hygiene_checks = []
     if args.hygiene_json:
         try:
@@ -166,31 +155,29 @@ def build_from_args(args):
             "skill": SKILL,
             "status": "error",
             "hygiene_checks": hygiene_checks,
-            "invariants": None,
+            "rules": None,
             "extra_checks": None,
             "validation": None,
             "cache_summary": {"cached": 0, "regenerated": 0},
             "error": args.error,
         }
 
-    if not args.invariants_sub_run_id:
-        die("--invariants-sub-run-id is required when status is not 'error'")
+    if not args.rules_sub_run_id:
+        die("--rules-sub-run-id is required when status is not 'error'")
     if not args.validation_sub_run_id:
         die("--validation-sub-run-id is required when status is not 'error'")
 
-    # Read invariants sub-run receipt
-    inv_sub = read_sub_run_receipt(args.invariants_sub_run_id)
-    registry = inv_sub.get("registry", {"status": "fail", "detail": "missing"})
-    inv_checks = []
-    for entry in (inv_sub.get("invariants") or []):
-        inv_checks.append({
-            "invariant": entry["invariant"],
+    rules_sub = read_sub_run_receipt(args.rules_sub_run_id)
+    registry = rules_sub.get("registry", {"status": "fail", "detail": "missing"})
+    rule_checks = []
+    for entry in (rules_sub.get("rules") or []):
+        rule_checks.append({
+            "rule": entry["rule"],
             "status": entry["status"],
             "source": entry["source"],
             "detail": entry.get("detail"),
         })
 
-    # Parse extra checks
     extra_checks = None
     if args.extra_checks_json and args.extra_checks_json.strip().lower() != "null":
         try:
@@ -200,35 +187,31 @@ def build_from_args(args):
         if not isinstance(extra_checks, list):
             die("--extra-checks-json must be a JSON array or null")
 
-    # Read validation sub-run receipt
     val_sub = read_sub_run_receipt(args.validation_sub_run_id)
     val_cache_summary = val_sub.get("cache_summary", {"cached": 0, "regenerated": 0})
-    val_source = validation_source(val_cache_summary)
     validation = {
         "sub_run_id": args.validation_sub_run_id,
         "status": val_sub["status"],
-        "source": val_source,
+        "source": validation_source(val_cache_summary),
         "cache_summary": val_cache_summary,
     }
 
-    # Compute overall cache_summary
-    inv_summary = summarize_sources(inv_checks)
-    cache_summary = merge_summaries(inv_summary, val_cache_summary)
+    rule_summary = summarize_sources(rule_checks)
+    cache_summary = merge_summaries(rule_summary, val_cache_summary)
 
-    # Derive overall status
     hygiene_ok = all(c.get("status") == "pass" for c in hygiene_checks)
-    inv_reg_ok = registry.get("status") == "pass"
-    inv_checks_ok = all(c.get("status") == "pass" for c in inv_checks)
+    rules_reg_ok = registry.get("status") == "pass"
+    rules_checks_ok = all(c.get("status") == "pass" for c in rule_checks)
     extra_ok = extra_checks is None or all(c.get("status") == "pass" for c in extra_checks)
     val_ok = val_sub["status"] == "pass"
-    status = "pass" if (hygiene_ok and inv_reg_ok and inv_checks_ok and extra_ok and val_ok) else "fail"
+    status = "pass" if (hygiene_ok and rules_reg_ok and rules_checks_ok and extra_ok and val_ok) else "fail"
 
     return {
         "skill_run_id": args.skill_run_id,
         "skill": SKILL,
         "status": status,
         "hygiene_checks": hygiene_checks,
-        "invariants": {"registry": registry, "checks": inv_checks},
+        "rules": {"registry": registry, "checks": rule_checks},
         "extra_checks": extra_checks,
         "validation": validation,
         "cache_summary": cache_summary,
@@ -253,7 +236,7 @@ def main():
         parser.add_argument("--skill-run-id", required=True)
         parser.add_argument("--status", default=None)
         parser.add_argument("--hygiene-json")
-        parser.add_argument("--invariants-sub-run-id")
+        parser.add_argument("--rules-sub-run-id")
         parser.add_argument("--extra-checks-json")
         parser.add_argument("--validation-sub-run-id")
         parser.add_argument("--error")
