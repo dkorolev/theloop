@@ -1,6 +1,6 @@
 ---
 name: InternalSkillCheckSingleRuleWithRunId
-description: Meta-skill that checks a single directory rule against its scoped files. Takes a SkillRunId and a RulePath; parses the YAML rule file, probes the cache (per .ai/CACHING.md), skips if cached, or judges the scoped files if stale; writes the cache entry on a pass.
+description: Meta-skill that checks a single directory rule against its scoped files. Takes a SkillRunId and a RulePath; parses the YAML rule file, probes the cache (per .theloop/CACHING.md), skips if cached, or judges the scoped files if stale; writes the cache entry on a pass.
 argument-hint: <SkillRunId> <RulePath>
 ---
 
@@ -23,7 +23,7 @@ If either parameter is missing, or extra parameters are passed, stop and report 
 
 All scripts under `.skills/InternalSkillCheckSingleRuleWithRunId/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
 
-1. **Parse and probe the cache.** Run `.skills/InternalSkillCheckSingleRuleWithRunId/scripts/rules.py probe-one <RulePath>` from the repository root. The script validates the YAML syntax and schema, resolves the scoped file set per `.ai/RULE-FILES.md`, fingerprints that scope per `.ai/CACHING.md` under the check name `rule:<RulePath>`, and reports whether a cache entry exists.
+1. **Parse and probe the cache.** Run `.skills/InternalSkillCheckSingleRuleWithRunId/scripts/rules.py probe-one <RulePath>` from the repository root. The script validates the YAML syntax and schema, resolves the scoped file set per `.theloop/RULE-FILES.md`, fingerprints that scope per `.theloop/CACHING.md` under the check name `rule:<RulePath>`, and reports whether a cache entry exists.
    - If the script exits with code 2 (e.g. `RulePath` is not a non-ignored `*-rule.yml` file), treat this as an error: record the detail, write the run receipt with `"status": "error"`, and stop.
    - If the result reports `"parse_status": "fail"`: the rule file is invalid. Record `"status": "fail"`, `"source": "regenerated"`, and `"detail"` from the script output. Proceed to writing the run receipt without judging or caching.
    - If the result reports `"cached": true`: this rule has already passed over byte-identical scoped content. Record `"status": "pass"` and `"source": "cache"`. Proceed directly to writing the run receipt.

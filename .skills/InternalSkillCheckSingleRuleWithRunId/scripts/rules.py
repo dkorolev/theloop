@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Parse, scope, probe, and cache directory rules, per .ai/RULE-FILES.md.
+"""Parse, scope, probe, and cache directory rules, per .theloop/RULE-FILES.md.
 
 Usage: .skills/InternalSkillCheckSingleRuleWithRunId/scripts/rules.py parse <path-to-rule.yml>
        .skills/InternalSkillCheckSingleRuleWithRunId/scripts/rules.py probe-one <path-to-rule.yml>

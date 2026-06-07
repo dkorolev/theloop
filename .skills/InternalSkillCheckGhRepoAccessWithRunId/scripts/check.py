@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check gh CLI availability and repository access per .ai/repo.txt.
+"""Check gh CLI availability and repository access per .theloop/repo.txt.
 
 Usage: .skills/InternalSkillCheckGhRepoAccessWithRunId/scripts/check.py   (from the repository root)
 Output: JSON object with repo_url, a checks array, and an actions array. Each check
@@ -15,14 +15,14 @@ import shutil
 import subprocess
 import sys
 
-REPO_FILE = os.path.join(".ai", "repo.txt")
+REPO_FILE = os.path.join(".theloop", "repo.txt")
 INSTALL_SUGGESTION = (
     "Install the GitHub CLI from https://cli.github.com/ "
     "(for example, `brew install gh` on macOS)."
 )
 AUTH_SUGGESTION = "Authenticate with `gh auth login`."
 REPO_CONFIG_SUGGESTION = (
-    "Create `.ai/repo.txt` containing a single line with the GitHub repository URL "
+    "Create `.theloop/repo.txt` containing a single line with the GitHub repository URL "
     "this project needs to access (for example, `https://github.com/owner/repo`)."
 )
 THELOOP_LABEL = "theloop"

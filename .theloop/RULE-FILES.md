@@ -1,6 +1,6 @@
 # Directory Rules
 
-This file lives at `.ai/RULE-FILES.md`, under the `.ai/` directory in the root of the repo. All file paths in this file are relative to the root of the repo.
+This file lives at `.theloop/RULE-FILES.md`, under the `.theloop/` directory in the root of the repo. All file paths in this file are relative to the root of the repo.
 
 A **directory rule** is any file whose name ends with `-rule.yml`, placed in any directory of this repository. It states a rule in plain English that must hold for a scoped subset of that directory's contents. Checking a rule means an agentic runner parses the YAML, resolves which files are in scope, reads the `rule:` text, and judges those files against it.
 
@@ -34,7 +34,7 @@ The registry exists so that no run ever has to crawl the repository looking for 
 
 ## When rules run
 
-Rules are checked by `InternalSkillCheckAllRulesWithRunId`, which is invoked by `InternalSkillPreCommitSkillWithRunId` as part of the pre-commit gate. Individual rules are each checked by `InternalSkillCheckSingleRuleWithRunId`. To keep model usage minimal, each rule check is cached using the technique documented in [`.ai/CACHING.md`](CACHING.md):
+Rules are checked by `InternalSkillCheckAllRulesWithRunId`, which is invoked by `InternalSkillPreCommitSkillWithRunId` as part of the pre-commit gate. Individual rules are each checked by `InternalSkillCheckSingleRuleWithRunId`. To keep model usage minimal, each rule check is cached using the technique documented in [`.theloop/CACHING.md`](CACHING.md):
 
 * the rule's input set is its resolved scope (the rule file plus every in-scope file; editing the rule text or scope invalidates the cache);
 * the check name is `rule:<path-to-rule.yml>`, so the rule's identity is part of the fingerprint;

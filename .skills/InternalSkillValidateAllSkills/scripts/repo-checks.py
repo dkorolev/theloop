@@ -5,10 +5,10 @@ Usage: .skills/InternalSkillValidateAllSkills/scripts/repo-checks.py   (from the
 Enumerates the skills (the directories .skills/<SkillName>/ that contain a
 SKILL.md file), reads the invocation relationships from the `invokes` field in
 each skill's SKILL.md frontmatter, and checks that SKILLS.md, the two tables
-of .ai/VIZ.md, and the Mermaid diagram of .ai/VIZ.md all list exactly those
+of .theloop/VIZ.md, and the Mermaid diagram of .theloop/VIZ.md all list exactly those
 skills and relationships.
 Output: one JSON object {"skills", "invocations", "violations"} on stdout;
-each violation is {"rule", "detail"} with the rule named as titled in .ai/SKILLS-META-RULES.md.
+each violation is {"rule", "detail"} with the rule named as titled in .theloop/SKILLS-META-RULES.md.
 Exit code: 0 with no violations, 1 with violations, 2 when no skills are found.
 """
 import json
@@ -59,21 +59,21 @@ def main():
     compare(RULE_SKILLS_MD, "SKILLS.md",
             set(re.findall(r"^\|\s*\[`(\w+)`\]", skills_md, re.M)), skill_set, name)
 
-    viz = open(os.path.join(".ai", "VIZ.md")).read()
-    compare(RULE_VIZ, "the Skills table of .ai/VIZ.md",
+    viz = open(os.path.join(".theloop", "VIZ.md")).read()
+    compare(RULE_VIZ, "the Skills table of .theloop/VIZ.md",
             set(re.findall(r"^\|\s*\[`(\w+)`\]", viz, re.M)), skill_set, name)
-    compare(RULE_VIZ, "the SkillInvocations table of .ai/VIZ.md",
+    compare(RULE_VIZ, "the SkillInvocations table of .theloop/VIZ.md",
             set(re.findall(r"^\|\s*`(\w+)`\s*\|\s*`(\w+)`\s*\|", viz, re.M)), edges, edge)
 
     diagram = re.search(r"```mermaid\n(.*?)```", viz, re.S)
     if not diagram:
-        violations.append({"rule": RULE_VIZ, "detail": ".ai/VIZ.md contains no Mermaid diagram"})
+        violations.append({"rule": RULE_VIZ, "detail": ".theloop/VIZ.md contains no Mermaid diagram"})
     else:
         body = diagram.group(1)
         mermaid_edges = set(re.findall(r"(\w+)(?:\[[^\]]*\])?\s*-->\s*(\w+)", body))
         mermaid_nodes = {node for pair in mermaid_edges for node in pair} | set(re.findall(r"^\s*(\w+)\[", body, re.M))
-        compare(RULE_VIZ, "the Mermaid diagram of .ai/VIZ.md", mermaid_nodes, skill_set, name)
-        compare(RULE_VIZ, "the Mermaid diagram of .ai/VIZ.md", mermaid_edges, edges, edge)
+        compare(RULE_VIZ, "the Mermaid diagram of .theloop/VIZ.md", mermaid_nodes, skill_set, name)
+        compare(RULE_VIZ, "the Mermaid diagram of .theloop/VIZ.md", mermaid_edges, edges, edge)
 
     print(json.dumps({
         "skills": skills,

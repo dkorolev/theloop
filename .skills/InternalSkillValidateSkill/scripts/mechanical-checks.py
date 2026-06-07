@@ -2,13 +2,13 @@
 """Mechanical rule checks of InternalSkillValidateSkill against one target skill.
 
 Usage: .skills/InternalSkillValidateSkill/scripts/mechanical-checks.py <SkillNameToCheck>   (from the repository root)
-Checks the mechanically verifiable projections of the rules in .ai/SKILLS-META-RULES.md
+Checks the mechanically verifiable projections of the rules in .theloop/SKILLS-META-RULES.md
 against .skills/<SkillNameToCheck>/SKILL.md; the judgment-based rules (strict
 parameter semantics, taste and style, parallel invocation wording) are left to
 the agentic runner.
 Output: one JSON object {"skill", "checks"} on stdout, where each check is
 {"rule", "check", "status", "detail"}; "rule" is the rule's name as titled in
-.ai/SKILLS-META-RULES.md and "detail" is null unless the check fails.
+.theloop/SKILLS-META-RULES.md and "detail" is null unless the check fails.
 Exit code: 0 when all checks pass, 1 when at least one fails, 2 when the target
 skill does not exist or the usage is wrong (then {"error": ...} is printed).
 """
@@ -81,9 +81,9 @@ def main():
     add(RULE_SKILLS_MD, "listed-in-skills-md", f"[`{skill}`]" in skills_md,
         f"`{skill}` is not listed in SKILLS.md")
 
-    viz = open(os.path.join(".ai", "VIZ.md")).read()
+    viz = open(os.path.join(".theloop", "VIZ.md")).read()
     add(RULE_VIZ, "listed-in-viz-md", f"[`{skill}`]" in viz,
-        f"`{skill}` is not listed in the Skills table of .ai/VIZ.md")
+        f"`{skill}` is not listed in the Skills table of .theloop/VIZ.md")
 
     fm_match = re.match(r"^---\n(.*?)\n---\n", open(path).read(), re.S)
     invoked = []
@@ -95,7 +95,7 @@ def main():
     for other in sorted(invoked):
         add(RULE_VIZ, f"invocation-listed-{other}",
             re.search(rf"^\|\s*`{skill}`\s*\|\s*`{other}`\s*\|", viz, re.M) is not None,
-            f"the invocation `{skill}` -> `{other}` is missing from the SkillInvocations table of .ai/VIZ.md")
+            f"the invocation `{skill}` -> `{other}` is missing from the SkillInvocations table of .theloop/VIZ.md")
 
     number_ref = re.search(r"\bRule\s+\d", body)
     add(RULE_BY_NAME, "no-rule-numbers", number_ref is None,

@@ -2,7 +2,7 @@
 
 Every skill in this repository must comply with all of the meta-rules below. The `InternalSkillValidateSkill` skill checks compliance. The `InternalSkillValidateAllSkills` skill checks compliance of all skills.
 
-This file lives at `.ai/SKILLS-META-RULES.md`, under the `.ai/` directory in the root of the repo. All file paths in this file are relative to the root of the repo. These meta-rules govern skills in this repository; eventually, the fruits of applying them here will be used to instrument other repositories.
+This file lives at `.theloop/SKILLS-META-RULES.md`, under the `.theloop/` directory in the root of the repo. All file paths in this file are relative to the root of the repo. These meta-rules govern skills in this repository; eventually, the fruits of applying them here will be used to instrument other repositories.
 
 ## Rule 1: Contained within the repo
 
@@ -51,11 +51,11 @@ The `SKILLS.md` file should, at any commit in this repo, contain exactly the ful
 
 ## Rule 6: Visualization and topology
 
-The `.ai/VIZ.md` file should, at any commit in this repo, contain exactly the full list of the skills, and a complete list of what skill can invoke what other skill.
+The `.theloop/VIZ.md` file should, at any commit in this repo, contain exactly the full list of the skills, and a complete list of what skill can invoke what other skill.
 
-"The full list" here means that every skill in the repo must be present in `.ai/VIZ.md`, and every skill present in `.ai/VIZ.md` is present in the repo. Same with invocation relationships: every invocation relationship between two skills must be present in `.ai/VIZ.md`, and every relation that is listed in `.ai/VIZ.md` must be actually present in the repo.
+"The full list" here means that every skill in the repo must be present in `.theloop/VIZ.md`, and every skill present in `.theloop/VIZ.md` is present in the repo. Same with invocation relationships: every invocation relationship between two skills must be present in `.theloop/VIZ.md`, and every relation that is listed in `.theloop/VIZ.md` must be actually present in the repo.
 
-Besides the textual list (two markdown tables, Skills and SkillInvocations), the `.ai/VIZ.md` file should also contain a Mermaid diagram outlining the above graphically: skills as nodes, skill invocation relationships as arrows, where an arrow from A to B means skill A can, under some circumstances, invoke skill B.
+Besides the textual list (two markdown tables, Skills and SkillInvocations), the `.theloop/VIZ.md` file should also contain a Mermaid diagram outlining the above graphically: skills as nodes, skill invocation relationships as arrows, where an arrow from A to B means skill A can, under some circumstances, invoke skill B.
 
 A skill that invokes one or more other skills must declare those invocations in its `SKILL.md` frontmatter using the `invokes` key — a YAML inline list of skill names (for example, `invokes: [SkillA, SkillB]`). A skill with no invocations omits the key entirely. This structured frontmatter declaration is the sole authoritative source of invocation relationships: the `repo-checks.py` and `mechanical-checks.py` scripts read `invokes` directly from the frontmatter. Parsing free text or natural language for invocation detection is prohibited.
 
@@ -83,7 +83,7 @@ Skills must not refer to the rules in this file by their numbers. The set of rul
 
 ## Rule 10: Hashing and caching of slow checks
 
-Whenever a skill performs a check that is potentially slow or token-consuming — one that requires an agentic runner to read files and exercise judgment — and the outcome of that check is fully determined by a fixed set of files, the skill must use the hashing and caching technique documented in `.ai/CACHING.md`: a provided Python script computes the fingerprint of the check's input set before the check runs, the check is skipped entirely when a cache entry for that fingerprint exists, and a passing verdict writes the cache entry so the next unchanged run is skipped.
+Whenever a skill performs a check that is potentially slow or token-consuming — one that requires an agentic runner to read files and exercise judgment — and the outcome of that check is fully determined by a fixed set of files, the skill must use the hashing and caching technique documented in `.theloop/CACHING.md`: a provided Python script computes the fingerprint of the check's input set before the check runs, the check is skipped entirely when a cache entry for that fingerprint exists, and a passing verdict writes the cache entry so the next unchanged run is skipped.
 
 The fingerprint must be computed by the skill's provided Python script, never reproduced inline by an agentic runner. The scripts are the single source of truth: because every agent uses the same script, they produce identical fingerprints for identical content, and cache entries are shared across agents and sessions automatically.
 

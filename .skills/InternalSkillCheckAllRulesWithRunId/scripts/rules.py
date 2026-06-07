@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check the rule registry and enumerate rules, per .ai/RULE-FILES.md."""
+"""Check the rule registry and enumerate rules, per .theloop/RULE-FILES.md."""
 import json
 import os
 import subprocess

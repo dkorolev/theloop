@@ -1,6 +1,6 @@
 ---
 name: InternalSkillCheckGhRepoAccessWithRunId
-description: Checks that the GitHub CLI (`gh`) is installed, authenticated, and can access the repository URL in `.ai/repo.txt`, and ensures the `theloop` label exists for bugs and pull requests. Use when verifying GitHub access before PR workflows, when `gh` commands fail, or when the user asks to confirm repository connectivity.
+description: Checks that the GitHub CLI (`gh`) is installed, authenticated, and can access the repository URL in `.theloop/repo.txt`, and ensures the `theloop` label exists for bugs and pull requests. Use when verifying GitHub access before PR workflows, when `gh` commands fail, or when the user asks to confirm repository connectivity.
 argument-hint: <SkillRunId>
 ---
 
@@ -20,14 +20,14 @@ If the parameter is missing, or extra parameters are passed, stop and report an 
 
 ## Required configuration
 
-This skill requires `.ai/repo.txt`: a single-line text file under `.ai/` containing the GitHub repository URL that this project must access (for example, `https://github.com/owner/repo`). If the file is missing or empty, the skill reports that the target repository is not configured and does not attempt repository access checks.
+This skill requires `.theloop/repo.txt`: a single-line text file under `.theloop/` containing the GitHub repository URL that this project must access (for example, `https://github.com/owner/repo`). If the file is missing or empty, the skill reports that the target repository is not configured and does not attempt repository access checks.
 
 ## Steps
 
 All scripts under `.skills/InternalSkillCheckGhRepoAccessWithRunId/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
 
 1. **Run the checks.** Run `.skills/InternalSkillCheckGhRepoAccessWithRunId/scripts/check.py` from the repository root. The script prints a JSON object with `repo_url`, a `checks` array, and an `actions` array (side effects such as a label that was created), and exits non-zero when at least one check fails. The checks are:
-   - `repo-config` — `.ai/repo.txt` exists and contains a recognizable GitHub repository URL;
+   - `repo-config` — `.theloop/repo.txt` exists and contains a recognizable GitHub repository URL;
    - `gh-installed` — the `gh` command is available on `PATH`; on failure, the check's `suggestion` tells the user to install the GitHub CLI;
    - `gh-authenticated` — `gh auth status` succeeds; on failure, the check's `suggestion` tells the user to run `gh auth login`;
    - `gh-repo-access` — `gh repo view` succeeds for the configured repository; skipped when earlier checks fail;
@@ -36,7 +36,7 @@ All scripts under `.skills/InternalSkillCheckGhRepoAccessWithRunId/scripts/` are
 
 2. **Report.** Tell the user the verdict in plain English:
    - when every check passes or is skipped, GitHub CLI access is ready for the configured repository and the `theloop` label is present;
-   - when `.ai/repo.txt` is missing or invalid, warn clearly that the target repository is not configured for this project and relay the `repo-config` suggestion;
+   - when `.theloop/repo.txt` is missing or invalid, warn clearly that the target repository is not configured for this project and relay the `repo-config` suggestion;
    - when `gh` is not installed, relay the `gh-installed` suggestion;
    - when `gh` is not authenticated, relay the `gh-authenticated` suggestion;
    - when repository access, label, or pull checks fail, relay their `detail` and `suggestion` fields;
@@ -53,7 +53,7 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
   "skill_run_id": "string — the SkillRunId parameter, verbatim",
   "skill": "InternalSkillCheckGhRepoAccessWithRunId",
   "status": "pass | fail | error",
-  "repo_url": "string|null — the URL read from .ai/repo.txt, or null when unavailable",
+  "repo_url": "string|null — the URL read from .theloop/repo.txt, or null when unavailable",
   "checks": [
     {
       "check": "repo-config | gh-installed | gh-authenticated | gh-repo-access | gh-label-theloop | gh-repo-pull",
