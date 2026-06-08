@@ -23,19 +23,20 @@ from typing import NoReturn
 
 # (development name in THELOOP_ROOT/.skills, client-facing name in the target)
 BUNDLE = [
-    ("IssueWhatWeJustDiscussed", "IssueWhatWeJustDiscussed"),
-    ("MakePRForIssue", "MakePRForIssue"),
-    ("ImplementWhatWeJustDiscussed", "ImplementWhatWeJustDiscussed"),
+    ("theloop-makeissue", "theloop-makeissue"),
+    ("theloop-fixissue", "theloop-fixissue"),
+    ("theloop-buildthis", "theloop-buildthis"),
     ("InternalSkillCheckGhRepoAccessWithRunId", "InternalSkillCheckGhRepoAccessWithRunId"),
-    ("PreCommitSkillForClientRepos", "PreCommitSkill"),
-    ("ConfigureTheLoopForClientRepos", "ConfigureTheLoop"),
+    ("PreCommitSkillForClientRepos", "theloop-precommit"),
+    ("ConfigureTheLoopForClientRepos", "theloop-post-setuprepo"),
     ("InternalSkillPreCommitForClientWithRunId", "InternalSkillPreCommitForClientWithRunId"),
 ]
 
 # Longest names first so a name is never a prefix of another during replacement.
 NAME_REWRITES = [
-    ("ConfigureTheLoopForClientRepos", "ConfigureTheLoop"),
-    ("PreCommitSkillForClientRepos", "PreCommitSkill"),
+    ("ConfigureTheLoopForClientRepos", "theloop-post-setuprepo"),
+    ("PreCommitSkillForClientRepos", "theloop-precommit"),
+    ("PreCommitSkill", "theloop-precommit"),
 ]
 
 AGENT_DIRS = [".cursor", ".claude", ".codex", ".agents"]

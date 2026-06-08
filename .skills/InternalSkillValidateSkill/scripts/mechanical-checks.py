@@ -101,7 +101,7 @@ def main():
     add(RULE_BY_NAME, "no-rule-numbers", number_ref is None,
         f'{path} refers to a rule by number ("{number_ref.group(0)}")' if number_ref else None)
 
-    for owner, script in sorted(set(re.findall(r"\.skills/(\w+)/scripts/([\w.-]+\.(?:py|sh))", body))):
+    for owner, script in sorted(set(re.findall(r"\.skills/([\w-]+)/scripts/([\w.-]+\.(?:py|sh))", body))):
         add(RULE_SCRIPTS, f"script-exists-{script}",
             os.path.isfile(f".skills/{owner}/scripts/{script}"),
             f"{path} references .skills/{owner}/scripts/{script}, which does not exist")

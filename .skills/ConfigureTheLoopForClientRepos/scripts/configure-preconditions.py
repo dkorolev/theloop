@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check whether ConfigureTheLoop is allowed to run in this repository.
+"""Check whether theloop-post-setuprepo is allowed to run in this repository.
 
 Usage: .skills/ConfigureTheLoopForClientRepos/scripts/configure-preconditions.py
        (from the repository root)
@@ -30,7 +30,7 @@ def refuse(reason, detail):
 def main():
     if os.path.exists(DONE):
         return refuse("already-configured",
-                      f"{DONE} exists; ConfigureTheLoop runs at most once per clone")
+                      f"{DONE} exists; theloop-post-setuprepo runs at most once per clone")
     if not os.path.exists(THELOOPIFIED):
         return refuse("not-theloopified",
                       f"{THELOOPIFIED} is absent; run theloopify on this repository first")

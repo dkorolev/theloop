@@ -39,7 +39,7 @@ The scripts under `.skills/ConfigureTheLoopForClientRepos/scripts/` are executab
 6. **Flip the configuration gate.** Run `.skills/ConfigureTheLoopForClientRepos/scripts/mark-configured.py` from the repository root (optionally with `--summary "one line"`). It writes `.theloop/configure_the_loop.done` and removes `.theloop/must_run_configure_the_loop.txt`, so the other workflow skills become available. If this step fails — for any reason — leave the repository unconfigured: do not retry by hand, report the failure, write the run receipt with `"status": "fail"`, and stop so the user can rerun this skill.
 
 7. **Final report.** Tell the user:
-   - That configuration is complete and the workflow skills (`IssueWhatWeJustDiscussed`, `MakePRForIssue`, `ImplementWhatWeJustDiscussed`, `PreCommitSkill`) are now available;
+   - That configuration is complete and the workflow skills (`theloop-makeissue`, `theloop-fixissue`, `theloop-buildthis`, `PreCommitSkill`) are now available;
    - The path of the `PRECOMMIT.md` written and the checks it now contains;
    - The `SkillRunId` of this run.
 

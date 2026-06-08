@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Stage all changes except the paths listed in .theloop/do_not_commit.txt.
 
-Usage: .skills/MakePRForIssue/scripts/stage-allowed.py   (from the repository root)
+Usage: .skills/theloop-buildthis/scripts/stage-allowed.py   (from the repository root)
 
 Runs `git add -A`, then unstages every path listed in .theloop/do_not_commit.txt
 (plain paths, one per line; blank lines and lines starting with # are ignored).

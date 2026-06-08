@@ -39,12 +39,12 @@ contains "$WORK/.theloop/repo.txt" "github.com/example/client"
 contains "$WORK/.theloop/do_not_commit.txt" ".theloop/"
 contains "$WORK/.theloop/do_not_commit.txt" "tmp/"
 contains "$WORK/.gitignore" "tmp/"
-# PRECOMMIT.md is owned by ConfigureTheLoop, not theloopify:
+# PRECOMMIT.md is owned by theloop-post-setuprepo, not theloopify:
 missing "$WORK/PRECOMMIT.md"
 
 # --- the seven bundled skills, under client-facing names --------------------
-for s in IssueWhatWeJustDiscussed MakePRForIssue ImplementWhatWeJustDiscussed \
-         InternalSkillCheckGhRepoAccessWithRunId PreCommitSkill ConfigureTheLoop \
+for s in theloop-makeissue theloop-fixissue theloop-buildthis \
+         InternalSkillCheckGhRepoAccessWithRunId theloop-precommit theloop-post-setuprepo \
          InternalSkillPreCommitForClientWithRunId; do
   have "$WORK/.theloop/skills/$s/SKILL.md"
 done
@@ -58,23 +58,23 @@ missing "$WORK/.theloop/skills/InternalSkillPreCommitSkillWithRunId"
 missing "$WORK/.skills"
 
 # --- install-name renames inside the copied files --------------------------
-contains "$WORK/.theloop/skills/PreCommitSkill/SKILL.md" "name: PreCommitSkill"
-absent   "$WORK/.theloop/skills/PreCommitSkill/SKILL.md" "ForClientRepos"
-contains "$WORK/.theloop/skills/ConfigureTheLoop/SKILL.md" "name: ConfigureTheLoop"
-absent   "$WORK/.theloop/skills/ConfigureTheLoop/SKILL.md" "ForClientRepos"
-contains "$WORK/.theloop/skills/ConfigureTheLoop/scripts/write-receipt.py" 'SKILL = "ConfigureTheLoop"'
+contains "$WORK/.theloop/skills/theloop-precommit/SKILL.md" "name: theloop-precommit"
+absent   "$WORK/.theloop/skills/theloop-precommit/SKILL.md" "ForClientRepos"
+contains "$WORK/.theloop/skills/theloop-post-setuprepo/SKILL.md" "name: theloop-post-setuprepo"
+absent   "$WORK/.theloop/skills/theloop-post-setuprepo/SKILL.md" "ForClientRepos"
+contains "$WORK/.theloop/skills/theloop-post-setuprepo/scripts/write-receipt.py" 'SKILL = "theloop-post-setuprepo"'
 
 # --- path rewriting: .skills/ -> .theloop/skills/ everywhere ----------------
 if grep -rIl '\.skills/' "$WORK/.theloop/skills" >/dev/null 2>&1; then
   fail "copied skills still reference .skills/ (should be .theloop/skills/)"
 fi
-contains "$WORK/.theloop/skills/MakePRForIssue/SKILL.md" ".theloop/skills/MakePRForIssue/scripts/"
+contains "$WORK/.theloop/skills/theloop-fixissue/SKILL.md" ".theloop/skills/theloop-fixissue/scripts/"
 
 # --- agent symlinks ---------------------------------------------------------
 for agent in .cursor .claude .codex .agents; do
-  link="$WORK/$agent/skills/MakePRForIssue"
-  [ -L "$link" ] || fail "$agent/skills/MakePRForIssue is not a symlink"
-  [ -f "$link/SKILL.md" ] || fail "$agent/skills/MakePRForIssue does not resolve to a skill"
+  link="$WORK/$agent/skills/theloop-fixissue"
+  [ -L "$link" ] || fail "$agent/skills/theloop-fixissue is not a symlink"
+  [ -f "$link/SKILL.md" ] || fail "$agent/skills/theloop-fixissue does not resolve to a skill"
 done
 
 # --- idempotency: a second run must fail ------------------------------------

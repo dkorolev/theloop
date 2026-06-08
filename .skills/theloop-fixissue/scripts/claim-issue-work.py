@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Post a MakePRForIssue work claim on a GitHub issue and detect duplicate claims.
+"""Post a theloop-fixissue work claim on a GitHub issue and detect duplicate claims.
 
 Usage (from the repository root):
   claim-issue-work.py --issue-number N
 
-Posts a comment that the issue was taken into work by MakePRForIssue, then scans
+Posts a comment that the issue was taken into work by theloop-fixissue, then scans
 other issue comments for the same claim. When another comment already claims the
 issue, edits the new comment to strike out the claim and append a retraction.
 
@@ -21,7 +21,7 @@ import sys
 from typing import NoReturn
 
 REPO_FILE = os.path.join(".theloop", "repo.txt")
-CLAIM_BODY = "Taken into work by **MakePRForIssue**."
+CLAIM_BODY = "Taken into work by **theloop-fixissue**."
 RETRACTION_LINE = "Nevermind; already in the works."
 
 

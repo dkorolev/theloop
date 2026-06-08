@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Check whether this repository has completed ConfigureTheLoop.
+"""Check whether this repository has completed theloop-post-setuprepo.
 
-Usage: .skills/IssueWhatWeJustDiscussed/scripts/check-configured.py   (from the repository root)
+Usage: .skills/theloop-fixissue/scripts/check-configured.py   (from the repository root)
 
 The gate keys off the positive marker .theloop/configure_the_loop.done, never the
 mere absence of the pending marker, so deleting the pending marker cannot bypass it.
@@ -9,7 +9,7 @@ mere absence of the pending marker, so deleting the pending marker cannot bypass
 - .theloop/theloopified absent  -> this is not a theloopified client repo (for example
   the theloop development repo); the gate does not apply and reports configured.
 - .theloop/configure_the_loop.done present -> configured.
-- otherwise -> not configured: the user must run ConfigureTheLoop first.
+- otherwise -> not configured: the user must run theloop-post-setuprepo first.
 
 Output: a JSON object {"configured", "applicable", "detail"} on stdout.
 Exit code: 0 when configured (or not applicable), 1 when configuration is pending.
@@ -36,7 +36,7 @@ def main():
     print(json.dumps({
         "configured": False,
         "applicable": True,
-        "detail": "configuration is pending: run ConfigureTheLoop before any other workflow skill",
+        "detail": "configuration is pending: run theloop-post-setuprepo before any other workflow skill",
     }, indent=2))
     return 1
 

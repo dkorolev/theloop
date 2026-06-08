@@ -12,12 +12,12 @@ This file lives at `.theloop/VIZ.md`, under the `.theloop/` directory in the roo
 | [`InternalSkillCheckAllRulesWithRunId`](../.skills/InternalSkillCheckAllRulesWithRunId/SKILL.md) | Meta-skill that checks all directory rules listed in `ai-rules.yml` by fanning out subagents to invoke `InternalSkillCheckSingleRuleWithRunId` once per rule. |
 | [`InternalSkillPreCommitSkillWithRunId`](../.skills/InternalSkillPreCommitSkillWithRunId/SKILL.md) | Meta-skill that performs the pre-commit gate under a caller-supplied `SkillRunId`: receipt-hygiene checks, directory rules via `InternalSkillCheckAllRulesWithRunId`, optional `PRECOMMIT.md` checks, then `InternalSkillValidateAllSkills` for full compliance. |
 | [`PreCommitSkill`](../.skills/PreCommitSkill/SKILL.md) | Meta-skill that gates a commit to this repository: takes no parameters, generates a fresh `SkillRunId` in the default format, and delegates to `InternalSkillPreCommitSkillWithRunId`. |
-| [`ImplementWhatWeJustDiscussed`](../.skills/ImplementWhatWeJustDiscussed/SKILL.md) | Summarizes the current conversation to extract the feature request, implements the feature with a design document, then invokes `PreCommitSkill` and iterates on any failures until all pre-commit checks pass. |
+| [`theloop-buildthis`](../.skills/theloop-buildthis/SKILL.md) | Summarizes the current conversation to extract the feature request, implements the feature with a design document, then invokes `PreCommitSkill` and iterates on any failures until all pre-commit checks pass. |
 | [`InternalSkillCheckGhRepoAccessWithRunId`](../.skills/InternalSkillCheckGhRepoAccessWithRunId/SKILL.md) | Checks that the GitHub CLI (`gh`) is installed, authenticated, and can access the repository URL in `.theloop/repo.txt`, ensures Issues are enabled on the repository, and ensures the `theloop` label exists for bugs and pull requests. |
-| [`IssueWhatWeJustDiscussed`](../.skills/IssueWhatWeJustDiscussed/SKILL.md) | Summarizes the current conversation into a feature specification, clarifies with the human until the picture is clear, then creates a GitHub issue tagged with `theloop`. |
-| [`MakePRForIssue`](../.skills/MakePRForIssue/SKILL.md) | Implements a GitHub issue as a pull request: unique branch, feature implementation, `PreCommitSkill`, commit, `theloop`-labeled PR, and issue journal comments. |
-| [`ConfigureTheLoopForClientRepos`](../.skills/ConfigureTheLoopForClientRepos/SKILL.md) | One-time agentic setup for a theloop client repository: analyzes docs, tooling, and CI gates, authors a free-form `PRECOMMIT.md`, and flips the configuration gate. Installed in clients as `ConfigureTheLoop`. |
-| [`PreCommitSkillForClientRepos`](../.skills/PreCommitSkillForClientRepos/SKILL.md) | Parameterless pre-commit gate for a theloop client repository: checks the configuration gate, generates a `SkillRunId`, and delegates to `InternalSkillPreCommitForClientWithRunId`. Installed in clients as `PreCommitSkill`. |
+| [`theloop-makeissue`](../.skills/theloop-makeissue/SKILL.md) | Summarizes the current conversation into a feature specification, clarifies with the human until the picture is clear, then creates a GitHub issue tagged with `theloop`. |
+| [`theloop-fixissue`](../.skills/theloop-fixissue/SKILL.md) | Implements a GitHub issue as a pull request: unique branch, feature implementation, `PreCommitSkill`, commit, `theloop`-labeled PR, and issue journal comments. |
+| [`ConfigureTheLoopForClientRepos`](../.skills/ConfigureTheLoopForClientRepos/SKILL.md) | One-time agentic setup for a theloop client repository: analyzes docs, tooling, and CI gates, authors a free-form `PRECOMMIT.md`, and flips the configuration gate. Installed in clients as `theloop-post-setuprepo`. |
+| [`PreCommitSkillForClientRepos`](../.skills/PreCommitSkillForClientRepos/SKILL.md) | Parameterless pre-commit gate for a theloop client repository: checks the configuration gate, generates a `SkillRunId`, and delegates to `InternalSkillPreCommitForClientWithRunId`. Installed in clients as `theloop-precommit`. |
 | [`InternalSkillPreCommitForClientWithRunId`](../.skills/InternalSkillPreCommitForClientWithRunId/SKILL.md) | Slim client-repo pre-commit gate under a caller-supplied `SkillRunId`: receipt hygiene plus the checks described in a free-form `PRECOMMIT.md`, with no directory rules or skill validation. |
 
 ## SkillInvocations
@@ -29,10 +29,10 @@ This file lives at `.theloop/VIZ.md`, under the `.theloop/` directory in the roo
 | `InternalSkillPreCommitSkillWithRunId` | `InternalSkillValidateAllSkills` |
 | `InternalSkillCheckAllRulesWithRunId` | `InternalSkillCheckSingleRuleWithRunId` |
 | `InternalSkillValidateAllSkills` | `InternalSkillValidateSkill` |
-| `ImplementWhatWeJustDiscussed` | `PreCommitSkill` |
-| `IssueWhatWeJustDiscussed` | `InternalSkillCheckGhRepoAccessWithRunId` |
-| `MakePRForIssue` | `InternalSkillCheckGhRepoAccessWithRunId` |
-| `MakePRForIssue` | `PreCommitSkill` |
+| `theloop-buildthis` | `PreCommitSkill` |
+| `theloop-makeissue` | `InternalSkillCheckGhRepoAccessWithRunId` |
+| `theloop-fixissue` | `InternalSkillCheckGhRepoAccessWithRunId` |
+| `theloop-fixissue` | `PreCommitSkill` |
 | `PreCommitSkillForClientRepos` | `InternalSkillPreCommitForClientWithRunId` |
 
 ## Diagram
@@ -42,10 +42,10 @@ An arrow from A to B means skill A can, under some circumstances, invoke skill B
 ```mermaid
 graph TD
     InternalSkillCheckGhRepoAccessWithRunId["InternalSkillCheckGhRepoAccessWithRunId"]
-    IssueWhatWeJustDiscussed["IssueWhatWeJustDiscussed"] --> InternalSkillCheckGhRepoAccessWithRunId
-    MakePRForIssue["MakePRForIssue"] --> InternalSkillCheckGhRepoAccessWithRunId
-    MakePRForIssue --> PreCommitSkill["PreCommitSkill"]
-    ImplementWhatWeJustDiscussed["ImplementWhatWeJustDiscussed"] --> PreCommitSkill["PreCommitSkill"]
+    theloop-makeissue["theloop-makeissue"] --> InternalSkillCheckGhRepoAccessWithRunId
+    theloop-fixissue["theloop-fixissue"] --> InternalSkillCheckGhRepoAccessWithRunId
+    theloop-fixissue --> PreCommitSkill["PreCommitSkill"]
+    theloop-buildthis["theloop-buildthis"] --> PreCommitSkill["PreCommitSkill"]
     PreCommitSkill --> InternalSkillPreCommitSkillWithRunId["InternalSkillPreCommitSkillWithRunId"]
     InternalSkillPreCommitSkillWithRunId --> InternalSkillCheckAllRulesWithRunId["InternalSkillCheckAllRulesWithRunId"]
     InternalSkillPreCommitSkillWithRunId --> InternalSkillValidateAllSkills["InternalSkillValidateAllSkills"]

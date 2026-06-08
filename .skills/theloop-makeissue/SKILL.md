@@ -1,10 +1,10 @@
 ---
-name: IssueWhatWeJustDiscussed
+name: theloop-makeissue
 description: Summarizes the current conversation into a complete feature description, asks the human for clarifications until the picture is clear, verifies GitHub CLI access, then creates a GitHub issue tagged with theloop. Use when the user wants to capture a feature discussion as a tracked issue, file a feature request from a design conversation, or turn what was just discussed into a GitHub issue.
 invokes: [InternalSkillCheckGhRepoAccessWithRunId]
 ---
 
-# IssueWhatWeJustDiscussed
+# theloop-makeissue
 
 Per the rule on run receipts, this is the exceptional skill that does not take the `SkillRunId` parameter — it is invoked by a human at the end of a design discussion, where a caller-supplied identifier would serve no purpose. It generates a fresh `SkillRunId` of its own and writes its own run receipt.
 
@@ -16,9 +16,9 @@ This skill takes no parameters. If any parameters are passed, stop immediately a
 
 ## Steps
 
-The Python scripts under `.skills/IssueWhatWeJustDiscussed/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
+The Python scripts under `.skills/theloop-makeissue/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
 
-1. **Check the configuration gate, then generate the run identifier.** First run `.skills/IssueWhatWeJustDiscussed/scripts/check-configured.py` from the repository root. If it exits non-zero (the repository has been theloopified but `ConfigureTheLoop` has not completed), stop immediately: tell the user they must run `ConfigureTheLoop` before capturing an issue, and do not generate an identifier. When it reports configured — including the not-applicable case in a non-theloopified repository, such as the theloop repository itself — continue. Then run `.skills/IssueWhatWeJustDiscussed/scripts/new-run-id.sh` from the repository root: it prints a fresh `SkillRunId` in the default format codified in the rule on run receipts, `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}` — the local date and time at which the run started, followed by six random lowercase Latin letters (for example, `20260607-153012-kqzwxy`). Tell the user which identifier was generated. Then confirm that `tmp/<SkillRunId>.json` does not already exist; if it does, stop immediately and report an error without touching the file.
+1. **Check the configuration gate, then generate the run identifier.** First run `.skills/theloop-makeissue/scripts/check-configured.py` from the repository root. If it exits non-zero (the repository has been theloopified but `theloop-post-setuprepo` has not completed), stop immediately: tell the user they must run `theloop-post-setuprepo` before capturing an issue, and do not generate an identifier. When it reports configured — including the not-applicable case in a non-theloopified repository, such as the theloop repository itself — continue. Then run `.skills/theloop-makeissue/scripts/new-run-id.sh` from the repository root: it prints a fresh `SkillRunId` in the default format codified in the rule on run receipts, `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}` — the local date and time at which the run started, followed by six random lowercase Latin letters (for example, `20260607-153012-kqzwxy`). Tell the user which identifier was generated. Then confirm that `tmp/<SkillRunId>.json` does not already exist; if it does, stop immediately and report an error without touching the file.
 
 2. **Verify GitHub access.** Invoke the `InternalSkillCheckGhRepoAccessWithRunId` skill with exactly one parameter: the sub-run identifier `<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId`. Invoke it through the configured skill runner if one is available; otherwise execute it by reading `.skills/InternalSkillCheckGhRepoAccessWithRunId/SKILL.md` and following its instructions literally. Read the sub-run receipt at `tmp/<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId.json`. If its `status` is not `"pass"`, relay every failing check and its remediation suggestion to the user, write the run receipt with `"status": "fail"`, and stop without creating an issue.
 
@@ -54,16 +54,16 @@ The Python scripts under `.skills/IssueWhatWeJustDiscussed/scripts/` are executa
 
    Present the draft specification to the user and ask whether it accurately captures what should be built. If they request changes, revise the draft and ask again. Do not proceed until the user confirms the specification is correct.
 
-6. **Create the GitHub issue.** Save the confirmed specification to `tmp/<SkillRunId>-issue-body.md` in the repository. Derive a concise issue title from the feature (the `#` heading in the specification, without the leading `#`). Run `.skills/IssueWhatWeJustDiscussed/scripts/create-issue.py` from the repository root with CLI flags `--title TITLE` and `--body-file tmp/<SkillRunId>-issue-body.md`. The script reads the repository URL from `.theloop/repo.txt`, creates an issue with the `theloop` label, and prints a JSON object with `issue_number` and `issue_url`. If the script exits non-zero, relay the error to the user, write the run receipt with `"status": "fail"`, and stop.
+6. **Create the GitHub issue.** Save the confirmed specification to `tmp/<SkillRunId>-issue-body.md` in the repository. Derive a concise issue title from the feature (the `#` heading in the specification, without the leading `#`). Run `.skills/theloop-makeissue/scripts/create-issue.py` from the repository root with CLI flags `--title TITLE` and `--body-file tmp/<SkillRunId>-issue-body.md`. The script reads the repository URL from `.theloop/repo.txt`, creates an issue with the `theloop` label, and prints a JSON object with `issue_number` and `issue_url`. If the script exits non-zero, relay the error to the user, write the run receipt with `"status": "fail"`, and stop.
 
 7. **Final report.** Tell the user:
    - That the GitHub issue was created successfully
    - The issue number (ID) and the full issue URL — both prominently, on their own lines
    - A one-sentence summary of the feature captured in the issue
    - The `SkillRunId` of this run
-   - That they can implement the feature and open a pull request by running `/MakePRForIssue <issue_number>` (substitute the issue number just created)
+   - That they can implement the feature and open a pull request by running `/theloop-fixissue <issue_number>` (substitute the issue number just created)
 
-8. **Write the run receipt** by calling `.skills/IssueWhatWeJustDiscussed/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--status pass|fail|error`; when status is `pass`: `--feature-title TITLE`, `--feature-summary TEXT`, `--issue-number N`, `--issue-url URL`, `--gh-check-sub-run-id ID`; when status is `fail`: `--gh-check-sub-run-id ID` if the GitHub access sub-run completed, plus any of `--issue-number` and `--issue-url` if an issue was partially created; when status is `error`: `--error TEXT`. The script validates the schema and refuses to overwrite an existing receipt.
+8. **Write the run receipt** by calling `.skills/theloop-makeissue/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--status pass|fail|error`; when status is `pass`: `--feature-title TITLE`, `--feature-summary TEXT`, `--issue-number N`, `--issue-url URL`, `--gh-check-sub-run-id ID`; when status is `fail`: `--gh-check-sub-run-id ID` if the GitHub access sub-run completed, plus any of `--issue-number` and `--issue-url` if an issue was partially created; when status is `error`: `--error TEXT`. The script validates the schema and refuses to overwrite an existing receipt.
 
 ## Run receipt schema
 
@@ -72,7 +72,7 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
 ```json
 {
   "skill_run_id": "string — the generated SkillRunId",
-  "skill": "IssueWhatWeJustDiscussed",
+  "skill": "theloop-makeissue",
   "status": "pass | fail | error",
   "feature_title": "string|null — the issue title, null when status is error",
   "feature_summary": "string|null — one-sentence summary of the feature, null when status is error",

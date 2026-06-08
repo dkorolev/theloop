@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and write the run receipt of ImplementWhatWeJustDiscussed, write-once.
+"""Validate and write the run receipt of theloop-buildthis, write-once.
 
 Usage (CLI — preferred):
   write-receipt.py --skill-run-id ID --status pass|fail \
@@ -22,7 +22,7 @@ import re
 import sys
 from typing import NoReturn
 
-SKILL = "ImplementWhatWeJustDiscussed"
+SKILL = "theloop-buildthis"
 FIELDS = {
     "skill_run_id", "skill", "status",
     "feature_summary", "feature_doc_path",

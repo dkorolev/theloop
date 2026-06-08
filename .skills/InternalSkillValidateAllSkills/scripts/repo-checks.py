@@ -57,21 +57,21 @@ def main():
 
     skills_md = open("SKILLS.md").read()
     compare(RULE_SKILLS_MD, "SKILLS.md",
-            set(re.findall(r"^\|\s*\[`(\w+)`\]", skills_md, re.M)), skill_set, name)
+            set(re.findall(r"^\|\s*\[`([\w-]+)`\]", skills_md, re.M)), skill_set, name)
 
     viz = open(os.path.join(".theloop", "VIZ.md")).read()
     compare(RULE_VIZ, "the Skills table of .theloop/VIZ.md",
-            set(re.findall(r"^\|\s*\[`(\w+)`\]", viz, re.M)), skill_set, name)
+            set(re.findall(r"^\|\s*\[`([\w-]+)`\]", viz, re.M)), skill_set, name)
     compare(RULE_VIZ, "the SkillInvocations table of .theloop/VIZ.md",
-            set(re.findall(r"^\|\s*`(\w+)`\s*\|\s*`(\w+)`\s*\|", viz, re.M)), edges, edge)
+            set(re.findall(r"^\|\s*`([\w-]+)`\s*\|\s*`([\w-]+)`\s*\|", viz, re.M)), edges, edge)
 
     diagram = re.search(r"```mermaid\n(.*?)```", viz, re.S)
     if not diagram:
         violations.append({"rule": RULE_VIZ, "detail": ".theloop/VIZ.md contains no Mermaid diagram"})
     else:
         body = diagram.group(1)
-        mermaid_edges = set(re.findall(r"(\w+)(?:\[[^\]]*\])?\s*-->\s*(\w+)", body))
-        mermaid_nodes = {node for pair in mermaid_edges for node in pair} | set(re.findall(r"^\s*(\w+)\[", body, re.M))
+        mermaid_edges = set(re.findall(r"([\w-]+)(?:\[[^\]]*\])?\s*-->\s*([\w-]+)", body))
+        mermaid_nodes = {node for pair in mermaid_edges for node in pair} | set(re.findall(r"^\s*([\w-]+)\[", body, re.M))
         compare(RULE_VIZ, "the Mermaid diagram of .theloop/VIZ.md", mermaid_nodes, skill_set, name)
         compare(RULE_VIZ, "the Mermaid diagram of .theloop/VIZ.md", mermaid_edges, edges, edge)
 

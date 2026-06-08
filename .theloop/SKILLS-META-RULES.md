@@ -113,4 +113,4 @@ Skills that take `SkillRunId` as a parameter are orchestration sub-skills: they 
 
 Skills that do not take `SkillRunId` — including the exceptional skills that generate a `SkillRunId` themselves rather than receiving one from a caller — are the user-facing entry points and must not use the `InternalSkill` prefix.
 
-The prefix exists because slash-command menus surface skills by name; keeping internal `SkillRunId`-parameterized skills behind `InternalSkill` leaves discoverable names (`PreCommitSkill`, `ImplementWhatWeJustDiscussed`, and future user-facing skills) uncluttered by sub-skills the user should never invoke directly.
+The prefix exists because slash-command menus surface skills by name; keeping internal `SkillRunId`-parameterized skills behind `InternalSkill` leaves discoverable names (`PreCommitSkill`, `theloop-buildthis`, and future user-facing skills) uncluttered by sub-skills the user should never invoke directly.

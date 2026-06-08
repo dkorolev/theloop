@@ -1,11 +1,11 @@
 ---
-name: MakePRForIssue
-description: Implements a GitHub issue as a pull request. Takes an issue number, verifies GitHub CLI access, chooses a unique branch name, implements the feature from the issue spec, runs PreCommitSkill until it passes, commits, opens a theloop-labeled PR, and journals progress as comments on the issue. Use when the user runs MakePRForIssue with an issue index, wants to implement a filed feature request, or follow up after IssueWhatWeJustDiscussed.
+name: theloop-fixissue
+description: Implements a GitHub issue as a pull request. Takes an issue number, verifies GitHub CLI access, chooses a unique branch name, implements the feature from the issue spec, runs PreCommitSkill until it passes, commits, opens a theloop-labeled PR, and journals progress as comments on the issue. Use when the user runs theloop-fixissue with an issue index, wants to implement a filed feature request, or follow up after theloop-makeissue.
 argument-hint: <IssueIndex>
 invokes: [InternalSkillCheckGhRepoAccessWithRunId, PreCommitSkill]
 ---
 
-# MakePRForIssue
+# theloop-fixissue
 
 Per the rule on run receipts, this is the exceptional skill that does not take the `SkillRunId` parameter — it is invoked by a human with a GitHub issue number, where a caller-supplied run identifier would serve no purpose. It generates a fresh `SkillRunId` of its own and writes its own run receipt.
 
@@ -15,13 +15,13 @@ Running this skill is an operation fully contained within the directory of this 
 
 This skill takes exactly one parameter:
 
-1. `IssueIndex` — the GitHub issue number to implement (a positive integer, as shown in the issue URL or returned by `IssueWhatWeJustDiscussed`).
+1. `IssueIndex` — the GitHub issue number to implement (a positive integer, as shown in the issue URL or returned by `theloop-makeissue`).
 
 If the parameter is missing, if extra parameters are passed, or if `IssueIndex` is not a positive integer, stop immediately and report an error.
 
 ## Journal
 
-Throughout this run, record progress on the GitHub issue by posting comments via `.skills/MakePRForIssue/scripts/issue-comment.py`. Each comment is prefixed automatically with **`theloop journal`** so the timeline stays readable. Post a journal entry at every milestone below — do not skip steps:
+Throughout this run, record progress on the GitHub issue by posting comments via `.skills/theloop-fixissue/scripts/issue-comment.py`. Each comment is prefixed automatically with **`theloop journal`** so the timeline stays readable. Post a journal entry at every milestone below — do not skip steps:
 
 | When | Comment text (adapt placeholders) |
 |------|-----------------------------------|
@@ -41,20 +41,20 @@ Do **not** invoke sub-skills via the Skill tool runner. Execute each sub-skill *
 
 ## Steps
 
-The Python scripts under `.skills/MakePRForIssue/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
+The Python scripts under `.skills/theloop-fixissue/scripts/` are executable and begin with `#!/usr/bin/env python3`; run each one directly by path — never prefix it with `python` or `python3`.
 
-1. **Check the configuration gate, then generate the run identifier.** First run `.skills/MakePRForIssue/scripts/check-configured.py` from the repository root. If it exits non-zero (the repository has been theloopified but `ConfigureTheLoop` has not completed), stop immediately: tell the user they must run `ConfigureTheLoop` before implementing an issue, and do not generate an identifier. When it reports configured — including the not-applicable case in a non-theloopified repository, such as the theloop repository itself — continue. Then run `.skills/MakePRForIssue/scripts/new-run-id.sh` from the repository root: it prints a fresh `SkillRunId` in the default format codified in the rule on run receipts, `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}` — the local date and time at which the run started, followed by six random lowercase Latin letters (for example, `20260607-153012-kqzwxy`). Tell the user which identifier was generated. Then confirm that `tmp/<SkillRunId>.json` does not already exist; if it does, stop immediately and report an error without touching the file.
+1. **Check the configuration gate, then generate the run identifier.** First run `.skills/theloop-fixissue/scripts/check-configured.py` from the repository root. If it exits non-zero (the repository has been theloopified but `theloop-post-setuprepo` has not completed), stop immediately: tell the user they must run `theloop-post-setuprepo` before implementing an issue, and do not generate an identifier. When it reports configured — including the not-applicable case in a non-theloopified repository, such as the theloop repository itself — continue. Then run `.skills/theloop-fixissue/scripts/new-run-id.sh` from the repository root: it prints a fresh `SkillRunId` in the default format codified in the rule on run receipts, `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}` — the local date and time at which the run started, followed by six random lowercase Latin letters (for example, `20260607-153012-kqzwxy`). Tell the user which identifier was generated. Then confirm that `tmp/<SkillRunId>.json` does not already exist; if it does, stop immediately and report an error without touching the file.
 
 2. **Verify GitHub access.** Execute `InternalSkillCheckGhRepoAccessWithRunId` **inline** (see Sub-skill execution above): read `.skills/InternalSkillCheckGhRepoAccessWithRunId/SKILL.md` and follow it directly with exactly one parameter — the sub-run identifier `<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId`. Read the sub-run receipt at `tmp/<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId.json`. If its `status` is not `"pass"`, relay every failing check and its remediation suggestion to the user, write the run receipt with `"status": "fail"`, and stop.
    - When the check **passes**, immediately tell the user `GitHub access confirmed — loading Issue #<IssueIndex>` and **continue to step 3 without pausing**. Do not end the run here.
 
-3. **Load the issue.** Run `.skills/MakePRForIssue/scripts/fetch-issue.py --issue-number <IssueIndex>` from the repository root. The script prints a JSON object with `number`, `title`, `body`, `url`, and `labels`. If the issue does not exist or cannot be read, write the run receipt with `"status": "error"` and stop. Treat the issue `body` as the authoritative feature specification (the same Markdown structure written by `IssueWhatWeJustDiscussed`). Warn the user if the `theloop` label is missing, but continue unless the issue body is empty.
+3. **Load the issue.** Run `.skills/theloop-fixissue/scripts/fetch-issue.py --issue-number <IssueIndex>` from the repository root. The script prints a JSON object with `number`, `title`, `body`, `url`, and `labels`. If the issue does not exist or cannot be read, write the run receipt with `"status": "error"` and stop. Treat the issue `body` as the authoritative feature specification (the same Markdown structure written by `theloop-makeissue`). Warn the user if the `theloop` label is missing, but continue unless the issue body is empty.
 
-4. **Claim the issue.** Run `.skills/MakePRForIssue/scripts/claim-issue-work.py --issue-number <IssueIndex>` from the repository root. This must be the **first** action on the issue in this run — before choosing a branch or posting any journal comment. The script posts `Taken into work by **MakePRForIssue**.`, then immediately scans **other** issue comments for an existing "taken into work" claim (retracted comments — those containing `Nevermind; already in the works.` — do not count). If another claim exists, the script **edits** the comment it just posted: strike out the claim and append `Nevermind; already in the works.` Read the JSON output:
+4. **Claim the issue.** Run `.skills/theloop-fixissue/scripts/claim-issue-work.py --issue-number <IssueIndex>` from the repository root. This must be the **first** action on the issue in this run — before choosing a branch or posting any journal comment. The script posts `Taken into work by **theloop-fixissue**.`, then immediately scans **other** issue comments for an existing "taken into work" claim (retracted comments — those containing `Nevermind; already in the works.` — do not count). If another claim exists, the script **edits** the comment it just posted: strike out the claim and append `Nevermind; already in the works.` Read the JSON output:
    - When `"retracted": true`, tell the user the issue is already being worked on, write the run receipt with `"status": "fail"`, and **stop** — do not branch, implement, or open a PR.
    - When `"claimed": true`, continue.
 
-5. **Prepare the branch.** From the repository root, update the default branch: `git fetch origin` and check out a clean, up-to-date base (typically `main` or `master` — use whichever exists and tracks `origin`). Derive a short, memorable branch name from the issue title: lowercase, words separated by hyphens, no special characters, at most 40 characters (for example, `add-issue-pr-skill` for "Add MakePRForIssue skill"). If the first candidate is taken, append `-2`, `-3`, and so on until free. Run `.skills/MakePRForIssue/scripts/check-branch.py --branch <candidate>` for each candidate; the script exits 0 when the branch is available both locally and on the remote, and prints JSON with `"available": true`. When a name is free, run `git checkout -b <branch>`. Journal: post `started working; chose branch \`<branch>\`` via `issue-comment.py`.
+5. **Prepare the branch.** From the repository root, update the default branch: `git fetch origin` and check out a clean, up-to-date base (typically `main` or `master` — use whichever exists and tracks `origin`). Derive a short, memorable branch name from the issue title: lowercase, words separated by hyphens, no special characters, at most 40 characters (for example, `add-issue-pr-skill` for "Add theloop-fixissue skill"). If the first candidate is taken, append `-2`, `-3`, and so on until free. Run `.skills/theloop-fixissue/scripts/check-branch.py --branch <candidate>` for each candidate; the script exits 0 when the branch is available both locally and on the remote, and prints JSON with `"available": true`. When a name is free, run `git checkout -b <branch>`. Journal: post `started working; chose branch \`<branch>\`` via `issue-comment.py`.
 
 6. **Write the feature design document.** Before writing implementation code, create a Markdown design document at an appropriate path within the repository — use `docs/<FeatureName>.md` if a `docs/` directory exists, otherwise `FEATURE.md` at the repository root. Base it on the issue body. The document must contain:
    - A title and one-paragraph summary
@@ -81,7 +81,7 @@ The Python scripts under `.skills/MakePRForIssue/scripts/` are executable and be
 
    If `PreCommitSkill` has still not reported `"pass"` after five total invocations, write the run receipt with `"status": "fail"` and stop.
 
-11. **Commit and push.** Stage the changes by running `.skills/MakePRForIssue/scripts/stage-allowed.py` from the repository root: it stages every change except the paths listed in `.theloop/do_not_commit.txt`, so theloop instrumentation (the `.theloop/` scaffolding, the agent skill symlinks, and `tmp/`) is hard-excluded and can never land in the feature commit. In the theloop repository itself there is no `.theloop/do_not_commit.txt`, so it stages everything, as before. Feature design documents are user artifacts and are not excluded. Then commit with a clear commit message referencing the issue (for example, `Implement feature for Issue #<IssueIndex>`). If the work required multiple commits during the fix loop, that is fine — journal every new commit SHA on the branch. Run `git push -u origin <branch>`.
+11. **Commit and push.** Stage the changes by running `.skills/theloop-fixissue/scripts/stage-allowed.py` from the repository root: it stages every change except the paths listed in `.theloop/do_not_commit.txt`, so theloop instrumentation (the `.theloop/` scaffolding, the agent skill symlinks, and `tmp/`) is hard-excluded and can never land in the feature commit. In the theloop repository itself there is no `.theloop/do_not_commit.txt`, so it stages everything, as before. Feature design documents are user artifacts and are not excluded. Then commit with a clear commit message referencing the issue (for example, `Implement feature for Issue #<IssueIndex>`). If the work required multiple commits during the fix loop, that is fine — journal every new commit SHA on the branch. Run `git push -u origin <branch>`.
 
 12. **Create the pull request.** Build a PR body and save it to `tmp/<SkillRunId>-pr-body.md`. The body **must** include all of the following:
    - A prominent notice that **this pull request was created by theloop** (for example, a blockquote near the top: `> This pull request was created by **theloop**.`).
@@ -109,7 +109,7 @@ The Python scripts under `.skills/MakePRForIssue/scripts/` are executable and be
    `<feature_doc_path>`
    ```
 
-   Run `.skills/MakePRForIssue/scripts/create-pr.py` with `--title TITLE` (the issue title, or a concise variant), `--body-file tmp/<SkillRunId>-pr-body.md`, and `--head <branch>`. The script creates a PR with the `theloop` label and prints JSON with `pr_number` and `pr_url`. Journal: `created PR #<pr_number> at <pr_url>`.
+   Run `.skills/theloop-fixissue/scripts/create-pr.py` with `--title TITLE` (the issue title, or a concise variant), `--body-file tmp/<SkillRunId>-pr-body.md`, and `--head <branch>`. The script creates a PR with the `theloop` label and prints JSON with `pr_number` and `pr_url`. Journal: `created PR #<pr_number> at <pr_url>`.
 
 13. **Final report.** Tell the user:
     - That the pull request was created successfully
@@ -119,7 +119,7 @@ The Python scripts under `.skills/MakePRForIssue/scripts/` are executable and be
     - The `SkillRunId` of this run and the `SkillRunId` of the final `PreCommitSkill` run
     - A brief summary of what was implemented
 
-14. **Write the run receipt** by calling `.skills/MakePRForIssue/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--status pass|fail|error`; when status is `pass`: `--issue-number N`, `--issue-url URL`, `--branch NAME`, `--pr-number N`, `--pr-url URL`, `--feature-doc-path PATH`, `--implementation-attempts N`, `--pre-commit-skill-run-id ID`, `--gh-check-sub-run-id ID`, and `--commits "sha1 sha2 ..."` (space-separated short SHAs of commits on this branch not on the base); when status is `fail`: include whatever fields were determined before failure; when status is `error`: `--error TEXT`. The script validates the schema and refuses to overwrite an existing receipt.
+14. **Write the run receipt** by calling `.skills/theloop-fixissue/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--status pass|fail|error`; when status is `pass`: `--issue-number N`, `--issue-url URL`, `--branch NAME`, `--pr-number N`, `--pr-url URL`, `--feature-doc-path PATH`, `--implementation-attempts N`, `--pre-commit-skill-run-id ID`, `--gh-check-sub-run-id ID`, and `--commits "sha1 sha2 ..."` (space-separated short SHAs of commits on this branch not on the base); when status is `fail`: include whatever fields were determined before failure; when status is `error`: `--error TEXT`. The script validates the schema and refuses to overwrite an existing receipt.
 
 ## Run receipt schema
 
@@ -128,7 +128,7 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
 ```json
 {
   "skill_run_id": "string — the generated SkillRunId",
-  "skill": "MakePRForIssue",
+  "skill": "theloop-fixissue",
   "status": "pass | fail | error",
   "issue_number": "integer|null — the IssueIndex parameter, null when status is error before the issue was loaded",
   "issue_url": "string|null — the GitHub issue URL, null when unavailable",

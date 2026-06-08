@@ -25,13 +25,13 @@ theloop gives you a **discuss → issue → implement → PR** loop in your own 
 
 3. **Review** the uncommitted changes it produced.
 
-4. **Run `/ConfigureTheLoop`** in your coding agent — required once. The agent reads your repo's docs, test/lint tooling, and CI gates and writes a repo-root **`PRECOMMIT.md`**, then marks configuration complete. Until this finishes, the other skills refuse to run.
+4. **Run `/theloop-post-setuprepo`** in your coding agent — required once. The agent reads your repo's docs, test/lint tooling, and CI gates and writes a repo-root **`PRECOMMIT.md`**, then marks configuration complete. Until this finishes, the other skills refuse to run.
 
 5. **Use the workflow skills:**
-   - `/IssueWhatWeJustDiscussed` — capture a design discussion as a GitHub issue
-   - `/MakePRForIssue <n>` — implement an issue and open a pull request
-   - `/ImplementWhatWeJustDiscussed` — implement straight from the conversation, no issue
-   - `/PreCommitSkill` — run the pre-commit checks before any commit
+   - `/theloop-makeissue` — capture a design discussion as a GitHub issue
+   - `/theloop-fixissue <n>` — implement an issue and open a pull request
+   - `/theloop-buildthis` — implement straight from the conversation, no issue
+   - `/theloop-precommit` — run the pre-commit checks before any commit
 
 6. **Open a PR.** The committing skills stage your changes through `.theloop/do_not_commit.txt`, so feature PRs contain **only your code** (and your feature design docs) — never the `.theloop/` scaffolding or agent symlinks.
 
@@ -47,7 +47,7 @@ theloop gives you a **discuss → issue → implement → PR** loop in your own 
 
 ### What `PRECOMMIT.md` is
 
-`PRECOMMIT.md` is a **free-form Markdown checklist** written by `/ConfigureTheLoop`, not a YAML config file. It lists your repo's pre-commit checks — tests, linters, CI gates — each with a name, where to run it, and the command. The client `PreCommitSkill` reads it, runs the checks, and gates the commit alongside basic run-receipt hygiene. Edit it freely; it is yours.
+`PRECOMMIT.md` is a **free-form Markdown checklist** written by `/theloop-post-setuprepo`, not a YAML config file. It lists your repo's pre-commit checks — tests, linters, CI gates — each with a name, where to run it, and the command. The client `theloop-precommit` skill reads it, runs the checks, and gates the commit alongside basic run-receipt hygiene. Edit it freely; it is yours.
 
 ### Supported agents
 
@@ -59,10 +59,10 @@ A few skills are **developed and validated in this repo under a `…ForClientRep
 
 | Developed here (`.skills/`) | Installed in clients as |
 |---|---|
-| `PreCommitSkillForClientRepos` | `PreCommitSkill` |
-| `ConfigureTheLoopForClientRepos` | `ConfigureTheLoop` |
+| `PreCommitSkillForClientRepos` | `theloop-precommit` |
+| `ConfigureTheLoopForClientRepos` | `theloop-post-setuprepo` |
 
-The client never sees the `ForClientRepos` suffix — `theloopify` renames these and rewrites every `.skills/…` reference to `.theloop/skills/…` during the copy. The suffix lets these skills coexist with theloop's own full-strength `PreCommitSkill` (which stays here and is never shipped). `theloopify` also installs the internal sub-skill `InternalSkillPreCommitForClientWithRunId` that the client `PreCommitSkill` delegates to.
+The client never sees the `ForClientRepos` suffix — `theloopify` renames these and rewrites every `.skills/…` reference to `.theloop/skills/…` during the copy. The suffix lets these skills coexist with theloop's own full-strength `PreCommitSkill` (which stays here and is never shipped). `theloopify` also installs the internal sub-skill `InternalSkillPreCommitForClientWithRunId` that the client `theloop-precommit` skill delegates to.
 
 The **meta-skills** (`InternalSkillValidateAllSkills`, `InternalSkillCheckAllRulesWithRunId`, `InternalSkillPreCommitSkillWithRunId`, and friends) exist to maintain theloop itself and are **never** installed into client repos; client repos get the slim workflow bundle only.
 
