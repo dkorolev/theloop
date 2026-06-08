@@ -43,7 +43,7 @@ theloop gives you a **discuss → issue → implement → PR** loop in your own 
 | `.cursor/skills/`, `.claude/skills/`, `.codex/skills/`, `.agents/skills/` (symlinks) | **No** — local-only |
 | `tmp/` (run receipts and caches) | **No** — gitignored |
 | `PRECOMMIT.md` | **Yes** — once written it is your file, committed as normal repo maintenance |
-| `FEATURE.md` / `docs/<Feature>.md` (design docs) | **Yes** — they are your feature artifacts |
+| Feature design documents (feature-named, e.g. under `design-docs/`) | **Yes** — they are your feature artifacts |
 
 ### What `PRECOMMIT.md` is
 
@@ -52,6 +52,10 @@ theloop gives you a **discuss → issue → implement → PR** loop in your own 
 ### Supported agents
 
 The same canonical skill copy under `.theloop/skills/` is symlinked into `.cursor/skills/`, `.claude/skills/`, `.codex/skills/`, and `.agents/skills/`, so whichever agent you use sees the same skills.
+
+## Integration
+
+**Claude Code:** there is a one-time, copy-and-paste terminal installer that puts the global `/theloopify` skill on your machine. See **[SETUP-CLAUDE.md](SETUP-CLAUDE.md)** for the command and an explanation of exactly what it does. Once installed, open Claude Code in a fresh clone of your repository and run `/theloopify` to instrument it.
 
 ## For theloop contributors
 

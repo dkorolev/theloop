@@ -8,9 +8,10 @@ The installer shallow-clones [github.com/dkorolev/theloop](https://github.com/dk
 
 ## Copy and run (one time)
 
-Paste this entire block into your terminal:
+Paste this entire block into your terminal. The whole installer is wrapped in a single `bash <<'THELOOP_SETUP'` heredoc, so it pastes and runs as **one** command in both bash and zsh — exactly as if you had saved it to a file and run it. Its `set -euo pipefail` strictness stays inside that subshell, so a failed step can never close or disturb your interactive shell:
 
 ````bash
+bash <<'THELOOP_SETUP'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -168,11 +169,14 @@ echo "    Vendor: ${VENDOR_DIR} (shallow clone, refreshed on each install)"
 echo ""
 echo "Next: open Claude Code in a fresh clone of your project and run:"
 echo "      /theloopify"
+THELOOP_SETUP
 ````
 
 ## What this script does
 
 This is a one-time terminal installer. It puts a global **`/theloopify`** skill on your machine for Claude Code, bundles a shallow copy of the [theloop](https://github.com/dkorolev/theloop) repository inside that skill, and prints a reminder to run `/theloopify` from a project clone. It does **not** instrument your project repository itself — that happens later when you invoke the skill from Claude Code.
+
+The whole script is fed to a fresh `bash` via a `bash <<'THELOOP_SETUP'` heredoc, so the entire installer runs in a single subshell. Pasting it therefore behaves exactly like saving it to a file and running it: the script's `set -euo pipefail` strictness stays in that subshell and never leaks into — or closes — your interactive bash or zsh session, even if a step fails.
 
 ### Step by step
 
@@ -219,6 +223,10 @@ When setup completes, use:
 The terminal script is safe to run again. It refreshes `SKILL.md`, the helper scripts, and the shallow vendor clone under `~/.claude/skills/theloopify/vendor/theloop/`.
 
 **Do not** run `/theloopify` a second time on the same clone after mechanical setup — `theloopify` refuses when `.theloop/theloopified` already exists. To start another feature, clone the repository again.
+
+## Uninstalling
+
+To uninstall the skill, just remove the `~/.claude/skills/theloopify/` directory. That removes the global `/theloopify` skill, its helper scripts, and the bundled vendor clone in one step. It does not touch any repository you previously instrumented with `/theloopify`.
 
 ## How we know theloopify already ran
 

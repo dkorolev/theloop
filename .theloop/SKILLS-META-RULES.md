@@ -114,3 +114,9 @@ Skills that take `SkillRunId` as a parameter are orchestration sub-skills: they 
 Skills that do not take `SkillRunId` — including the exceptional skills that generate a `SkillRunId` themselves rather than receiving one from a caller — are the user-facing entry points and must not use the `InternalSkill` prefix.
 
 The prefix exists because slash-command menus surface skills by name; keeping internal `SkillRunId`-parameterized skills behind `InternalSkill` leaves discoverable names (`PreCommitSkill`, `theloop-buildthis`, and future user-facing skills) uncluttered by sub-skills the user should never invoke directly.
+
+## Rule 14: Commits are authored by the user, never the AI
+
+Any skill that creates a git commit, or that stages changes and directs the user (or runner) to commit them, must ensure the human user is the sole author of the resulting commit. The commit is attributed to the user's configured git identity, and the commit message must contain no AI-assistant attribution of any kind: no `Generated with …` line, no `Co-Authored-By:` trailer naming an AI assistant, model, or tool, and no other mention of the AI that produced the change. A skill that creates or suggests commits must state this requirement explicitly in its instructions.
+
+The `InternalSkillValidateSkill` skill checks this: for every skill whose instructions create a commit or tell the user to commit staged changes, it confirms the skill text explicitly requires the user to be the commit author and explicitly forbids AI-assistant mentions in the commit message. Skills that never create or suggest commits trivially comply and are unaffected by this rule.
