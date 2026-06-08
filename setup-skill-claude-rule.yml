@@ -18,7 +18,7 @@ rule: |
 
   - targets `~/.claude/skills/theloopify`, with helpers under `scripts/` and a vendor checkout under `vendor/theloop`;
   - writes `SKILL.md` for the global `/theloopify` skill (including that the skill later detects `.theloop/theloopified` and `.theloop/configure_the_loop.done`, runs the bundled mechanical installer when needed, verifies the bundle, and drives `/theloop-post-setuprepo`);
-  - writes `ensure-vendor.sh` that shallow-clones or refreshes `https://github.com/dkorolev/theloop` on branch `main` (with optional `THELOOP_VENDOR_BRANCH`), refuses a symlink at `vendor/theloop`, and errors if `theloopify.sh` is missing;
+  - writes `ensure-vendor.sh` that shallow-clones or refreshes `https://github.com/dkorolev/theloop` on branch `main` (with optional `THELOOP_VENDOR_BRANCH`), refuses a symlink at `vendor/theloop`, and errors when the checkout has no usable installer (neither `theloopify.sh` nor an executable `theloopify`);
   - writes `run-theloopify.sh` that calls `ensure-vendor.sh` then runs the bundled `theloopify` / `theloopify.sh` against a target directory (defaulting to the current working directory);
   - writes `verify-install.sh` that checks `.theloop/theloopified`, `.theloop/must_run_configure_the_loop.txt`, all seven bundled skills under `.theloop/skills/`, and the `.claude/skills/theloop-post-setuprepo` symlink;
   - marks the three helper scripts executable;
