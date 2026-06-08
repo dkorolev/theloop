@@ -23,8 +23,8 @@ A single bash script, phased and colorized, that instruments a target directory 
 2. **Refuse a second run** if `.theloop/theloopified` already exists, with a "one feature per clone — clone again" message.
 3. Verify the target is a git repository.
 4. Detect a GitHub remote URL across all remotes (preferring a GitHub one); if none is found, **interactively prompt**; write the single-line URL to `.theloop/repo.txt`.
-5. Ensure `tmp/` is present in `.gitignore` (run-receipt hygiene).
-6. Create the `.theloop/` scaffolding: `do_not_commit.txt` (agreed plain paths), `must_run_configure_the_loop.txt`, and `theloopified`.
+5. Gitignore every path the instrumentation creates — the six plain paths below (`.theloop/`, the four agent `*/skills/` dirs, and `tmp/`) — under a labeled comment block, so none of theloop's scaffolding ever appears as an untracked change. This is a **deliberate compromise**: theloop is otherwise not designed to alter `.gitignore`, but does so consciously so a repo that treats a dirty tree as illegal keeps passing; the cost is that the `.gitignore` change itself must never be committed (see §6).
+6. Create the `.theloop/` scaffolding: `do_not_commit.txt` (agreed plain paths, plus `.gitignore` so the compromise edit is never committed), `must_run_configure_the_loop.txt`, and `theloopified`.
 7. Copy the bundled skills from the theloop checkout's `.skills/` into the client's `.theloop/skills/`, applying the install-name renames and rewriting every `.skills/…` reference to `.theloop/skills/…` (and every `…ForClientRepos` name to its client-facing name) inside the copied files.
 8. Create the four agent skill directories and, for every installed skill, a symlink from `<agent>/skills/<SkillName>` to `../../.theloop/skills/<SkillName>`.
 9. Print a clean summary whose final line tells the user to run `/theloop-post-setuprepo`.
@@ -82,7 +82,7 @@ The gate keys off the **positive** signal `configure_the_loop.done`, never the m
 
 ### 6. Commit hygiene (`do_not_commit.txt`)
 
-`.theloop/do_not_commit.txt` holds plain paths (no globs): `.theloop/`, `.cursor/skills/`, `.claude/skills/`, `.codex/skills/`, `.agents/skills/`, `tmp/`. The two committing skills (`theloop-fixissue`, `theloop-buildthis`) stage via their own copy of `stage-allowed.py`, which stages all changes and then unstages every `do_not_commit.txt` path, asserting none remain staged. Feature design docs (`FEATURE.md`, `docs/<Feature>.md`) and `PRECOMMIT.md` are **not** excluded — they are user artifacts and may be committed. In the theloop repo itself, where there is no `do_not_commit.txt`, `stage-allowed.py` stages everything, matching the previous behavior.
+`.theloop/do_not_commit.txt` holds plain paths (no globs): `.theloop/`, `.cursor/skills/`, `.claude/skills/`, `.codex/skills/`, `.agents/skills/`, `tmp/`, **and `.gitignore`**. The first six are also written into `.gitignore` by `theloopify` (the deliberate compromise in §1) so they never surface as untracked changes; `.gitignore` is the seventh entry so that the compromise edit is itself never committed. The two committing skills (`theloop-fixissue`, `theloop-buildthis`) stage via their own copy of `stage-allowed.py`, which stages all changes and then unstages every `do_not_commit.txt` path, asserting none remain staged. Feature design docs (`FEATURE.md`, `docs/<Feature>.md`) and `PRECOMMIT.md` are **not** excluded — they are user artifacts and may be committed. In the theloop repo itself, where there is no `do_not_commit.txt`, `stage-allowed.py` stages everything, matching the previous behavior.
 
 ### 7. README & registries
 
@@ -94,8 +94,8 @@ If the code is lost, reconstruct it from these invariants:
 
 1. **`theloopify.sh`** (root) + **`theloopify`** symlink → `theloopify.sh`. No arg ⇒ instrument cwd; one path arg ⇒ instrument it. Refuse when the target contains `.theloop/SKILLS-META-RULES.md` (it is the theloop repo) or already contains `.theloop/theloopified` (already instrumented). Require the target to be a git repo. Produce, all uncommitted:
    - `.theloop/repo.txt` — one GitHub URL, from remote auto-detection or an interactive prompt;
-   - `tmp/` appended to `.gitignore` if absent;
-   - `.theloop/do_not_commit.txt` with exactly the six plain paths above;
+   - every instrumented path (the six plain paths below) appended to `.gitignore` under a labeled comment block — a deliberate compromise so the working tree stays clean; the `.gitignore` change is itself never committed;
+   - `.theloop/do_not_commit.txt` with exactly the six plain paths above **plus `.gitignore`** (so the compromise edit is excluded from commits);
    - `.theloop/must_run_configure_the_loop.txt` and `.theloop/theloopified` markers;
    - `.theloop/skills/<SkillName>/` canonical copies of the seven bundled skills, with install-name renames applied and every `.skills/…` rewritten to `.theloop/skills/…` and every `…ForClientRepos` name rewritten to its client-facing name;
    - `<agent>/skills/<SkillName>` symlinks for each of `.cursor`, `.claude`, `.codex`, `.agents`, pointing at the canonical copy; **no** `.skills/` at the client root.

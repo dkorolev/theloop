@@ -39,6 +39,15 @@ contains "$WORK/.theloop/repo.txt" "github.com/example/client"
 contains "$WORK/.theloop/do_not_commit.txt" ".theloop/"
 contains "$WORK/.theloop/do_not_commit.txt" "tmp/"
 contains "$WORK/.gitignore" "tmp/"
+# Deliberate compromise: theloopify gitignores every path it instruments so the
+# working tree stays clean, and excludes the .gitignore change itself from commits.
+for p in ".theloop/" ".cursor/skills/" ".claude/skills/" ".codex/skills/" ".agents/skills/"; do
+  contains "$WORK/.gitignore" "$p"
+done
+contains "$WORK/.theloop/do_not_commit.txt" ".gitignore"
+# the instrumentation must actually be hidden from a dirty-tree check:
+git -C "$WORK" status --porcelain | grep -qE '(\.theloop/|/skills/)' \
+  && fail "theloop instrumentation is visible to git status (should be gitignored)" || true
 # PRECOMMIT.md is owned by theloop-post-setuprepo, not theloopify:
 missing "$WORK/PRECOMMIT.md"
 

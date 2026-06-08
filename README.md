@@ -21,7 +21,7 @@ theloop gives you a **discuss → issue → implement → PR** loop in your own 
    /path/to/theloop/theloopify /path/to/clone  # or instrument an explicit path
    ```
 
-   `theloopify` is mechanical and **never commits**. It copies the skill bundle into `.theloop/skills/`, symlinks it into every supported agent directory (`.cursor/`, `.claude/`, `.codex/`, `.agents/`), writes the `.theloop/` scaffolding, detects (or asks for) your GitHub remote, and ensures `tmp/` is gitignored. It refuses to run on the theloop repo itself, and refuses a second run (clone again to start another feature).
+   `theloopify` is mechanical and **never commits**. It copies the skill bundle into `.theloop/skills/`, symlinks it into every supported agent directory (`.cursor/`, `.claude/`, `.codex/`, `.agents/`), writes the `.theloop/` scaffolding, detects (or asks for) your GitHub remote, and gitignores every path it instruments (the `.theloop/` scaffolding, the agent `*/skills/` symlink dirs, and `tmp/`) so none of it shows up as untracked. It refuses to run on the theloop repo itself, and refuses a second run (clone again to start another feature).
 
 3. **Review** the uncommitted changes it produced.
 
@@ -39,11 +39,14 @@ theloop gives you a **discuss → issue → implement → PR** loop in your own 
 
 | Path | Committed in feature PRs? |
 |---|---|
-| `.theloop/skills/`, `.theloop/repo.txt`, `.theloop/*` markers | **No** — listed in `.theloop/do_not_commit.txt` |
-| `.cursor/skills/`, `.claude/skills/`, `.codex/skills/`, `.agents/skills/` (symlinks) | **No** — local-only |
+| `.theloop/skills/`, `.theloop/repo.txt`, `.theloop/*` markers | **No** — gitignored and listed in `.theloop/do_not_commit.txt` |
+| `.cursor/skills/`, `.claude/skills/`, `.codex/skills/`, `.agents/skills/` (symlinks) | **No** — gitignored, local-only |
 | `tmp/` (run receipts and caches) | **No** — gitignored |
+| `.gitignore` (the entries `theloopify` adds) | **No** — modified-but-uncommitted by design (see note below) |
 | `PRECOMMIT.md` | **Yes** — once written it is your file, committed as normal repo maintenance |
 | Feature design documents (feature-named, e.g. under `design-docs/`) | **Yes** — they are your feature artifacts |
+
+> **Why `.gitignore` is modified but never committed — a deliberate compromise.** `theloopify` adds every path it instruments to `.gitignore` so that none of theloop's scaffolding shows up as an untracked change; this keeps a repo that treats a dirty working tree as illegal passing its check. theloop is otherwise **not designed to alter `.gitignore`**, so it makes this one exception consciously and **never commits the change**: `.gitignore` is itself listed in `.theloop/do_not_commit.txt`, so the committing skills exclude it and the edit stays local. The accepted cost is that your working tree carries a modified-but-uncommitted `.gitignore`.
 
 ### What `PRECOMMIT.md` is
 

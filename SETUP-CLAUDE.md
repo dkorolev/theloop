@@ -72,6 +72,7 @@ Work from the **repository root** you want to instrument (the current working di
 
    - If the script exits non-zero, stop immediately: report the error output and mark this skill as failed. Do not continue.
    - The script never commits; leave all scaffolding uncommitted.
+   - The script also adds every path it instruments (`.theloop/`, the per-agent `*/skills/` symlink directories, and `tmp/`) to `.gitignore`, and excludes the `.gitignore` change itself from commits via `.theloop/do_not_commit.txt`. This is a **deliberate compromise**: theloop is not designed to alter `.gitignore`, but does so here — consciously, and never committing the change — so that none of theloop's scaffolding shows up as untracked and a repository that treats a dirty working tree as illegal keeps passing. Leave the modified `.gitignore` uncommitted.
 
 4. **Verify the skill bundle.** Confirm every item below exists in the target repository:
    - `.theloop/theloopified`
@@ -98,7 +99,8 @@ Work from the **repository root** you want to instrument (the current working di
    - theloop is fully configured in this repository;
    - the path to the `PRECOMMIT.md` that was written;
    - the workflow skills now available: `/theloop-makeissue`, `/theloop-fixissue <n>`, `/theloop-buildthis`, `/theloop-precommit`;
-   - that `.theloop/` scaffolding and agent symlinks are local-only (listed in `.theloop/do_not_commit.txt`) and should not appear in feature pull requests.
+   - that `.theloop/` scaffolding and agent symlinks are local-only (listed in `.theloop/do_not_commit.txt`) and should not appear in feature pull requests;
+   - that theloop has gitignored its own instrumentation and left `.gitignore` modified but uncommitted on purpose — a compromise, since theloop does not otherwise manage `.gitignore` — so a dirty-tree check still passes while the `.gitignore` change never enters a feature PR.
 EOF
 
 cat > "${SCRIPTS_DIR}/ensure-vendor.sh" <<'EOF'

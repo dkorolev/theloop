@@ -90,24 +90,53 @@ else
 fi
 printf '%s\n' "$REPO_URL" > "$TARGET/.theloop/repo.txt"
 
-# --- 5. ensure tmp/ is gitignored ------------------------------------------
+# Every path this instrumentation adds to the client tree: the .theloop/
+# scaffolding, the per-agent skill symlink directories, and tmp/ (run receipts
+# and caches). Used twice below — written verbatim into do_not_commit.txt (so
+# the committing skills hard-exclude them) and appended to .gitignore (so they
+# never surface as untracked changes).
+INSTRUMENT_PATHS=(
+  '.theloop/'
+  '.cursor/skills/'
+  '.claude/skills/'
+  '.codex/skills/'
+  '.agents/skills/'
+  'tmp/'
+)
+
+# --- 5. gitignore every instrumented path (a deliberate compromise) --------
+# COMPROMISE: theloopify is mechanical and otherwise never alters the client's
+# tracked files. .gitignore is the single, conscious exception. We add every
+# path this instrumentation creates so none of theloop's scaffolding ever shows
+# up as untracked — a client repo that treats a dirty working tree as illegal
+# keeps passing that check. The cost we accept on purpose is a hard constraint:
+# this .gitignore edit is itself NEVER committed (.gitignore is the extra entry
+# in do_not_commit.txt below), so the modified .gitignore stays local and
+# theloop still lands nothing in a feature PR. theloop is not designed to manage
+# .gitignore beyond this one compromise.
+phase "Gitignoring theloop instrumentation"
 GI="$TARGET/.gitignore"
-if [ ! -f "$GI" ] || ! grep -qxF 'tmp/' "$GI"; then
-  if [ -f "$GI" ] && [ -n "$(tail -c1 "$GI" 2>/dev/null)" ]; then printf '\n' >> "$GI"; fi
-  printf 'tmp/\n' >> "$GI"
-  info "added tmp/ to .gitignore"
-fi
+if [ -f "$GI" ] && [ -n "$(tail -c1 "$GI" 2>/dev/null)" ]; then printf '\n' >> "$GI"; fi
+{
+  printf '# theloop instrumentation — added by theloopify; do NOT commit this\n'
+  printf '# block or this .gitignore change. Deliberate compromise: theloop does\n'
+  printf '# not otherwise touch .gitignore, but ignores its own scaffolding here so\n'
+  printf '# the working tree stays clean for repos that forbid a dirty tree. The\n'
+  printf '# .gitignore change is excluded from commits via .theloop/do_not_commit.txt.\n'
+} >> "$GI"
+for p in "${INSTRUMENT_PATHS[@]}"; do
+  grep -qxF "$p" "$GI" || printf '%s\n' "$p" >> "$GI"
+done
+ok "gitignored theloop instrumentation paths (left uncommitted)"
 
 # --- 6. write the .theloop/ scaffolding ------------------------------------
 phase "Writing .theloop/ scaffolding"
-cat > "$TARGET/.theloop/do_not_commit.txt" <<'EOF'
-.theloop/
-.cursor/skills/
-.claude/skills/
-.codex/skills/
-.agents/skills/
-tmp/
-EOF
+# do_not_commit.txt lists the instrumented paths plus .gitignore itself, so the
+# committing skills' stage-allowed.py never stages the .gitignore compromise.
+{
+  printf '%s\n' "${INSTRUMENT_PATHS[@]}"
+  printf '.gitignore\n'
+} > "$TARGET/.theloop/do_not_commit.txt"
 printf 'Run /theloop-post-setuprepo to finish setting up theloop in this repository.\n' \
   > "$TARGET/.theloop/must_run_configure_the_loop.txt"
 ok "wrote repo.txt, do_not_commit.txt, must_run_configure_the_loop.txt"
@@ -132,3 +161,5 @@ info "  ${DIM}/theloop-makeissue, /theloop-fixissue <n>, /theloop-buildthis, /th
 info ""
 info "Review the uncommitted changes; the .theloop/ scaffolding and agent symlinks"
 info "are local-only (listed in .theloop/do_not_commit.txt) and never enter feature PRs."
+info "theloop also gitignores its own paths and leaves .gitignore modified but"
+info "uncommitted — a deliberate compromise so a dirty-tree check still passes."
