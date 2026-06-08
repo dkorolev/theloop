@@ -1,3 +1,4 @@
+- setup-skill-claude-rule.yml
 - example/code/code-rule.yml
 - example/math/add/add-rule.yml
 - example/math/subtract/subtract-rule.yml
