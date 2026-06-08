@@ -25,7 +25,7 @@ theloop gives you a **discuss → issue → implement → PR** loop in your own 
 
 3. **Review** the uncommitted changes it produced.
 
-4. **Run `/theloop-post-setuprepo`** in your coding agent — required once. The agent reads your repo's docs, test/lint tooling, and CI gates and writes a repo-root **`PRECOMMIT.md`**, then marks configuration complete. Until this finishes, the other skills refuse to run.
+4. **Run `/newrepo-theloopify-internal-postinit`** in your coding agent — required once. The agent reads your repo's docs, test/lint tooling, and CI gates and writes a repo-root **`PRECOMMIT.md`**, then marks configuration complete. Until this finishes, the other skills refuse to run.
 
 5. **Use the workflow skills:**
    - `/theloop-makeissue` — capture a design discussion as a GitHub issue
@@ -50,7 +50,7 @@ theloop gives you a **discuss → issue → implement → PR** loop in your own 
 
 ### What `PRECOMMIT.md` is
 
-`PRECOMMIT.md` is a **free-form Markdown checklist** written by `/theloop-post-setuprepo`, not a YAML config file. It lists your repo's pre-commit checks — tests, linters, CI gates — each with a name, where to run it, and the command. The client `theloop-precommit` skill reads it, runs the checks, and gates the commit alongside basic run-receipt hygiene. Edit it freely; it is yours.
+`PRECOMMIT.md` is a **free-form Markdown checklist** written by `/newrepo-theloopify-internal-postinit`, not a YAML config file. It lists your repo's pre-commit checks — tests, linters, CI gates — each with a name, where to run it, and the command. The client `theloop-precommit` skill reads it, runs the checks, and gates the commit alongside basic run-receipt hygiene. Edit it freely; it is yours.
 
 ### Supported agents
 
@@ -58,7 +58,7 @@ The same canonical skill copy under `.theloop/skills/` is symlinked into `.curso
 
 ## Integration
 
-**Claude Code:** there is a one-time, copy-and-paste terminal installer that puts the global `/theloopify` skill on your machine. See **[SETUP-CLAUDE.md](SETUP-CLAUDE.md)** for the command and an explanation of exactly what it does. Once installed, open Claude Code in a fresh clone of your repository and run `/theloopify` to instrument it.
+**Claude Code:** there is a one-time, copy-and-paste terminal installer that puts the global `/newrepo-theloopify` skill on your machine. See **[SETUP-CLAUDE.md](SETUP-CLAUDE.md)** for the command and an explanation of exactly what it does. Once installed, open Claude Code in a fresh clone of your repository and run `/newrepo-theloopify` to instrument it.
 
 ## For theloop contributors
 
@@ -67,7 +67,7 @@ A few skills are **developed and validated in this repo under a `…ForClientRep
 | Developed here (`.skills/`) | Installed in clients as |
 |---|---|
 | `PreCommitSkillForClientRepos` | `theloop-precommit` |
-| `ConfigureTheLoopForClientRepos` | `theloop-post-setuprepo` |
+| `ConfigureTheLoopForClientRepos` | `newrepo-theloopify-internal-postinit` |
 
 The client never sees the `ForClientRepos` suffix — `theloopify` renames these and rewrites every `.skills/…` reference to `.theloop/skills/…` during the copy. The suffix lets these skills coexist with theloop's own full-strength `PreCommitSkill` (which stays here and is never shipped). `theloopify` also installs the internal sub-skill `InternalSkillPreCommitForClientWithRunId` that the client `theloop-precommit` skill delegates to.
 

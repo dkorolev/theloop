@@ -1,6 +1,6 @@
 ---
 name: PreCommitSkillForClientRepos
-description: Meta-skill that gates a commit to a theloop client repository. Takes no parameters and errors if any are passed; checks that theloop-post-setuprepo has been completed, generates a fresh SkillRunId in the default format codified in .theloop/SKILLS-META-RULES.md, and delegates the slim pre-commit gate to InternalSkillPreCommitForClientWithRunId under that identifier.
+description: Meta-skill that gates a commit to a theloop client repository. Takes no parameters and errors if any are passed; checks that newrepo-theloopify-internal-postinit has been completed, generates a fresh SkillRunId in the default format codified in .theloop/SKILLS-META-RULES.md, and delegates the slim pre-commit gate to InternalSkillPreCommitForClientWithRunId under that identifier.
 invokes: [InternalSkillPreCommitForClientWithRunId]
 ---
 
@@ -18,7 +18,7 @@ This skill takes no parameters. If any parameters are passed, stop immediately a
 
 The scripts under `.skills/PreCommitSkillForClientRepos/scripts/` are executable; run each one directly by path — never prefix it with `python`, `python3`, or `sh`.
 
-1. **Check the configuration gate.** Run `.skills/PreCommitSkillForClientRepos/scripts/check-configured.py` from the repository root. It reports whether this repository has completed `theloop-post-setuprepo`, keying off the positive marker `.theloop/configure_the_loop.done`. If it exits non-zero (`"configured": false`), stop immediately: tell the user the repository is not configured yet and that they must run `theloop-post-setuprepo` before committing. Do not generate an identifier and do not delegate. When it reports configured (including the not-applicable case in a non-theloopified repository), continue.
+1. **Check the configuration gate.** Run `.skills/PreCommitSkillForClientRepos/scripts/check-configured.py` from the repository root. It reports whether this repository has completed `newrepo-theloopify-internal-postinit`, keying off the positive marker `.theloop/configure_the_loop.done`. If it exits non-zero (`"configured": false`), stop immediately: tell the user the repository is not configured yet and that they must run `newrepo-theloopify-internal-postinit` before committing. Do not generate an identifier and do not delegate. When it reports configured (including the not-applicable case in a non-theloopified repository), continue.
 
 2. **Generate the run identifier.** Run `.skills/PreCommitSkillForClientRepos/scripts/new-run-id.sh` from the repository root: it prints a fresh `SkillRunId` in the default format codified in the rule on run receipts, `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}` — the local date and time at which the run started, followed by six random lowercase Latin letters (for example, `20260607-153012-kqzwxy`). Tell the user which identifier was generated.
 

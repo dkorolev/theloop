@@ -8,7 +8,7 @@
 #
 # theloopify is mechanical and never commits: it copies the client skill bundle
 # into .theloop/skills/, symlinks it into every supported coding-agent directory,
-# and writes the .theloop/ scaffolding. The one-time, agentic /theloop-post-setuprepo
+# and writes the .theloop/ scaffolding. The one-time, agentic /newrepo-theloopify-internal-postinit
 # step (run afterwards) authors PRECOMMIT.md and unlocks the workflow skills.
 #
 # Designed to run exactly once per clone: one clone, one feature.
@@ -137,7 +137,7 @@ phase "Writing .theloop/ scaffolding"
   printf '%s\n' "${INSTRUMENT_PATHS[@]}"
   printf '.gitignore\n'
 } > "$TARGET/.theloop/do_not_commit.txt"
-printf 'Run /theloop-post-setuprepo to finish setting up theloop in this repository.\n' \
+printf 'Run /newrepo-theloopify-internal-postinit to finish setting up theloop in this repository.\n' \
   > "$TARGET/.theloop/must_run_configure_the_loop.txt"
 ok "wrote repo.txt, do_not_commit.txt, must_run_configure_the_loop.txt"
 
@@ -155,7 +155,7 @@ printf '\n'
 phase "Done"
 info "${GREEN}theloop is installed${RESET} in $TARGET (all changes left uncommitted)."
 info ""
-info "${BOLD}Next step:${RESET} run ${CYAN}/theloop-post-setuprepo${RESET} in your coding agent to author"
+info "${BOLD}Next step:${RESET} run ${CYAN}/newrepo-theloopify-internal-postinit${RESET} in your coding agent to author"
 info "PRECOMMIT.md and unlock the workflow skills:"
 info "  ${DIM}/theloop-makeissue, /theloop-fixissue <n>, /theloop-buildthis, /theloop-precommit${RESET}"
 info ""

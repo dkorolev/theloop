@@ -28,13 +28,13 @@ BUNDLE = [
     ("theloop-buildthis", "theloop-buildthis"),
     ("InternalSkillCheckGhRepoAccessWithRunId", "InternalSkillCheckGhRepoAccessWithRunId"),
     ("PreCommitSkillForClientRepos", "theloop-precommit"),
-    ("ConfigureTheLoopForClientRepos", "theloop-post-setuprepo"),
+    ("ConfigureTheLoopForClientRepos", "newrepo-theloopify-internal-postinit"),
     ("InternalSkillPreCommitForClientWithRunId", "InternalSkillPreCommitForClientWithRunId"),
 ]
 
 # Longest names first so a name is never a prefix of another during replacement.
 NAME_REWRITES = [
-    ("ConfigureTheLoopForClientRepos", "theloop-post-setuprepo"),
+    ("ConfigureTheLoopForClientRepos", "newrepo-theloopify-internal-postinit"),
     ("PreCommitSkillForClientRepos", "theloop-precommit"),
     ("PreCommitSkill", "theloop-precommit"),
 ]

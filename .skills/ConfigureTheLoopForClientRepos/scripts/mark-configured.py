@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mark theloop-post-setuprepo complete: write the done marker, remove the pending marker.
+"""Mark newrepo-theloopify-internal-postinit complete: write the done marker, remove the pending marker.
 
 Usage: .skills/ConfigureTheLoopForClientRepos/scripts/mark-configured.py [--summary TEXT]
        (from the repository root)

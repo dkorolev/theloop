@@ -48,12 +48,12 @@ contains "$WORK/.theloop/do_not_commit.txt" ".gitignore"
 # the instrumentation must actually be hidden from a dirty-tree check:
 git -C "$WORK" status --porcelain | grep -qE '(\.theloop/|/skills/)' \
   && fail "theloop instrumentation is visible to git status (should be gitignored)" || true
-# PRECOMMIT.md is owned by theloop-post-setuprepo, not theloopify:
+# PRECOMMIT.md is owned by newrepo-theloopify-internal-postinit, not theloopify:
 missing "$WORK/PRECOMMIT.md"
 
 # --- the seven bundled skills, under client-facing names --------------------
 for s in theloop-makeissue theloop-fixissue theloop-buildthis \
-         InternalSkillCheckGhRepoAccessWithRunId theloop-precommit theloop-post-setuprepo \
+         InternalSkillCheckGhRepoAccessWithRunId theloop-precommit newrepo-theloopify-internal-postinit \
          InternalSkillPreCommitForClientWithRunId; do
   have "$WORK/.theloop/skills/$s/SKILL.md"
 done
@@ -69,9 +69,9 @@ missing "$WORK/.skills"
 # --- install-name renames inside the copied files --------------------------
 contains "$WORK/.theloop/skills/theloop-precommit/SKILL.md" "name: theloop-precommit"
 absent   "$WORK/.theloop/skills/theloop-precommit/SKILL.md" "ForClientRepos"
-contains "$WORK/.theloop/skills/theloop-post-setuprepo/SKILL.md" "name: theloop-post-setuprepo"
-absent   "$WORK/.theloop/skills/theloop-post-setuprepo/SKILL.md" "ForClientRepos"
-contains "$WORK/.theloop/skills/theloop-post-setuprepo/scripts/write-receipt.py" 'SKILL = "theloop-post-setuprepo"'
+contains "$WORK/.theloop/skills/newrepo-theloopify-internal-postinit/SKILL.md" "name: newrepo-theloopify-internal-postinit"
+absent   "$WORK/.theloop/skills/newrepo-theloopify-internal-postinit/SKILL.md" "ForClientRepos"
+contains "$WORK/.theloop/skills/newrepo-theloopify-internal-postinit/scripts/write-receipt.py" 'SKILL = "newrepo-theloopify-internal-postinit"'
 
 # --- path rewriting: .skills/ -> .theloop/skills/ everywhere ----------------
 if grep -rIl '\.skills/' "$WORK/.theloop/skills" >/dev/null 2>&1; then
