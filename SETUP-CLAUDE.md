@@ -10,7 +10,7 @@ The installer shallow-clones [github.com/dkorolev/theloop](https://github.com/dk
 
 Paste this entire block into your terminal:
 
-```bash
+````bash
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -172,7 +172,7 @@ echo "    Vendor: ${VENDOR_DIR} (shallow clone, refreshed on each install)"
 echo ""
 echo "Next: open Claude Code in a fresh clone of your project and run:"
 echo "      /theloopify"
-```
+````
 
 ## What this script does
 
