@@ -55,9 +55,13 @@ def normalize_entry(entry):
 
 def expand_entry(entry, rule_dir, subtree_files):
     full = os.path.normpath(os.path.join(rule_dir, entry))
-    prefix = rule_dir + os.sep
-    if full != rule_dir and not full.startswith(prefix):
-        raise ValueError(f"scope path must stay within the rule directory: {entry!r}")
+    if rule_dir == ".":
+        if os.path.isabs(full) or full == ".." or full.startswith("../"):
+            raise ValueError(f"scope path must stay within the rule directory: {entry!r}")
+    else:
+        prefix = rule_dir + os.sep
+        if full != rule_dir and not full.startswith(prefix):
+            raise ValueError(f"scope path must stay within the rule directory: {entry!r}")
     if os.path.isdir(full):
         return [p for p in subtree_files if p == full or p.startswith(full + "/")]
     if os.path.isfile(full):

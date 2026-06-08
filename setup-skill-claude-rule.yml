@@ -1,0 +1,28 @@
+use:
+  - SETUP-CLAUDE.md
+rule: |
+  `SETUP-CLAUDE.md` documents the Claude Code one-time installer for the global `/theloopify` skill. It must satisfy all of the following:
+
+  ## Placement and format
+
+  1. Under `## Copy and run (one time)`, the file contains exactly one fenced `bash` code block holding the full install script the user is told to copy and paste.
+  2. Immediately after that fenced block — with no other `##` section in between — the file contains a `## What this script does` section.
+  3. That section opens with a **top-level** plain-English summary: one or more paragraphs that state the overall purpose and outcome before any step list. The summary must make clear that this terminal script only installs the global skill and bundled vendor checkout, and that project instrumentation happens later when the user runs `/theloopify` in Claude Code.
+  4. After the top-level summary, the same section contains a `### Step by step` subsection with a numbered list that walks through what the install script does in order.
+
+  ## Script and description must agree
+
+  Read the `bash` install script in the fenced block and the `## What this script does` text together. They must match with **no discrepancies**: every material action the script performs must appear in the step-by-step description, and the description must not claim behavior the script lacks.
+
+  At minimum, the step-by-step description must accurately cover all of the following actions the install script performs:
+
+  - targets `~/.claude/skills/theloopify`, with helpers under `scripts/` and a vendor checkout under `vendor/theloop`;
+  - writes `SKILL.md` for the global `/theloopify` skill (including that the skill later detects `.theloop/theloopified` and `.theloop/configure_the_loop.done`, runs the bundled mechanical installer when needed, verifies the bundle, and drives `/theloop-post-setuprepo`);
+  - writes `ensure-vendor.sh` that shallow-clones or refreshes `https://github.com/dkorolev/theloop` on branch `main` (with optional `THELOOP_VENDOR_BRANCH`), refuses a symlink at `vendor/theloop`, and errors if `theloopify.sh` is missing;
+  - writes `run-theloopify.sh` that calls `ensure-vendor.sh` then runs the bundled `theloopify` / `theloopify.sh` against a target directory (defaulting to the current working directory);
+  - writes `verify-install.sh` that checks `.theloop/theloopified`, `.theloop/must_run_configure_the_loop.txt`, all seven bundled skills under `.theloop/skills/`, and the `.claude/skills/theloop-post-setuprepo` symlink;
+  - marks the three helper scripts executable;
+  - runs `ensure-vendor.sh` during install;
+  - prints the skill and vendor paths and instructs the user to run `/theloopify` in Claude Code from a project clone.
+
+  The description must **not** say the install script itself runs `theloopify` against the user's project, writes `PRECOMMIT.md`, or completes `/theloop-post-setuprepo` — those are performed later by the installed skill, not by this terminal script.
