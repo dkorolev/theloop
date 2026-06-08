@@ -65,9 +65,7 @@ Work from the **repository root** you want to instrument (the current working di
 
 3. **Run the mechanical installer.** Execute:
 
-   ```sh
-   ~/.claude/skills/theloopify/scripts/run-theloopify.sh
-   ```
+       ~/.claude/skills/theloopify/scripts/run-theloopify.sh
 
    from the repository root (no arguments — it instruments the current directory).
 
@@ -86,9 +84,7 @@ Work from the **repository root** you want to instrument (the current working di
 
    Optionally run the bundled verifier for a deterministic check:
 
-   ```sh
-   ~/.claude/skills/theloopify/scripts/verify-install.sh
-   ```
+       ~/.claude/skills/theloopify/scripts/verify-install.sh
 
    If verification fails, stop and report what is missing.
 
