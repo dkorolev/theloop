@@ -27,7 +27,9 @@ Throughout this run, record progress on the GitHub issue by posting comments via
 |------|-----------------------------------|
 | After choosing a branch | `started working; chose branch \`<branch>\`` |
 | After committing | `committed <sha>` for a single commit, or `committed <sha1>, <sha2>, …` listing every new commit on this branch (short SHAs, seven characters each) |
+| After pushing to the remote | `pushed <sha>`, or `pushed <sha1>, <sha2>, …` listing every commit pushed (the same short SHAs as the commit entry) |
 | Before each PreCommitSkill run | `running the checks` |
+| When a PreCommitSkill run fails | `checks failed — <failing check(s)>` — record the failure itself, naming each failing check, before you begin fixing |
 | During the fix loop | `fixing …` — name the failing check or error in the same comment |
 | After the PR is created | `created PR #<pr_number>` |
 
@@ -70,7 +72,7 @@ The Python scripts under `.skills/theloop-fixissue/scripts/` are executable and 
 
 9. **Evaluate the outcome.**
    - If `PreCommitSkill` reported `"pass"`, proceed to step 11.
-   - If it reported `"fail"` or `"error"`, proceed to the fix loop (step 10).
+   - If it reported `"fail"` or `"error"`, journal `checks failed — <failing check(s)>` (naming each failing check from the receipt) so the local gate failure is timestamped in the issue, then proceed to the fix loop (step 10).
 
 10. **Fix loop.** While `PreCommitSkill` has not reported `"pass"`, and fewer than five total `PreCommitSkill` invocations have occurred in this run:
    a. Journal: `fixing …` — summarize what failed.
@@ -87,7 +89,7 @@ The Python scripts under `.skills/theloop-fixissue/scripts/` are executable and 
 
    To produce more than one commit while preserving the exclusions above, run `stage-allowed.py` once and read its `staged` list (the paths cleared to commit) and its `excluded` prefixes. Then, for each logical group: clear the index with `git restore --staged .`, stage just that group with `git add -- <paths>` — choosing only paths from the `staged` list and never one under an `excluded` prefix — and commit. After the final group, run `stage-allowed.py` again and confirm its `staged` list is now empty, so no allowed change was left uncommitted. When a single commit is appropriate, run `stage-allowed.py` and commit directly.
 
-   Reference the issue in every commit message (for example, `Implement feature for Issue #<IssueIndex>`), and journal every new commit SHA on the branch. Every commit must be authored by the user's configured git identity — never by the AI assistant: do not add any AI-assistant attribution to the commit message (no `Generated with …` line, no `Co-Authored-By:` trailer naming an AI assistant, model, or tool, and no other mention of the AI that produced the change). Run `git push -u origin <branch>`.
+   Reference the issue in every commit message (for example, `Implement feature for Issue #<IssueIndex>`), and journal every new commit SHA on the branch. Every commit must be authored by the user's configured git identity — never by the AI assistant: do not add any AI-assistant attribution to the commit message (no `Generated with …` line, no `Co-Authored-By:` trailer naming an AI assistant, model, or tool, and no other mention of the AI that produced the change). Run `git push -u origin <branch>`, then journal `pushed <sha…>` listing the same short SHAs you committed, so the push is timestamped in the issue.
 
 12. **Create the pull request.** Build a PR body and save it to `tmp/<SkillRunId>-pr-body.md`. The body **must** include all of the following:
    - A prominent notice that **this pull request was created by theloop** (for example, a blockquote near the top: `> This pull request was created by **theloop**.`).
