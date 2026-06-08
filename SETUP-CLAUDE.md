@@ -134,8 +134,8 @@ chmod +x "${SCRIPTS_DIR}/ensure-vendor.sh"
 cat > "${SCRIPTS_DIR}/run-theloopify.sh" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-SKILL_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VENDOR="${SKILL_ROOT}/vendor/theloop"
+SKILL_ROOT="${SKILL_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+VENDOR="${SKILL_ROOT:?run-theloopify.sh is corrupted: SKILL_ROOT line missing}/vendor/theloop"
 "${SKILL_ROOT}/scripts/ensure-vendor.sh"
 TARGET="${1:-$PWD}"
 if [ -x "${VENDOR}/theloopify" ]; then
