@@ -32,6 +32,8 @@ Throughout this run, record progress on the GitHub issue by posting comments via
 | When a PreCommitSkill run fails | `checks failed — <failing check(s)>` — record the failure itself, naming each failing check, before you begin fixing |
 | During the fix loop | `fixing …` — name the failing check or error in the same comment |
 | After the PR is created | `created PR #<pr_number>` |
+| While waiting on GitHub gates | `waiting on GitHub checks: <check names>` |
+| After the GitHub gates settle | `GitHub checks passed`, or `GitHub checks failed — <failing check(s)>` |
 
 Use `--body-file` when the comment is long; otherwise `--body TEXT`.
 
@@ -119,15 +121,24 @@ The Python scripts under `.skills/theloop-fixissue/scripts/` are executable and 
 
    Run `.skills/theloop-fixissue/scripts/create-pr.py` with `--title TITLE` (the issue title, or a concise variant), `--body-file tmp/<SkillRunId>-pr-body.md`, and `--head <branch>`. The script creates a PR with the `theloop` label and prints JSON with `pr_number` and `pr_url`. Journal: `created PR #<pr_number>`.
 
-13. **Final report.** Tell the user:
+13. **Watch the GitHub gates.** After the PR is opened, the repository may run required GitHub checks (CI and other status gates) against it. Wait for them so the issue timeline records the wait with timestamps, and journal around it:
+    - Before waiting, journal `waiting on GitHub checks: <check names>` — list the pending checks; if you cannot enumerate them, write `waiting on GitHub checks`.
+    - Run `gh pr checks <pr_number> --watch` from the repository root to block until the gates settle.
+    - When they settle, journal `GitHub checks passed`, or `GitHub checks failed — <failing check(s)>` naming each failing gate.
+    - If the PR has no required GitHub checks (`gh pr checks` reports none), journal `no GitHub checks configured` and continue.
+
+    This step waits on and reports the GitHub gates; it does **not** change the run receipt, whose `status` continues to reflect PR creation and the final local `PreCommitSkill` outcome. Surface any GitHub gate failure to the user in the final report.
+
+14. **Final report.** Tell the user:
     - That the pull request was created successfully
     - The PR number and full PR URL — prominently, on their own lines
     - The branch name and issue URL
+    - The outcome of the GitHub gates (passed, failed with which checks, or none configured)
     - The path of the feature design document
     - The `SkillRunId` of this run and the `SkillRunId` of the final `PreCommitSkill` run
     - A brief summary of what was implemented
 
-14. **Write the run receipt** by calling `.skills/theloop-fixissue/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--status pass|fail|error`; when status is `pass`: `--issue-number N`, `--issue-url URL`, `--branch NAME`, `--pr-number N`, `--pr-url URL`, `--feature-doc-path PATH`, `--implementation-attempts N`, `--pre-commit-skill-run-id ID`, `--gh-check-sub-run-id ID`, and `--commits "sha1 sha2 ..."` (space-separated short SHAs of commits on this branch not on the base); when status is `fail`: include whatever fields were determined before failure; when status is `error`: `--error TEXT`. The script validates the schema and refuses to overwrite an existing receipt.
+15. **Write the run receipt** by calling `.skills/theloop-fixissue/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--status pass|fail|error`; when status is `pass`: `--issue-number N`, `--issue-url URL`, `--branch NAME`, `--pr-number N`, `--pr-url URL`, `--feature-doc-path PATH`, `--implementation-attempts N`, `--pre-commit-skill-run-id ID`, `--gh-check-sub-run-id ID`, and `--commits "sha1 sha2 ..."` (space-separated short SHAs of commits on this branch not on the base); when status is `fail`: include whatever fields were determined before failure; when status is `error`: `--error TEXT`. The script validates the schema and refuses to overwrite an existing receipt.
 
 ## Run receipt schema
 
