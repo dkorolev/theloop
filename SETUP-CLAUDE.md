@@ -126,7 +126,7 @@ else
 fi
 
 if [ ! -f "${VENDOR}/theloopify.sh" ] && [ ! -x "${VENDOR}/theloopify" ]; then
-  echo "error: ${VENDOR} is missing theloopify.sh — publish theloop to ${REPO} first" >&2
+  echo "error: ${VENDOR} has no usable installer (neither theloopify.sh nor an executable theloopify) — publish theloop to ${REPO} first" >&2
   exit 1
 fi
 EOF
@@ -184,7 +184,7 @@ This is a one-time terminal installer. It puts a global **`/theloopify`** skill 
 
 2. **Write the global `/theloopify` skill.** It creates `~/.claude/skills/theloopify/SKILL.md`, which tells Claude Code how to instrument the repository you are working in: detect prior runs via `.theloop/theloopified` and `.theloop/configure_the_loop.done`, run the bundled mechanical `theloopify` installer when needed, verify the skill bundle landed, and then execute the one-time agentic `/theloop-post-setuprepo` skill installed into that repository.
 
-3. **Write `ensure-vendor.sh`.** This helper shallow-clones `https://github.com/dkorolev/theloop` (branch `main`, overridable via `THELOOP_VENDOR_BRANCH`) into `vendor/theloop`, or refreshes that clone on re-run. It refuses a symlink at `vendor/theloop` and exits with an error if the checkout lacks `theloopify.sh`.
+3. **Write `ensure-vendor.sh`.** This helper shallow-clones `https://github.com/dkorolev/theloop` (branch `main`, overridable via `THELOOP_VENDOR_BRANCH`) into `vendor/theloop`, or refreshes that clone on re-run. It refuses a symlink at `vendor/theloop` and exits with an error if the checkout contains no usable installer — that is, when neither `theloopify.sh` nor an executable `theloopify` is present.
 
 4. **Write `run-theloopify.sh`.** This helper calls `ensure-vendor.sh`, then runs the bundled `theloopify` (or `theloopify.sh`) against a target directory — defaulting to the current working directory when no argument is given.
 
