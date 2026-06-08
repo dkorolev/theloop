@@ -29,9 +29,11 @@ Throughout this run, record progress on the GitHub issue by posting comments via
 | After committing | `committed <sha>` for a single commit, or `committed <sha1>, <sha2>, …` listing every new commit on this branch (short SHAs, seven characters each) |
 | Before each PreCommitSkill run | `running the checks` |
 | During the fix loop | `fixing …` — name the failing check or error in the same comment |
-| After the PR is created | `created PR #<pr_number> — <pr_url>` |
+| After the PR is created | `created PR #<pr_number> at <pr_url>` |
 
 Use `--body-file` when the comment is long; otherwise `--body TEXT`.
+
+When referring to a GitHub issue or pull request number in journal text, PR bodies, or commit messages, always write **`Issue #N`** or **`PR #N`** (capitalized prefix, hash, number) — never bare `#N` alone, and never a Markdown link whose anchor text is `#N`. GitHub autolinks `#N`; duplicating it as `[#N](url)` produces doubled links like `#2 — #2`. Link each issue or PR at most once: rely on autolinking for `Issue #N` / `PR #N`, or use a single descriptive link such as `[Issue #N: title](url)` — not both. The sole exception is the PR closing line: keep plain `Closes #N` with no Markdown link so merging auto-closes the issue.
 
 ## Sub-skill execution
 
@@ -44,7 +46,7 @@ The Python scripts under `.skills/MakePRForIssue/scripts/` are executable and be
 1. **Check the configuration gate, then generate the run identifier.** First run `.skills/MakePRForIssue/scripts/check-configured.py` from the repository root. If it exits non-zero (the repository has been theloopified but `ConfigureTheLoop` has not completed), stop immediately: tell the user they must run `ConfigureTheLoop` before implementing an issue, and do not generate an identifier. When it reports configured — including the not-applicable case in a non-theloopified repository, such as the theloop repository itself — continue. Then run `.skills/MakePRForIssue/scripts/new-run-id.sh` from the repository root: it prints a fresh `SkillRunId` in the default format codified in the rule on run receipts, `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}` — the local date and time at which the run started, followed by six random lowercase Latin letters (for example, `20260607-153012-kqzwxy`). Tell the user which identifier was generated. Then confirm that `tmp/<SkillRunId>.json` does not already exist; if it does, stop immediately and report an error without touching the file.
 
 2. **Verify GitHub access.** Execute `InternalSkillCheckGhRepoAccessWithRunId` **inline** (see Sub-skill execution above): read `.skills/InternalSkillCheckGhRepoAccessWithRunId/SKILL.md` and follow it directly with exactly one parameter — the sub-run identifier `<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId`. Read the sub-run receipt at `tmp/<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId.json`. If its `status` is not `"pass"`, relay every failing check and its remediation suggestion to the user, write the run receipt with `"status": "fail"`, and stop.
-   - When the check **passes**, immediately tell the user `GitHub access confirmed — loading issue #<IssueIndex>` and **continue to step 3 without pausing**. Do not end the run here.
+   - When the check **passes**, immediately tell the user `GitHub access confirmed — loading Issue #<IssueIndex>` and **continue to step 3 without pausing**. Do not end the run here.
 
 3. **Load the issue.** Run `.skills/MakePRForIssue/scripts/fetch-issue.py --issue-number <IssueIndex>` from the repository root. The script prints a JSON object with `number`, `title`, `body`, `url`, and `labels`. If the issue does not exist or cannot be read, write the run receipt with `"status": "error"` and stop. Treat the issue `body` as the authoritative feature specification (the same Markdown structure written by `IssueWhatWeJustDiscussed`). Warn the user if the `theloop` label is missing, but continue unless the issue body is empty.
 
@@ -79,13 +81,13 @@ The Python scripts under `.skills/MakePRForIssue/scripts/` are executable and be
 
    If `PreCommitSkill` has still not reported `"pass"` after five total invocations, write the run receipt with `"status": "fail"` and stop.
 
-11. **Commit and push.** Stage the changes by running `.skills/MakePRForIssue/scripts/stage-allowed.py` from the repository root: it stages every change except the paths listed in `.theloop/do_not_commit.txt`, so theloop instrumentation (the `.theloop/` scaffolding, the agent skill symlinks, and `tmp/`) is hard-excluded and can never land in the feature commit. In the theloop repository itself there is no `.theloop/do_not_commit.txt`, so it stages everything, as before. Feature design documents are user artifacts and are not excluded. Then commit with a clear commit message referencing the issue (for example, `Implement feature for #<IssueIndex>`). If the work required multiple commits during the fix loop, that is fine — journal every new commit SHA on the branch. Run `git push -u origin <branch>`.
+11. **Commit and push.** Stage the changes by running `.skills/MakePRForIssue/scripts/stage-allowed.py` from the repository root: it stages every change except the paths listed in `.theloop/do_not_commit.txt`, so theloop instrumentation (the `.theloop/` scaffolding, the agent skill symlinks, and `tmp/`) is hard-excluded and can never land in the feature commit. In the theloop repository itself there is no `.theloop/do_not_commit.txt`, so it stages everything, as before. Feature design documents are user artifacts and are not excluded. Then commit with a clear commit message referencing the issue (for example, `Implement feature for Issue #<IssueIndex>`). If the work required multiple commits during the fix loop, that is fine — journal every new commit SHA on the branch. Run `git push -u origin <branch>`.
 
 12. **Create the pull request.** Build a PR body and save it to `tmp/<SkillRunId>-pr-body.md`. The body **must** include all of the following:
    - A prominent notice that **this pull request was created by theloop** (for example, a blockquote near the top: `> This pull request was created by **theloop**.`).
-   - A statement that **this PR implements issue #\<IssueIndex\>** (substitute the issue number), with a Markdown link to the issue URL from step 3.
+   - A statement that **this PR implements Issue #\<IssueIndex\>** (substitute the issue number), with the issue title linked once to the issue URL from step 3 (see GitHub reference formatting under Journal).
    - A pointer that the **problem statement, acceptance criteria, and design decisions** are recorded in that issue — reviewers should read the issue for full context rather than duplicating the entire spec in the PR.
-   - `Closes #<IssueIndex>` so merging closes the issue.
+   - Plain `Closes #<IssueIndex>` on its own line (no Markdown link) so merging closes the issue.
    - A brief summary of what was implemented in this PR.
    - The path to the feature design document written in step 5.
 
@@ -94,7 +96,7 @@ The Python scripts under `.skills/MakePRForIssue/scripts/` are executable and be
    ```markdown
    > This pull request was created by **theloop**.
 
-   This PR implements issue #<IssueIndex> — [<issue title>](<issue_url>).
+   This PR implements Issue #<IssueIndex> — [<issue title>](<issue_url>).
 
    The problem statement, acceptance criteria, and design decisions are recorded in that issue; read it for full context.
 
@@ -107,7 +109,7 @@ The Python scripts under `.skills/MakePRForIssue/scripts/` are executable and be
    `<feature_doc_path>`
    ```
 
-   Run `.skills/MakePRForIssue/scripts/create-pr.py` with `--title TITLE` (the issue title, or a concise variant), `--body-file tmp/<SkillRunId>-pr-body.md`, and `--head <branch>`. The script creates a PR with the `theloop` label and prints JSON with `pr_number` and `pr_url`. Journal: `created PR #<pr_number> — <pr_url>`.
+   Run `.skills/MakePRForIssue/scripts/create-pr.py` with `--title TITLE` (the issue title, or a concise variant), `--body-file tmp/<SkillRunId>-pr-body.md`, and `--head <branch>`. The script creates a PR with the `theloop` label and prints JSON with `pr_number` and `pr_url`. Journal: `created PR #<pr_number> at <pr_url>`.
 
 13. **Final report.** Tell the user:
     - That the pull request was created successfully
