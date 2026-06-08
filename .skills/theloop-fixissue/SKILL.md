@@ -34,6 +34,8 @@ Throughout this run, record progress on the GitHub issue by posting comments via
 | After the PR is created | `created PR #<pr_number>` |
 | While waiting on GitHub gates | `waiting on GitHub checks: <check names>` |
 | After the GitHub gates settle | `GitHub checks passed`, or `GitHub checks failed — <failing check(s)>` |
+| When restarting a flaky gate | `restarting flaky gate <name>` |
+| When fixing a red gate | `fixing GitHub gate <name> — <root cause>` |
 
 Use `--body-file` when the comment is long; otherwise `--body TEXT`.
 
@@ -121,13 +123,16 @@ The Python scripts under `.skills/theloop-fixissue/scripts/` are executable and 
 
    Run `.skills/theloop-fixissue/scripts/create-pr.py` with `--title TITLE` (the issue title, or a concise variant), `--body-file tmp/<SkillRunId>-pr-body.md`, and `--head <branch>`. The script creates a PR with the `theloop` label and prints JSON with `pr_number` and `pr_url`. Journal: `created PR #<pr_number>`.
 
-13. **Watch the GitHub gates.** After the PR is opened, the repository may run required GitHub checks (CI and other status gates) against it. Wait for them so the issue timeline records the wait with timestamps, and journal around it:
+13. **Drive the GitHub gates to green.** After the PR is opened, the repository may run required GitHub checks (CI and other status gates) against it. If the PR has any such gates, **this skill is not done until every one of them is green.** Journal around the wait so the issue timeline records it with timestamps:
     - Before waiting, journal `waiting on GitHub checks: <check names>` — list the pending checks; if you cannot enumerate them, write `waiting on GitHub checks`.
-    - Run `gh pr checks <pr_number> --watch` from the repository root to block until the gates settle.
-    - When they settle, journal `GitHub checks passed`, or `GitHub checks failed — <failing check(s)>` naming each failing gate.
-    - If the PR has no required GitHub checks (`gh pr checks` reports none), journal `no GitHub checks configured` and continue.
-
-    This step waits on and reports the GitHub gates; it does **not** change the run receipt, whose `status` continues to reflect PR creation and the final local `PreCommitSkill` outcome. Surface any GitHub gate failure to the user in the final report.
+    - Poll the gates roughly every ten seconds until every one has settled — green (passed) or red (failed) — rather than leaving while any is still pending. `gh pr checks <pr_number> --watch --interval 10` from the repository root blocks until they settle and exits non-zero if any gate is red.
+    - If the PR has no required GitHub checks (`gh pr checks` reports none), journal `no GitHub checks configured` and continue to the final report.
+    - When every gate is green, journal `GitHub checks passed` and continue to the final report.
+    - When one or more gates are red, journal `GitHub checks failed — <failing check(s)>`, then resolve each failing gate and go back to polling. Repeat as many times as necessary until every gate is green:
+        - **Likely flakiness** — when the failure is plainly infrastructural and transient rather than caused by this change (for example, a Docker image or dependency that could not be downloaded, a runner that died mid-job, a network timeout): just restart the gate — `gh run rerun <run-id> --failed` (read the run id from `gh pr checks` or `gh run list`). Journal `restarting flaky gate <name>`.
+        - **A real failure** — otherwise, read the gate's logs (`gh run view <run-id> --log-failed`) and dig down to the root cause. Fix it diligently: work out the goal the gate is enforcing and make the code actually meet that goal. Do **not** remove, disable, or weaken the gate, and do **not** paper over it with a hack. Journal `fixing GitHub gate <name> — <root cause>`, apply the fix, then commit and push it under step 11's commit-and-push discipline (journal `committed <sha…>` and `pushed <sha…>`); the push re-triggers the gates.
+        - After restarting a gate or pushing a fix, journal `waiting on GitHub checks` again and poll as above.
+    - Only when every gate is green is the GitHub work done. Stop with failure only as a genuine last resort: if a gate stays red because the change really does not meet the gate's goal and the sole way to make it pass would be to weaken or remove the gate, do not do that — journal the situation, write the run receipt with `"status": "fail"`, report it to the user, and stop. Never declare success while a gate is red.
 
 14. **Final report.** Tell the user:
     - That the pull request was created successfully
@@ -164,8 +169,8 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
 ```
 
 - `commits` is `[]` when no commits were made, and `null` only when `status` is `"error"` before any commit;
-- `status` is `"pass"` when the PR was created and the final `PreCommitSkill` run reported `"pass"` (then `error` is `null`);
-- `"fail"` when checks or PR creation failed after partial progress (then `error` is `null`);
+- `status` is `"pass"` when the PR was created, the final `PreCommitSkill` run reported `"pass"`, and every GitHub gate on the PR is green — or the PR has no GitHub gates (then `error` is `null`);
+- `"fail"` when checks or PR creation failed after partial progress, or a GitHub gate stayed red and could not be driven green without weakening it (then `error` is `null`);
 - `"error"` when the skill could not proceed — bad parameters, missing issue, or a pre-existing receipt file (then nullable fields are `null` and `error` explains why).
 
 **Run receipt (final reminder):** before finishing this skill — regardless of outcome, success, failure, or error alike — write `tmp/<SkillRunId>.json` containing a single well-formed JSON object conforming to the schema above. The only exception is when `tmp/<SkillRunId>.json` already existed before the run: in that case, never overwrite it.
