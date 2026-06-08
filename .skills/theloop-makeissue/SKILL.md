@@ -41,9 +41,9 @@ The Python scripts under `.skills/theloop-makeissue/scripts/` are executable and
    Detailed description of what the system should do — interfaces, flows, and edge cases.
 
    ## Acceptance criteria
-   - [ ] Criterion 1 — concrete and testable
-   - [ ] Criterion 2
-   - [ ] …
+   - Criterion 1 — concrete and testable
+   - Criterion 2
+   - …
 
    ## Design notes and constraints
    Decisions, non-goals, dependencies, or limits mentioned in the conversation.
@@ -51,6 +51,8 @@ The Python scripts under `.skills/theloop-makeissue/scripts/` are executable and
    ## Open questions
    Remaining uncertainties, or "None" when everything is settled.
    ```
+
+   Use plain Markdown bullets throughout the specification — never task-list checkboxes (`- [ ]`); these issues are not checked off interactively, so checkboxes only add noise.
 
    Present the draft specification to the user and ask whether it accurately captures what should be built. If they request changes, revise the draft and ask again. Do not proceed until the user confirms the specification is correct.
 
