@@ -1,7 +1,7 @@
 ---
 name: theloop-makeissue
 description: Summarizes the current conversation into a complete feature description, asks the human for clarifications until the picture is clear, verifies GitHub CLI access, then creates a GitHub issue tagged with theloop. Use when the user wants to capture a feature discussion as a tracked issue, file a feature request from a design conversation, or turn what was just discussed into a GitHub issue.
-invokes: [InternalSkillCheckGhRepoAccessWithRunId]
+invokes: [theloop-internal-check-gh-repo-access]
 ---
 
 # theloop-makeissue
@@ -20,7 +20,7 @@ The Python scripts under `.skills/theloop-makeissue/scripts/` are executable and
 
 1. **Check the configuration gate, then generate the run identifier.** First run `.skills/theloop-makeissue/scripts/check-configured.py` from the repository root. If it exits non-zero (the repository has been theloopified but `newrepo-theloopify-internal-postinit` has not completed), stop immediately: tell the user they must run `newrepo-theloopify-internal-postinit` before capturing an issue, and do not generate an identifier. When it reports configured — including the not-applicable case in a non-theloopified repository, such as the theloop repository itself — continue. Then run `.skills/theloop-makeissue/scripts/new-run-id.sh` from the repository root: it prints a fresh `SkillRunId` in the default format codified in the rule on run receipts, `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}` — the local date and time at which the run started, followed by six random lowercase Latin letters (for example, `20260607-153012-kqzwxy`). Tell the user which identifier was generated. Then confirm that `tmp/<SkillRunId>.json` does not already exist; if it does, stop immediately and report an error without touching the file.
 
-2. **Verify GitHub access.** Invoke the `InternalSkillCheckGhRepoAccessWithRunId` skill with exactly one parameter: the sub-run identifier `<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId`. Invoke it through the configured skill runner if one is available; otherwise execute it by reading `.skills/InternalSkillCheckGhRepoAccessWithRunId/SKILL.md` and following its instructions literally. Read the sub-run receipt at `tmp/<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId.json`. If its `status` is not `"pass"`, relay every failing check and its remediation suggestion to the user, write the run receipt with `"status": "fail"`, and stop without creating an issue.
+2. **Verify GitHub access.** Invoke the `theloop-internal-check-gh-repo-access` skill with exactly one parameter: the sub-run identifier `<SkillRunId>-theloop-internal-check-gh-repo-access`. Invoke it through the configured skill runner if one is available; otherwise execute it by reading `.skills/theloop-internal-check-gh-repo-access/SKILL.md` and following its instructions literally. Read the sub-run receipt at `tmp/<SkillRunId>-theloop-internal-check-gh-repo-access.json`. If its `status` is not `"pass"`, relay every failing check and its remediation suggestion to the user, write the run receipt with `"status": "fail"`, and stop without creating an issue.
 
 3. **Extract the feature from the conversation.** Review the entire current conversation — all turns visible to the outer shell running this skill — and determine what feature the user wants built. If the conversation contains no feature discussion at all, write the run receipt with `"status": "error"` and stop: report to the user that no feature request was found and ask them to describe what to build before invoking this skill again.
 
@@ -80,7 +80,7 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
   "feature_summary": "string|null — one-sentence summary of the feature, null when status is error",
   "issue_number": "integer|null — the GitHub issue number, null when no issue was created",
   "issue_url": "string|null — the full GitHub issue URL, null when no issue was created",
-  "gh_check_sub_run_id": "string|null — the InternalSkillCheckGhRepoAccessWithRunId sub-run identifier, null when status is error before the sub-run started",
+  "gh_check_sub_run_id": "string|null — the theloop-internal-check-gh-repo-access sub-run identifier, null when status is error before the sub-run started",
   "error": "string|null — set only when status is error"
 }
 ```

@@ -36,14 +36,14 @@ The registry exists so that no run ever has to crawl the repository looking for 
 
 ## When rules run
 
-Rules are checked by `InternalSkillCheckAllRulesWithRunId`, which is invoked by `InternalSkillPreCommitSkillWithRunId` as part of the pre-commit gate. Individual rules are each checked by `InternalSkillCheckSingleRuleWithRunId`. To keep model usage minimal, each rule check is cached using the technique documented in [`.theloop/CACHING.md`](CACHING.md):
+Rules are checked by `theloop-internal-check-all-rules`, which is invoked by `theloop-internal-precommit` as part of the pre-commit gate. Individual rules are each checked by `theloop-internal-check-single-rule`. To keep model usage minimal, each rule check is cached using the technique documented in [`.theloop/CACHING.md`](CACHING.md):
 
 * the rule's input set is its resolved scope (the rule file plus every in-scope file; editing the rule text or scope invalidates the cache);
 * the check name is `rule:<path-to-rule.yml>`, so the rule's identity is part of the fingerprint;
-* `InternalSkillCheckSingleRuleWithRunId` parses and validates the YAML first — invalid syntax or schema fails mechanically with a precise error;
+* `theloop-internal-check-single-rule` parses and validates the YAML first — invalid syntax or schema fails mechanically with a precise error;
 * then it probes the cache — a single Python script call that classifies the rule as **cached** (pass already on record for byte-identical content) or **stale** (must run);
-* cached rules are skipped entirely; stale rules are checked by fanning out subagents in `InternalSkillCheckAllRulesWithRunId`, since they are independent of each other;
-* on a cache miss `InternalSkillCheckSingleRuleWithRunId` reads the `rule:` text and judges only the scoped files, then writes the cache entry only when the rule passes.
+* cached rules are skipped entirely; stale rules are checked by fanning out subagents in `theloop-internal-check-all-rules`, since they are independent of each other;
+* on a cache miss `theloop-internal-check-single-rule` reads the `rule:` text and judges only the scoped files, then writes the cache entry only when the rule passes.
 
 A failing rule blocks the commit, and its failure is never cached.
 

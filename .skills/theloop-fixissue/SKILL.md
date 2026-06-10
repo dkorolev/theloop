@@ -1,8 +1,8 @@
 ---
 name: theloop-fixissue
-description: Implements a GitHub issue as a pull request. Takes an issue number, verifies GitHub CLI access, chooses a unique branch name, implements the feature from the issue spec, runs PreCommitSkill until it passes, commits, opens a theloop-labeled PR, and journals progress as comments on the issue. Use when the user runs theloop-fixissue with an issue index, wants to implement a filed feature request, or follow up after theloop-makeissue.
+description: Implements a GitHub issue as a pull request. Takes an issue number, verifies GitHub CLI access, chooses a unique branch name, implements the feature from the issue spec, runs theloop-precommit until it passes, commits, opens a theloop-labeled PR, and journals progress as comments on the issue. Use when the user runs theloop-fixissue with an issue index, wants to implement a filed feature request, or follow up after theloop-makeissue.
 argument-hint: <IssueIndex>
-invokes: [InternalSkillCheckGhRepoAccessWithRunId, PreCommitSkill]
+invokes: [theloop-internal-check-gh-repo-access, theloop-precommit]
 ---
 
 # theloop-fixissue
@@ -28,8 +28,8 @@ Throughout this run, record progress on the GitHub issue by posting comments via
 | After choosing a branch | `started working; chose branch \`<branch>\`` |
 | After committing | `committed <sha>` for a single commit, or `committed <sha1>, <sha2>, …` listing every new commit on this branch (short SHAs, seven characters each) |
 | After pushing to the remote | `pushed <sha>`, or `pushed <sha1>, <sha2>, …` listing every commit pushed (the same short SHAs as the commit entry) |
-| Before each PreCommitSkill run | `running the checks` |
-| When a PreCommitSkill run fails | `checks failed — <failing check(s)>` — record the failure itself, naming each failing check, before you begin fixing |
+| Before each theloop-precommit run | `running the checks` |
+| When a theloop-precommit run fails | `checks failed — <failing check(s)>` — record the failure itself, naming each failing check, before you begin fixing |
 | During the fix loop | `fixing …` — name the failing check or error in the same comment |
 | After the PR is created | `created PR #<pr_number>` |
 | While waiting on GitHub gates | `waiting on GitHub checks: <check names>` |
@@ -51,7 +51,7 @@ The Python scripts under `.skills/theloop-fixissue/scripts/` are executable and 
 
 1. **Check the configuration gate and git identity, then generate the run identifier.** First run `.skills/theloop-fixissue/scripts/check-configured.py` from the repository root. If it exits non-zero (the repository has been theloopified but `newrepo-theloopify-internal-postinit` has not completed), stop immediately: tell the user they must run `newrepo-theloopify-internal-postinit` before implementing an issue, and do not generate an identifier. When it reports configured — including the not-applicable case in a non-theloopified repository, such as the theloop repository itself — continue. Next, confirm a git author identity is configured: run `git config user.name` and `git config user.email`. If either prints nothing (unset or empty), stop immediately — tell the user to set their git identity first (for example, `git config --global user.name "Your Name"` and `git config --global user.email "you@example.com"`) before re-running this skill, since the commit and push performed later in this skill would otherwise fail or be misattributed — and do not generate an identifier. When both are set, continue. Then run `.skills/theloop-fixissue/scripts/new-run-id.sh` from the repository root: it prints a fresh `SkillRunId` in the default format codified in the rule on run receipts, `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}` — the local date and time at which the run started, followed by six random lowercase Latin letters (for example, `20260607-153012-kqzwxy`). Tell the user which identifier was generated. Then confirm that `tmp/<SkillRunId>.json` does not already exist; if it does, stop immediately and report an error without touching the file.
 
-2. **Verify GitHub access.** Execute `InternalSkillCheckGhRepoAccessWithRunId` **inline** (see Sub-skill execution above): read `.skills/InternalSkillCheckGhRepoAccessWithRunId/SKILL.md` and follow it directly with exactly one parameter — the sub-run identifier `<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId`. Read the sub-run receipt at `tmp/<SkillRunId>-InternalSkillCheckGhRepoAccessWithRunId.json`. If its `status` is not `"pass"`, relay every failing check and its remediation suggestion to the user, write the run receipt with `"status": "fail"`, and stop.
+2. **Verify GitHub access.** Execute `theloop-internal-check-gh-repo-access` **inline** (see Sub-skill execution above): read `.skills/theloop-internal-check-gh-repo-access/SKILL.md` and follow it directly with exactly one parameter — the sub-run identifier `<SkillRunId>-theloop-internal-check-gh-repo-access`. Read the sub-run receipt at `tmp/<SkillRunId>-theloop-internal-check-gh-repo-access.json`. If its `status` is not `"pass"`, relay every failing check and its remediation suggestion to the user, write the run receipt with `"status": "fail"`, and stop.
    - When the check **passes**, immediately tell the user `GitHub access confirmed — loading Issue #<IssueIndex>` and **continue to step 3 without pausing**. Do not end the run here.
 
 3. **Load the issue.** Run `.skills/theloop-fixissue/scripts/fetch-issue.py --issue-number <IssueIndex>` from the repository root. The script prints a JSON object with `number`, `title`, `body`, `url`, and `labels`. If the issue does not exist or cannot be read, write the run receipt with `"status": "error"` and stop. Treat the issue `body` as the authoritative feature specification (the same Markdown structure written by `theloop-makeissue`). Warn the user if the `theloop` label is missing, but continue unless the issue body is empty.
@@ -72,20 +72,20 @@ The Python scripts under `.skills/theloop-fixissue/scripts/` are executable and 
 
 7. **Implement the feature.** Using the issue body and the design document as the specification, write or modify the source files needed to realize the feature. Keep code, configuration, and tests consistent with the design document.
 
-8. **Run PreCommitSkill.** Journal: `running the checks`. Execute `PreCommitSkill` **inline** (see Sub-skill execution above): read `.skills/PreCommitSkill/SKILL.md` and follow it directly, passing no parameters. Record the `SkillRunId` that `PreCommitSkill` generates and whether its final verdict was `"pass"`. When it finishes, continue to step 9 — do not treat PreCommitSkill completion as the end of this run.
+8. **Run theloop-precommit.** Journal: `running the checks`. Execute `theloop-precommit` **inline** (see Sub-skill execution above): read `.skills/theloop-precommit/SKILL.md` and follow it directly, passing no parameters. Record the `SkillRunId` that `theloop-precommit` generates and whether its final verdict was `"pass"`. When it finishes, continue to step 9 — do not treat theloop-precommit completion as the end of this run.
 
 9. **Evaluate the outcome.**
-   - If `PreCommitSkill` reported `"pass"`, proceed to step 11.
+   - If `theloop-precommit` reported `"pass"`, proceed to step 11.
    - If it reported `"fail"` or `"error"`, journal `checks failed — <failing check(s)>` (naming each failing check from the receipt) so the local gate failure is timestamped in the issue, then proceed to the fix loop (step 10).
 
-10. **Fix loop.** While `PreCommitSkill` has not reported `"pass"`, and fewer than five total `PreCommitSkill` invocations have occurred in this run:
+10. **Fix loop.** While `theloop-precommit` has not reported `"pass"`, and fewer than five total `theloop-precommit` invocations have occurred in this run:
    a. Journal: `fixing …` — summarize what failed.
-   b. Read every failing check from the most recent `PreCommitSkill` receipt and its sub-run receipts.
+   b. Read every failing check from the most recent `theloop-precommit` receipt and its sub-run receipts.
    c. Fix the root cause; align implementation with the design document, updating the document first when it must change.
    d. Do not remove or weaken a check to make it pass.
-   e. Journal: `running the checks`, then invoke `PreCommitSkill` again (step 8) and re-evaluate (step 9).
+   e. Journal: `running the checks`, then invoke `theloop-precommit` again (step 8) and re-evaluate (step 9).
 
-   If `PreCommitSkill` has still not reported `"pass"` after five total invocations, write the run receipt with `"status": "fail"` and stop.
+   If `theloop-precommit` has still not reported `"pass"` after five total invocations, write the run receipt with `"status": "fail"` and stop.
 
 11. **Commit and push.** Stage the changes by running `.skills/theloop-fixissue/scripts/stage-allowed.py` from the repository root: it stages every change except the paths listed in `.theloop/do_not_commit.txt`, so theloop instrumentation (the `.theloop/` scaffolding, the agent skill symlinks, `tmp/`, and the `.gitignore` change `theloopify` made) is hard-excluded and can never land in a commit. In the theloop repository itself there is no `.theloop/do_not_commit.txt`, so it stages everything, as before. Feature design documents are user artifacts and are not excluded.
 
@@ -140,7 +140,7 @@ The Python scripts under `.skills/theloop-fixissue/scripts/` are executable and 
     - The branch name and issue URL
     - The outcome of the GitHub gates (passed, failed with which checks, or none configured)
     - The path of the feature design document
-    - The `SkillRunId` of this run and the `SkillRunId` of the final `PreCommitSkill` run
+    - The `SkillRunId` of this run and the `SkillRunId` of the final `theloop-precommit` run
     - A brief summary of what was implemented
 
 15. **Write the run receipt** by calling `.skills/theloop-fixissue/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--status pass|fail|error`; when status is `pass`: `--issue-number N`, `--issue-url URL`, `--branch NAME`, `--pr-number N`, `--pr-url URL`, `--feature-doc-path PATH`, `--implementation-attempts N`, `--pre-commit-skill-run-id ID`, `--gh-check-sub-run-id ID`, and `--commits "sha1 sha2 ..."` (space-separated short SHAs of commits on this branch not on the base); when status is `fail`: include whatever fields were determined before failure; when status is `error`: `--error TEXT`. The script validates the schema and refuses to overwrite an existing receipt.
@@ -160,16 +160,16 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
   "pr_number": "integer|null — the GitHub pull request number, null when no PR was created",
   "pr_url": "string|null — the full GitHub pull request URL, null when no PR was created",
   "feature_doc_path": "string|null — path to the design document, null when status is error",
-  "implementation_attempts": "integer|null — total PreCommitSkill invocations, null when status is error",
-  "pre_commit_skill_run_id": "string|null — SkillRunId of the final PreCommitSkill run, null when status is error",
-  "gh_check_sub_run_id": "string|null — InternalSkillCheckGhRepoAccessWithRunId sub-run identifier, null when status is error before that sub-run",
+  "implementation_attempts": "integer|null — total theloop-precommit invocations, null when status is error",
+  "pre_commit_skill_run_id": "string|null — SkillRunId of the final theloop-precommit run, null when status is error",
+  "gh_check_sub_run_id": "string|null — theloop-internal-check-gh-repo-access sub-run identifier, null when status is error before that sub-run",
   "commits": ["string — short commit SHA, seven characters"] ,
   "error": "string|null — set only when status is error"
 }
 ```
 
 - `commits` is `[]` when no commits were made, and `null` only when `status` is `"error"` before any commit;
-- `status` is `"pass"` when the PR was created, the final `PreCommitSkill` run reported `"pass"`, and every GitHub gate on the PR is green — or the PR has no GitHub gates (then `error` is `null`);
+- `status` is `"pass"` when the PR was created, the final `theloop-precommit` run reported `"pass"`, and every GitHub gate on the PR is green — or the PR has no GitHub gates (then `error` is `null`);
 - `"fail"` when checks or PR creation failed after partial progress, or a GitHub gate stayed red and could not be driven green without weakening it (then `error` is `null`);
 - `"error"` when the skill could not proceed — bad parameters, missing issue, or a pre-existing receipt file (then nullable fields are `null` and `error` explains why).
 

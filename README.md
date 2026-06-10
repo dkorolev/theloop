@@ -62,16 +62,15 @@ The same canonical skill copy under `.theloop/skills/` is symlinked into `.curso
 
 ## For theloop contributors
 
-A few skills are **developed and validated in this repo under a `…ForClientRepos` name** and **installed into client repos under their client-facing name**:
+A skill whose client behavior must differ from its theloop namesake is **developed and validated in this repo under a development name** and **installed into client repos under its client-facing name**:
 
 | Developed here (`.skills/`) | Installed in clients as |
 |---|---|
-| `PreCommitSkillForClientRepos` | `theloop-precommit` |
-| `ConfigureTheLoopForClientRepos` | `newrepo-theloopify-internal-postinit` |
+| `theloop-clientrepo-precommit` | `theloop-precommit` |
 
-The client never sees the `ForClientRepos` suffix — `theloopify` renames these and rewrites every `.skills/…` reference to `.theloop/skills/…` during the copy. The suffix lets these skills coexist with theloop's own full-strength `PreCommitSkill` (which stays here and is never shipped). `theloopify` also installs the internal sub-skill `InternalSkillPreCommitForClientWithRunId` that the client `theloop-precommit` skill delegates to.
+The client never sees the development name — `theloopify` renames it and rewrites every `.skills/…` reference to `.theloop/skills/…` during the copy. The separate name lets this skill coexist with theloop's own full-strength `theloop-precommit` (which stays here and is never shipped). `theloopify` also installs the internal sub-skill `theloop-internal-clientrepo-precommit` that the client `theloop-precommit` skill delegates to.
 
-The **meta-skills** (`InternalSkillValidateAllSkills`, `InternalSkillCheckAllRulesWithRunId`, `InternalSkillPreCommitSkillWithRunId`, and friends) exist to maintain theloop itself and are **never** installed into client repos; client repos get the slim workflow bundle only.
+The **meta-skills** (`theloop-internal-validate-all-skills`, `theloop-internal-check-all-rules`, `theloop-internal-precommit`, and friends) exist to maintain theloop itself and are **never** installed into client repos; client repos get the slim workflow bundle only.
 
 `theloopify.sh` (with the `theloopify` symlink) and its helper `theloopify-install.py` live at the repo root; `theloopify-test.sh` is a deterministic smoke test of the whole install, run as part of this repo's own pre-commit checks. `theloopify` is structured so it can later be wrapped as a Claude Code skill with minimal change.
 

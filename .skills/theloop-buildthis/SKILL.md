@@ -1,7 +1,7 @@
 ---
 name: theloop-buildthis
-description: Summarizes the current conversation to extract the feature request, implements the feature with a design document, then runs PreCommitSkill and iterates on any failures until the implementation is complete and all pre-commit checks pass.
-invokes: [PreCommitSkill]
+description: Summarizes the current conversation to extract the feature request, implements the feature with a design document, then runs theloop-precommit and iterates on any failures until the implementation is complete and all pre-commit checks pass.
+invokes: [theloop-precommit]
 ---
 
 # theloop-buildthis
@@ -38,26 +38,26 @@ The Python scripts under `.skills/theloop-buildthis/scripts/` are executable and
 
 4. **Implement the feature.** Using the conversation summary and the design document as the authoritative specification, write or modify the source files needed to realize the feature. Keep implementation code, configuration, and tests consistent with each other and with the design document.
 
-5. **Run PreCommitSkill.** Invoke the `PreCommitSkill` skill, passing no parameters. Invoke it through the configured skill runner if one is available; otherwise execute it by reading `.skills/PreCommitSkill/SKILL.md` and following its instructions literally. Record the `SkillRunId` that `PreCommitSkill` generates (it reports this identifier at the start of its run), and record whether its final verdict was `"pass"` or not.
+5. **Run theloop-precommit.** Invoke the `theloop-precommit` skill, passing no parameters. Invoke it through the configured skill runner if one is available; otherwise execute it by reading `.skills/theloop-precommit/SKILL.md` and following its instructions literally. Record the `SkillRunId` that `theloop-precommit` generates (it reports this identifier at the start of its run), and record whether its final verdict was `"pass"` or not.
 
 6. **Evaluate the outcome.**
-   - If `PreCommitSkill` reported `"pass"`, proceed to staging the changes (step 8).
+   - If `theloop-precommit` reported `"pass"`, proceed to staging the changes (step 8).
    - If it reported `"fail"` or `"error"`, proceed to the fix loop (step 7).
 
-7. **Fix loop.** While `PreCommitSkill` has not reported `"pass"`, and fewer than five total `PreCommitSkill` invocations have occurred in this run:
-   a. Read every failing check from the most recent `PreCommitSkill` receipt and its sub-run receipts.
+7. **Fix loop.** While `theloop-precommit` has not reported `"pass"`, and fewer than five total `theloop-precommit` invocations have occurred in this run:
+   a. Read every failing check from the most recent `theloop-precommit` receipt and its sub-run receipts.
    b. For each failing check, identify the root cause. If the implementation diverges from the design document, correct the implementation to match the document. If the design document itself needs revision to reflect a necessary change, update it first and then bring the implementation into alignment.
    c. Do not remove or weaken a check to make it pass; fix the underlying cause so the check genuinely holds.
-   d. Invoke the `PreCommitSkill` skill again (step 5) and re-evaluate (step 6).
+   d. Invoke the `theloop-precommit` skill again (step 5) and re-evaluate (step 6).
 
-   If `PreCommitSkill` has still not reported `"pass"` after five total invocations, write the run receipt with `"status": "fail"` and stop: report every remaining blocking issue to the user in full.
+   If `theloop-precommit` has still not reported `"pass"` after five total invocations, write the run receipt with `"status": "fail"` and stop: report every remaining blocking issue to the user in full.
 
 8. **Stage the implemented changes.** Run `.skills/theloop-buildthis/scripts/stage-allowed.py` from the repository root: it stages every change except the paths listed in `.theloop/do_not_commit.txt`, so theloop instrumentation (the `.theloop/` scaffolding, the agent skill symlinks, `tmp/`, and the `.gitignore` change `theloopify` made) is hard-excluded and can never be staged for a feature commit. In the theloop repository itself there is no `.theloop/do_not_commit.txt`, so it stages everything. Feature design documents are user artifacts and are not excluded. Leave the changes staged but uncommitted for the user to review and commit. The resulting commit is authored by the user, never by the AI assistant: do not create the commit on the user's behalf, and the commit message must contain no AI-assistant attribution (no `Generated with …` line, no `Co-Authored-By:` trailer naming an AI assistant, model, or tool, and no other mention of the AI that produced the change).
 
 9. **Final report.** Tell the user:
    - That the implementation is complete and all pre-commit checks pass
    - The path of the feature design document
-   - The `SkillRunId` of this run and the `SkillRunId` of the final `PreCommitSkill` run
+   - The `SkillRunId` of this run and the `SkillRunId` of the final `theloop-precommit` run
    - A brief summary of what was implemented
 
 10. **Write the run receipt** by calling `.skills/theloop-buildthis/scripts/write-receipt.py` with CLI flags: `--skill-run-id`, `--status pass|fail|error`; when status is not `error`: `--feature-summary TEXT`, `--feature-doc-path PATH`, `--implementation-attempts N`, `--pre-commit-skill-run-id ID`; when status is `error`: `--error TEXT`. The script validates the schema and refuses to overwrite an existing receipt.
@@ -73,14 +73,14 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
   "status": "pass | fail | error",
   "feature_summary": "string|null — one-sentence summary of what was built, null when status is error",
   "feature_doc_path": "string|null — path to the feature design document written during this run, null when status is error",
-  "implementation_attempts": "integer|null — total number of PreCommitSkill invocations in this run, null when status is error",
-  "pre_commit_skill_run_id": "string|null — the SkillRunId generated by the final PreCommitSkill invocation, null when status is error",
+  "implementation_attempts": "integer|null — total number of theloop-precommit invocations in this run, null when status is error",
+  "pre_commit_skill_run_id": "string|null — the SkillRunId generated by the final theloop-precommit invocation, null when status is error",
   "error": "string|null — set only when status is error"
 }
 ```
 
-- `status` is `"pass"` when the implementation is complete and the final `PreCommitSkill` run reported `"pass"` (then `error` is `null`);
-- `"fail"` when the fix loop was exhausted without a passing `PreCommitSkill` run (then `error` is `null`);
+- `status` is `"pass"` when the implementation is complete and the final `theloop-precommit` run reported `"pass"` (then `error` is `null`);
+- `"fail"` when the fix loop was exhausted without a passing `theloop-precommit` run (then `error` is `null`);
 - `"error"` when this skill could not proceed at all — for example, unexpected parameters were supplied, no feature request was found in the conversation, or a pre-existing receipt file was detected (then `feature_summary`, `feature_doc_path`, `implementation_attempts`, and `pre_commit_skill_run_id` are `null`, and `error` explains why).
 
 **Run receipt (final reminder):** before finishing this skill — regardless of outcome, success, failure, or error alike — write `tmp/<SkillRunId>.json` containing a single well-formed JSON object conforming to the schema above. The only exception is when the run was aborted because `tmp/<SkillRunId>.json` already existed before the run: in that case, never overwrite it.

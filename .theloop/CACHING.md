@@ -59,7 +59,7 @@ Because the input set includes the file that states the rule being checked (a sk
 ## Who uses this
 
 * The rule on hashing and caching of slow checks in [`SKILLS-META-RULES.md`](SKILLS-META-RULES.md) requires every skill with slow or token-consuming, content-determined checks to use this technique.
-* `InternalSkillValidateSkill` caches its verdict per skill: the input set is the skill's directory subtree plus `.theloop/SKILLS-META-RULES.md`, `SKILLS.md`, and `.theloop/VIZ.md`, under the check name `InternalSkillValidateSkill:<SkillName>`.
-* `InternalSkillPreCommitSkillWithRunId` caches every directory rule, as described in [`.theloop/RULE-FILES.md`](RULE-FILES.md): the input set is the rule's resolved scope (the rule file plus every in-scope file), under the check name `rule:<path-to-rule.yml>`.
+* `theloop-internal-validate-skill` caches its verdict per skill: the input set is the skill's directory subtree plus `.theloop/SKILLS-META-RULES.md`, `SKILLS.md`, and `.theloop/VIZ.md`, under the check name `theloop-internal-validate-skill:<SkillName>`.
+* `theloop-internal-precommit` caches every directory rule, as described in [`.theloop/RULE-FILES.md`](RULE-FILES.md): the input set is the rule's resolved scope (the rule file plus every in-scope file), under the check name `rule:<path-to-rule.yml>`.
 
 The scripts that implement the technique are deliberately duplicated per skill, under each skill's own `scripts/` directory, per the rule on use of scripts. An agentic runner must call the provided scripts rather than reproduce the fingerprint algorithm in ad-hoc shell or Python — only the scripts are authoritative.

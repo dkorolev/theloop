@@ -53,24 +53,22 @@ missing "$WORK/PRECOMMIT.md"
 
 # --- the eight bundled skills, under client-facing names --------------------
 for s in theloop-makeissue theloop-fixissue theloop-buildthis theloop-keep-maxims-up-to-date \
-         InternalSkillCheckGhRepoAccessWithRunId theloop-precommit newrepo-theloopify-internal-postinit \
-         InternalSkillPreCommitForClientWithRunId; do
+         theloop-internal-check-gh-repo-access theloop-precommit newrepo-theloopify-internal-postinit \
+         theloop-internal-clientrepo-precommit; do
   have "$WORK/.theloop/skills/$s/SKILL.md"
 done
-# the *ForClientRepos development names must NOT appear as client directories:
-missing "$WORK/.theloop/skills/PreCommitSkillForClientRepos"
-missing "$WORK/.theloop/skills/ConfigureTheLoopForClientRepos"
+# development names that differ from the client-facing name must NOT appear as client directories:
+missing "$WORK/.theloop/skills/theloop-clientrepo-precommit"
 # meta-skills are not installed:
-missing "$WORK/.theloop/skills/InternalSkillValidateAllSkills"
-missing "$WORK/.theloop/skills/InternalSkillPreCommitSkillWithRunId"
+missing "$WORK/.theloop/skills/theloop-internal-validate-all-skills"
+missing "$WORK/.theloop/skills/theloop-internal-precommit"
 # no .skills/ at the client root:
 missing "$WORK/.skills"
 
 # --- install-name renames inside the copied files --------------------------
 contains "$WORK/.theloop/skills/theloop-precommit/SKILL.md" "name: theloop-precommit"
-absent   "$WORK/.theloop/skills/theloop-precommit/SKILL.md" "ForClientRepos"
+absent   "$WORK/.theloop/skills/theloop-precommit/SKILL.md" "theloop-clientrepo-precommit"
 contains "$WORK/.theloop/skills/newrepo-theloopify-internal-postinit/SKILL.md" "name: newrepo-theloopify-internal-postinit"
-absent   "$WORK/.theloop/skills/newrepo-theloopify-internal-postinit/SKILL.md" "ForClientRepos"
 contains "$WORK/.theloop/skills/newrepo-theloopify-internal-postinit/scripts/write-receipt.py" 'SKILL = "newrepo-theloopify-internal-postinit"'
 
 # --- path rewriting: .skills/ -> .theloop/skills/ everywhere ----------------

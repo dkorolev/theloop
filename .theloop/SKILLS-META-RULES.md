@@ -1,6 +1,6 @@
 # Skills meta-rules
 
-Every skill in this repository must comply with all of the meta-rules below. The `InternalSkillValidateSkill` skill checks compliance. The `InternalSkillValidateAllSkills` skill checks compliance of all skills.
+Every skill in this repository must comply with all of the meta-rules below. The `theloop-internal-validate-skill` skill checks compliance. The `theloop-internal-validate-all-skills` skill checks compliance of all skills.
 
 This file lives at `.theloop/SKILLS-META-RULES.md`, under the `.theloop/` directory in the root of the repo. All file paths in this file are relative to the root of the repo. These meta-rules govern skills in this repository; eventually, the fruits of applying them here will be used to instrument other repositories.
 
@@ -37,7 +37,7 @@ Concretely, a skill that takes the `SkillRunId` parameter complies with this rul
 3. The last instruction of the skill body repeats that same requirement.
 4. The skill describes the JSON schema of the object that goes into `tmp/<SkillRunId>.json`.
 
-Note that the `tmp/` directory is `.gitignore`-d, so skill run receipts are never committed. The `InternalSkillPreCommitSkillWithRunId` skill must check this.
+Note that the `tmp/` directory is `.gitignore`-d, so skill run receipts are never committed. The `theloop-internal-precommit` skill must check this.
 
 ## Rule 4: Universal directory for skills
 
@@ -59,7 +59,7 @@ Besides the textual list (two markdown tables, Skills and SkillInvocations), the
 
 A skill that invokes one or more other skills must declare those invocations in its `SKILL.md` frontmatter using the `invokes` key — a YAML inline list of skill names (for example, `invokes: [SkillA, SkillB]`). A skill with no invocations omits the key entirely. This structured frontmatter declaration is the sole authoritative source of invocation relationships: the `repo-checks.py` and `mechanical-checks.py` scripts read `invokes` directly from the frontmatter. Parsing free text or natural language for invocation detection is prohibited.
 
-The `invokes:` list must be bidirectionally accurate. Every skill named in `invokes:` must be one that the skill's instruction body actually directs the runner to invoke. Conversely, every skill that the instruction body directs the runner to invoke must appear in `invokes:`. A name listed in `invokes:` that the instructions never actually invoke is a phantom entry and is a violation. A skill invoked by the instructions but absent from `invokes:` is an omission and is equally a violation. The `InternalSkillValidateSkill` runner checks this by reading the skill's instruction body and comparing the set of skills it directs the runner to invoke against the `invokes:` list.
+The `invokes:` list must be bidirectionally accurate. Every skill named in `invokes:` must be one that the skill's instruction body actually directs the runner to invoke. Conversely, every skill that the instruction body directs the runner to invoke must appear in `invokes:`. A name listed in `invokes:` that the instructions never actually invoke is a phantom entry and is a violation. A skill invoked by the instructions but absent from `invokes:` is an omission and is equally a violation. The `theloop-internal-validate-skill` runner checks this by reading the skill's instruction body and comparing the set of skills it directs the runner to invoke against the `invokes:` list.
 
 ## Rule 7: Use of scripts
 
@@ -101,7 +101,7 @@ Whether two operations are "logically distinct" is determined by whether it is n
 
 When a skill invokes other skills, its definition must state clearly whether those invocations may and should run in parallel.
 
-Prefer the **fan out subagents** phrasing to tell the runner to launch independent sub-runs in parallel — for example, "Fan out subagents — one per rule — to invoke `InternalSkillCheckSingleRuleWithRunId`" rather than "launch sub-runs concurrently" or "run in parallel". This vocabulary maps directly to agent runners (such as Cursor) that spawn subagents via a Task tool. Meta-skills that orchestrate multiple sub-runs must use this phrasing in their step instructions and descriptions when parallel execution is intended.
+Prefer the **fan out subagents** phrasing to tell the runner to launch independent sub-runs in parallel — for example, "Fan out subagents — one per rule — to invoke `theloop-internal-check-single-rule`" rather than "launch sub-runs concurrently" or "run in parallel". This vocabulary maps directly to agent runners (such as Cursor) that spawn subagents via a Task tool. Meta-skills that orchestrate multiple sub-runs must use this phrasing in their step instructions and descriptions when parallel execution is intended.
 
 By default, when a skill starts two or more independent sub-runs — distinct sub-run identifiers, no step depends on another sub-run's receipt — it must instruct the runner to fan out subagents (one subagent per sub-run) and to read and aggregate their receipts only after all have completed.
 
@@ -111,17 +111,17 @@ A skill that invokes exactly one other skill need not include parallelism wordin
 
 ## Rule 13: Internal skill naming
 
-Skills that take `SkillRunId` as a parameter are orchestration sub-skills: they are invoked by other skills, not typed by humans at a slash-command prompt. Their directory name and `name` frontmatter field must begin with the prefix `InternalSkill` so they are not suggested when a user types `/` in Claude Code or Cursor.
+Skills that take `SkillRunId` as a parameter are orchestration sub-skills: they are invoked by other skills, not typed by humans at a slash-command prompt. Their directory name and `name` frontmatter field must begin with the prefix `theloop-internal-` so they are not suggested when a user types `/` in Claude Code or Cursor.
 
-Skills that do not take `SkillRunId` — including the exceptional skills that generate a `SkillRunId` themselves rather than receiving one from a caller — are the user-facing entry points and must not use the `InternalSkill` prefix.
+Skills that do not take `SkillRunId` — including the exceptional skills that generate a `SkillRunId` themselves rather than receiving one from a caller — are the user-facing entry points and must not use the `theloop-internal-` prefix.
 
-The prefix exists because slash-command menus surface skills by name; keeping internal `SkillRunId`-parameterized skills behind `InternalSkill` leaves discoverable names (`PreCommitSkill`, `theloop-buildthis`, and future user-facing skills) uncluttered by sub-skills the user should never invoke directly.
+The prefix exists because slash-command menus surface skills by name; keeping internal `SkillRunId`-parameterized skills behind `theloop-internal-` leaves discoverable names (`theloop-precommit`, `theloop-buildthis`, and future user-facing skills) uncluttered by sub-skills the user should never invoke directly.
 
 ## Rule 14: Commits are authored by the user, never the AI
 
 Any skill that creates a git commit, or that stages changes and directs the user (or runner) to commit them, must ensure the human user is the sole author of the resulting commit. The commit is attributed to the user's configured git identity, and the commit message must contain no AI-assistant attribution of any kind: no `Generated with …` line, no `Co-Authored-By:` trailer naming an AI assistant, model, or tool, and no other mention of the AI that produced the change. A skill that creates or suggests commits must state this requirement explicitly in its instructions.
 
-The `InternalSkillValidateSkill` skill checks this: for every skill whose instructions create a commit or tell the user to commit staged changes, it confirms the skill text explicitly requires the user to be the commit author and explicitly forbids AI-assistant mentions in the commit message. Skills that never create or suggest commits trivially comply and are unaffected by this rule.
+The `theloop-internal-validate-skill` skill checks this: for every skill whose instructions create a commit or tell the user to commit staged changes, it confirms the skill text explicitly requires the user to be the commit author and explicitly forbids AI-assistant mentions in the commit message. Skills that never create or suggest commits trivially comply and are unaffected by this rule.
 
 ## Rule 15: Persistent repository artifacts
 

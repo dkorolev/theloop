@@ -6,7 +6,7 @@ Usage: theloopify-install.py THELOOP_ROOT TARGET   (invoked by theloopify.sh)
 For every bundled skill it copies THELOOP_ROOT/.skills/<dev-name>/ into
 TARGET/.theloop/skills/<client-name>/, rewriting file contents so that:
   - every ".skills/" path reference becomes ".theloop/skills/", and
-  - every "*ForClientRepos" development name becomes its client-facing name.
+  - every development name that differs from its client-facing name is rewritten.
 Executable bits are preserved. It then creates, for each supported coding agent,
 a symlink <agent>/skills/<client-name> -> ../../.theloop/skills/<client-name>.
 
@@ -27,17 +27,15 @@ BUNDLE = [
     ("theloop-fixissue", "theloop-fixissue"),
     ("theloop-buildthis", "theloop-buildthis"),
     ("theloop-keep-maxims-up-to-date", "theloop-keep-maxims-up-to-date"),
-    ("InternalSkillCheckGhRepoAccessWithRunId", "InternalSkillCheckGhRepoAccessWithRunId"),
-    ("PreCommitSkillForClientRepos", "theloop-precommit"),
-    ("ConfigureTheLoopForClientRepos", "newrepo-theloopify-internal-postinit"),
-    ("InternalSkillPreCommitForClientWithRunId", "InternalSkillPreCommitForClientWithRunId"),
+    ("theloop-internal-check-gh-repo-access", "theloop-internal-check-gh-repo-access"),
+    ("theloop-clientrepo-precommit", "theloop-precommit"),
+    ("newrepo-theloopify-internal-postinit", "newrepo-theloopify-internal-postinit"),
+    ("theloop-internal-clientrepo-precommit", "theloop-internal-clientrepo-precommit"),
 ]
 
 # Longest names first so a name is never a prefix of another during replacement.
 NAME_REWRITES = [
-    ("ConfigureTheLoopForClientRepos", "newrepo-theloopify-internal-postinit"),
-    ("PreCommitSkillForClientRepos", "theloop-precommit"),
-    ("PreCommitSkill", "theloop-precommit"),
+    ("theloop-clientrepo-precommit", "theloop-precommit"),
 ]
 
 AGENT_DIRS = [".cursor", ".claude", ".codex", ".agents"]

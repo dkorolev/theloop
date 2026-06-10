@@ -153,8 +153,8 @@ fail() { echo "error: $1" >&2; exit 1; }
 [ -f "${ROOT}/.theloop/theloopified" ] || fail "missing .theloop/theloopified"
 [ -f "${ROOT}/.theloop/must_run_configure_the_loop.txt" ] || fail "missing .theloop/must_run_configure_the_loop.txt"
 for skill in theloop-makeissue theloop-fixissue theloop-buildthis \
-  InternalSkillCheckGhRepoAccessWithRunId theloop-precommit newrepo-theloopify-internal-postinit \
-  InternalSkillPreCommitForClientWithRunId; do
+  theloop-internal-check-gh-repo-access theloop-precommit newrepo-theloopify-internal-postinit \
+  theloop-internal-clientrepo-precommit; do
   [ -f "${ROOT}/.theloop/skills/${skill}/SKILL.md" ] || fail "missing .theloop/skills/${skill}/SKILL.md"
 done
 [ -L "${ROOT}/.claude/skills/newrepo-theloopify-internal-postinit" ] || fail ".claude/skills/newrepo-theloopify-internal-postinit is not a symlink"

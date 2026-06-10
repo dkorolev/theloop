@@ -6,12 +6,12 @@
 
 ## Rationale
 
-theloop's skills today only work inside the theloop repo itself, because they lean on repo-wide meta machinery: `InternalSkillValidateAllSkills`, `InternalSkillCheckAllRulesWithRunId`, the `ai-rules.yml` registry, `SKILLS.md`, and `.theloop/VIZ.md`. A user who wants the workflow in *their* repo needs the slim user-facing path — capture an issue, implement it, gate it, open a PR — and nothing else. The design therefore draws a hard line between:
+theloop's skills today only work inside the theloop repo itself, because they lean on repo-wide meta machinery: `theloop-internal-validate-all-skills`, `theloop-internal-check-all-rules`, the `ai-rules.yml` registry, `SKILLS.md`, and `.theloop/VIZ.md`. A user who wants the workflow in *their* repo needs the slim user-facing path — capture an issue, implement it, gate it, open a PR — and nothing else. The design therefore draws a hard line between:
 
 - **Mechanical vs. agentic.** `theloopify` is a deterministic shell script (safe to read, predictable, re-runnable in principle). Anything that requires understanding the target repo — above all, what its pre-commit checks should be — is deferred to the agentic `newrepo-theloopify-internal-postinit`. Forcing `PRECOMMIT.md` generation into the shell would be brittle and wrong.
 - **Copied vs. symlinked-to-theloop.** Skills are *copied* into the client (self-contained, portable) rather than symlinked back to the theloop checkout, so the client keeps working after the theloop checkout moves or disappears. Within the client, the four agent directories *symlink* to a single canonical copy under `.theloop/skills/`, so there is exactly one source of truth and many agent entry points.
 - **Client bundle vs. theloop-only meta-skills.** Meta-skills exist to maintain theloop itself; they never ship to clients. The client gets only the user-facing workflow skills plus the minimal internal sub-skills they require.
-- **`*ForClientRepos` development naming.** Skills that must differ from their theloop namesakes are developed and validated in the theloop repo under a `…ForClientRepos` suffix and **installed under the client-facing name** (`PreCommitSkillForClientRepos` → `theloop-precommit`, `ConfigureTheLoopForClientRepos` → `newrepo-theloopify-internal-postinit`). The client never sees the suffix. This lets the theloop repo's own meta-validation exercise these skills without colliding with theloop's full-strength `PreCommitSkill`.
+- **Development vs client-facing naming.** Skills that must differ from their theloop namesakes are developed and validated in the theloop repo under a development name and **installed under the client-facing name** (`theloop-clientrepo-precommit` → `theloop-precommit`). The client never sees the development name. This lets the theloop repo's own meta-validation exercise these skills without colliding with theloop's full-strength `theloop-precommit`.
 
 ## Implementation outline
 
@@ -25,7 +25,7 @@ A single bash script, phased and colorized, that instruments a target directory 
 4. Detect a GitHub remote URL across all remotes (preferring a GitHub one); if none is found, **interactively prompt**; write the single-line URL to `.theloop/repo.txt`.
 5. Gitignore every path the instrumentation creates — the six plain paths below (`.theloop/`, the four agent `*/skills/` dirs, and `tmp/`) — under a labeled comment block, so none of theloop's scaffolding ever appears as an untracked change. This is a **deliberate compromise**: theloop is otherwise not designed to alter `.gitignore`, but does so consciously so a repo that treats a dirty tree as illegal keeps passing; the cost is that the `.gitignore` change itself must never be committed (see §6).
 6. Create the `.theloop/` scaffolding: `do_not_commit.txt` (agreed plain paths, plus `.gitignore` so the compromise edit is never committed), `must_run_configure_the_loop.txt`, and `theloopified`.
-7. Copy the bundled skills from the theloop checkout's `.skills/` into the client's `.theloop/skills/`, applying the install-name renames and rewriting every `.skills/…` reference to `.theloop/skills/…` (and every `…ForClientRepos` name to its client-facing name) inside the copied files.
+7. Copy the bundled skills from the theloop checkout's `.skills/` into the client's `.theloop/skills/`, applying the install-name renames and rewriting every `.skills/…` reference to `.theloop/skills/…` (and every development name to its client-facing name) inside the copied files.
 8. Create the four agent skill directories and, for every installed skill, a symlink from `<agent>/skills/<SkillName>` to `../../.theloop/skills/<SkillName>`.
 9. Print a clean summary whose final line tells the user to run `/newrepo-theloopify-internal-postinit`.
 
@@ -40,25 +40,25 @@ The mechanical copy/rewrite/rename and the integrity assertions are delegated to
 | `theloop-makeissue` | `theloop-makeissue` | user-facing; configure-gated |
 | `theloop-fixissue` | `theloop-fixissue` | user-facing; gated; hard-excludes `do_not_commit.txt` paths at commit |
 | `theloop-buildthis` | `theloop-buildthis` | user-facing; gated; hard-excludes at commit |
-| `InternalSkillCheckGhRepoAccessWithRunId` | same | sub-skill; reads `.theloop/repo.txt`, ensures `theloop` label |
-| `PreCommitSkillForClientRepos` | `theloop-precommit` | user-facing; gated; slim pre-commit |
-| `ConfigureTheLoopForClientRepos` | `newrepo-theloopify-internal-postinit` | user-facing; one-time agentic setup |
-| `InternalSkillPreCommitForClientWithRunId` | same | sub-skill; hygiene + `PRECOMMIT.md` runner |
+| `theloop-internal-check-gh-repo-access` | same | sub-skill; reads `.theloop/repo.txt`, ensures `theloop` label |
+| `theloop-clientrepo-precommit` | `theloop-precommit` | user-facing; gated; slim pre-commit |
+| `newrepo-theloopify-internal-postinit` | `newrepo-theloopify-internal-postinit` | user-facing; one-time agentic setup |
+| `theloop-internal-clientrepo-precommit` | same | sub-skill; hygiene + `PRECOMMIT.md` runner |
 
-The internal sub-skill `InternalSkillPreCommitForClientWithRunId` is included beyond the six headline skills because `PreCommitSkillForClientRepos` delegates the actual checks to it, exactly as theloop's `PreCommitSkill` delegates to `InternalSkillPreCommitSkillWithRunId`. Splitting "generate id + delegate" from "run the checks" keeps each skill to a single responsibility.
+The internal sub-skill `theloop-internal-clientrepo-precommit` is included beyond the six headline skills because `theloop-clientrepo-precommit` delegates the actual checks to it, exactly as theloop's `theloop-precommit` delegates to `theloop-internal-precommit`. Splitting "generate id + delegate" from "run the checks" keeps each skill to a single responsibility.
 
-**Never installed:** `InternalSkillValidateSkill`, `InternalSkillValidateAllSkills`, `InternalSkillCheckSingleRuleWithRunId`, `InternalSkillCheckAllRulesWithRunId`, `InternalSkillPreCommitSkillWithRunId`, theloop's full `PreCommitSkill`, and the `SKILLS.md` / `.theloop/VIZ.md` / `ai-rules.yml` machinery.
+**Never installed:** `theloop-internal-validate-skill`, `theloop-internal-validate-all-skills`, `theloop-internal-check-single-rule`, `theloop-internal-check-all-rules`, `theloop-internal-precommit`, theloop's full `theloop-precommit`, and the `SKILLS.md` / `.theloop/VIZ.md` / `ai-rules.yml` machinery.
 
-### 3. `PreCommitSkillForClientRepos` → `theloop-precommit`
+### 3. `theloop-clientrepo-precommit` → `theloop-precommit`
 
-Parameterless entry point. Checks the configuration gate, generates a `SkillRunId`, and delegates to `InternalSkillPreCommitForClientWithRunId`. The internal sub-skill runs exactly two things:
+Parameterless entry point. Checks the configuration gate, generates a `SkillRunId`, and delegates to `theloop-internal-clientrepo-precommit`. The internal sub-skill runs exactly two things:
 
 1. **Receipt hygiene** — `tmp/` gitignored, no tracked files under `tmp/`, no staged files under `tmp/` (reusing `hygiene.py`).
 2. **`PRECOMMIT.md` checks** — reads the repo-root free-form `PRECOMMIT.md` and runs the checks it describes. Because `PRECOMMIT.md` is prose (sections/bullets, not a rigid YAML schema), the runner interprets it **agentically**: for each described check it extracts the name, the directory/scope, and the command, runs it, and records the outcome. This is deliberately not cached: a check that runs the repo's tests is not determined by a fixed file set, so the caching rule does not apply.
 
 It explicitly **excludes** theloop-only concerns: directory rules, the rules registry, and skill meta-validation.
 
-### 4. `ConfigureTheLoopForClientRepos` → `newrepo-theloopify-internal-postinit`
+### 4. `newrepo-theloopify-internal-postinit` → `newrepo-theloopify-internal-postinit`
 
 One-time agentic configuration. Generates its own `SkillRunId` and writes a receipt. Preconditions (enforced by `configure-preconditions.py`):
 
@@ -86,7 +86,7 @@ The gate keys off the **positive** signal `configure_the_loop.done`, never the m
 
 ### 7. README & registries
 
-The README gains an end-user guide (clone → `theloopify` → `newrepo-theloopify-internal-postinit` → workflow skills; what files appear and which are local-only; what `PRECOMMIT.md` is) and a short contributor section explaining the `*ForClientRepos` naming. The three new theloop-repo skills are registered in `SKILLS.md` and `.theloop/VIZ.md` (both tables and the Mermaid diagram), and a deterministic `theloopify` smoke test is added to the theloop repo's own `PRECOMMIT.md`.
+The README gains an end-user guide (clone → `theloopify` → `newrepo-theloopify-internal-postinit` → workflow skills; what files appear and which are local-only; what `PRECOMMIT.md` is) and a short contributor section explaining the development-name vs install-name mapping. The three new theloop-repo skills are registered in `SKILLS.md` and `.theloop/VIZ.md` (both tables and the Mermaid diagram), and a deterministic `theloopify` smoke test is added to the theloop repo's own `PRECOMMIT.md`.
 
 ## How to rebuild
 
@@ -97,11 +97,11 @@ If the code is lost, reconstruct it from these invariants:
    - every instrumented path (the six plain paths below) appended to `.gitignore` under a labeled comment block — a deliberate compromise so the working tree stays clean; the `.gitignore` change is itself never committed;
    - `.theloop/do_not_commit.txt` with exactly the six plain paths above **plus `.gitignore`** (so the compromise edit is excluded from commits);
    - `.theloop/must_run_configure_the_loop.txt` and `.theloop/theloopified` markers;
-   - `.theloop/skills/<SkillName>/` canonical copies of the seven bundled skills, with install-name renames applied and every `.skills/…` rewritten to `.theloop/skills/…` and every `…ForClientRepos` name rewritten to its client-facing name;
+   - `.theloop/skills/<SkillName>/` canonical copies of the seven bundled skills, with install-name renames applied and every `.skills/…` rewritten to `.theloop/skills/…` and every development name rewritten to its client-facing name;
    - `<agent>/skills/<SkillName>` symlinks for each of `.cursor`, `.claude`, `.codex`, `.agents`, pointing at the canonical copy; **no** `.skills/` at the client root.
    The final message directs the user to `/newrepo-theloopify-internal-postinit`.
-2. **Bundled skills** must obey `.theloop/SKILLS-META-RULES.md` in the theloop repo: run receipts where applicable, `InternalSkill` prefix iff the skill takes `SkillRunId`, listed in `SKILLS.md` and `.theloop/VIZ.md`, scripts under each skill's own `scripts/`, and accurate `invokes:` frontmatter.
+2. **Bundled skills** must obey `.theloop/SKILLS-META-RULES.md` in the theloop repo: run receipts where applicable, `theloop-internal-` prefix iff the skill takes `SkillRunId`, listed in `SKILLS.md` and `.theloop/VIZ.md`, scripts under each skill's own `scripts/`, and accurate `invokes:` frontmatter.
 3. **The gate** is a per-skill `check-configured.py` returning pass unless the repo is theloopified-but-not-configured. **Commit exclusion** is a per-skill `stage-allowed.py` driven by `.theloop/do_not_commit.txt`. Both degrade to no-ops in a repo without the corresponding `.theloop/` files (i.e. the theloop repo).
-4. **`theloop-precommit` (client)** = gate + generate id + delegate to `InternalSkillPreCommitForClientWithRunId` = hygiene + agentic `PRECOMMIT.md` checks; no rules, no skill validation.
+4. **`theloop-precommit` (client)** = gate + generate id + delegate to `theloop-internal-clientrepo-precommit` = hygiene + agentic `PRECOMMIT.md` checks; no rules, no skill validation.
 5. **`newrepo-theloopify-internal-postinit`** = preconditions (`theloopified` present, `done` absent) → agentic `PRECOMMIT.md` authoring → flip the gate (`mark-configured.py` deletes `must_run…txt`, writes `done`).
 6. The whole flow upholds **one feature per clone** and **feature PRs contain only user code**.
