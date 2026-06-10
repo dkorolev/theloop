@@ -8,6 +8,7 @@ Usage: .skills/InternalSkillCheckSingleRuleWithRunId/scripts/rules.py parse <pat
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -56,7 +57,43 @@ def normalize_entry(entry):
     return entry.rstrip("/")
 
 
+def translate_component(component):
+    out = []
+    for ch in component:
+        if ch == "*":
+            out.append("[^/]*")
+        elif ch == "?":
+            out.append("[^/]")
+        else:
+            out.append(re.escape(ch))
+    return "".join(out)
+
+
+def compile_glob(entry):
+    components = entry.split("/")
+    regex = ""
+    for i, component in enumerate(components):
+        last = i == len(components) - 1
+        if component == "**":
+            if last:
+                regex = (regex[:-1] + "(?:/.*)?") if regex else ".+"
+            else:
+                regex += "(?:[^/]+/)*"
+        else:
+            regex += translate_component(component)
+            if not last:
+                regex += "/"
+    return re.compile(regex + r"\Z")
+
+
 def expand_entry(entry, rule_dir, subtree_files):
+    if "*" in entry or "?" in entry:
+        pattern = compile_glob(entry)
+        prefix = "" if rule_dir == "." else rule_dir + os.sep
+        matched = [p for p in subtree_files if p.startswith(prefix) and pattern.match(p[len(prefix):])]
+        if not matched:
+            raise ValueError(f"glob pattern matches no files: {entry!r}")
+        return matched
     full = os.path.normpath(os.path.join(rule_dir, entry))
     if rule_dir == ".":
         if os.path.isabs(full) or full == ".." or full.startswith("../"):

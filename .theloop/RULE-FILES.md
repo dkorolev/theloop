@@ -12,9 +12,11 @@ Each `*-rule.yml` file is a YAML mapping with:
 * **`use`** (optional) — a list of paths, relative to the directory containing the rule file. Each entry names a file or a directory; a directory entry expands to every non-gitignored file under it recursively. When present, only the listed paths (plus the rule file itself) are in scope.
 * **`exclude`** (optional) — a list of paths with the same shape as `use`. When present, every non-gitignored file under the rule file's directory is in scope except the rule file itself and anything matched by the list.
 
+Entries may also be glob patterns. An entry containing `*` or `?` is matched against the non-gitignored files under the rule file's directory instead of being resolved as a literal path: `*` matches any run of characters within one path component, `?` matches one character, and `**` as a whole component matches any number of nested directories, including none — so `**/*.py` matches every Python file in the subtree and `src/**` matches everything under `src/`. These are the only wildcards; there is no `[...]` class syntax.
+
 `use` and `exclude` are mutually exclusive. When neither is present, the scope is the entire directory subtree: every non-gitignored file under the rule file's directory, recursively.
 
-Path entries must stay within the rule file's directory (`../` escapes are rejected). A path that does not exist is a schema error reported before any agentic judgment runs.
+Path entries must stay within the rule file's directory (`../` escapes are rejected). A literal path that does not exist — or a glob pattern that matches no files — is a schema error reported before any agentic judgment runs.
 
 ## Scope
 
