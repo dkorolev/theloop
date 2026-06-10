@@ -62,6 +62,8 @@ The same canonical skill copy under `.theloop/skills/` is symlinked into `.curso
 
 ## For theloop contributors
 
+Start with **[CONTRIBUTING.md](CONTRIBUTING.md)** — the principles behind this repo's mechanical rules (`AGENTS.md` is a symlink to it, so coding agents read the same bytes).
+
 A skill whose client behavior must differ from its theloop namesake is **developed and validated in this repo under a development name** and **installed into client repos under its client-facing name**:
 
 | Developed here (`.skills/`) | Installed in clients as |
