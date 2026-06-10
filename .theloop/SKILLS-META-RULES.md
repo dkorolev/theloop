@@ -71,6 +71,8 @@ Run receipts are a concrete case of this principle: every skill that writes a ru
 
 Every Python script provided by a skill must begin with `#!/usr/bin/env python3` as its very first line, and must be committed as executable (mode `+x`). The runner must always invoke such scripts directly by path — for example, `.skills/${SkillName}/scripts/write-receipt.py --flag value` — and must never pass them to an explicit interpreter such as `python` or `python3`. The shebang line ensures the shell selects the correct interpreter automatically.
 
+A skill's `scripts/` directory may also contain **non-entry-point library modules** — Python modules that the skill's own entry-point scripts import (for example, a shared `common.py` holding helpers used by several of the skill's scripts), rather than ones the runner invokes directly. Because the runner never invokes such a module by path, it is exempt from the requirements that it carry a `#!/usr/bin/env python3` shebang, be executable, or be invoked without an interpreter; those requirements bind only the scripts the runner actually runs. Library modules remain skill-local: there is still no shared script location across skills, and the duplication principle above still holds — when several skills need the same library, each carries its own copy under its own `scripts/`.
+
 ## Rule 8: Taste and style
 
 The repo should not contain grammatical errors.
@@ -120,3 +122,48 @@ The prefix exists because slash-command menus surface skills by name; keeping in
 Any skill that creates a git commit, or that stages changes and directs the user (or runner) to commit them, must ensure the human user is the sole author of the resulting commit. The commit is attributed to the user's configured git identity, and the commit message must contain no AI-assistant attribution of any kind: no `Generated with …` line, no `Co-Authored-By:` trailer naming an AI assistant, model, or tool, and no other mention of the AI that produced the change. A skill that creates or suggests commits must state this requirement explicitly in its instructions.
 
 The `InternalSkillValidateSkill` skill checks this: for every skill whose instructions create a commit or tell the user to commit staged changes, it confirms the skill text explicitly requires the user to be the commit author and explicitly forbids AI-assistant mentions in the commit message. Skills that never create or suggest commits trivially comply and are unaffected by this rule.
+
+## Rule 15: Persistent repository artifacts
+
+Most skills produce only the ephemeral `tmp/${SkillRunId}.json` run receipt (which is `.gitignore`-d) and, in some cases, a commit the user authors. A skill that instead maintains a **durable, committed artifact** in the repository — a directory or file tree it creates and keeps updating across runs — must observe the following, so the artifact stays self-describing, recoverable, and never collides with unrelated repository contents:
+
+- The skill declares, in its body, the single root path of the artifact it owns (for example, a top-level directory), and writes nothing durable outside that root.
+- The artifact root carries a machine-readable marker that identifies it as owned by the skill (for example, a `metadata.json` the skill writes on initialization). A skill must refuse to adopt a pre-existing root that lacks its marker: if the root path already exists but the marker is absent, the skill stops and reports that the path belongs to something else rather than writing into it.
+- The artifact stays compact: the skill must not emit large collections of per-item files when the same information fits in a bounded set of files. Raw inputs needed only transiently during a run are streamed to the runner, not persisted.
+- Any transient files the skill writes under the root while updating it — temporary or lock files — must be `.gitignore`-d so they are never committed, and must be named so that concurrent or interrupted runs cannot collide (see the rule on atomic, idempotent state mutation).
+
+This rule is vacuous for skills that own no durable artifact; they comply trivially.
+
+## Rule 16: Atomic, idempotent state mutation
+
+A skill that mutates **durable on-disk state** — a persistent artifact, as opposed to a write-once run receipt — must do so atomically and idempotently, through a provided script rather than improvised inline edits:
+
+- Every mutation is **atomic**: the script writes the new content to a temporary file and renames it over the target in a single atomic step, so neither a reader nor a crash ever observes a partially written file. The temporary file is named with the `SkillRunId` as its nonce, so an interrupted run leaves attributable, sweepable debris and concurrent runs never share a temporary name.
+- Every mutation is **idempotent and convergent**: re-running the same logical operation, or running two operations concurrently, leaves the state correct without accumulating duplicates or spuriously rewriting unchanged content. A mutation whose computed result equals the current state is a no-op.
+- Every mutation **guards against lost updates**: a concurrent writer's changes are not silently clobbered — for instance, by an optimistic compare-and-swap that commits the rename only when the target is unchanged since it was read, retrying after a randomized backoff otherwise.
+
+The specific mechanism (optimistic concurrency, a version field, and so on) and its parameters are the skill's own choice and belong in the skill, not in this file; this rule fixes only the contract: atomic, idempotent, lost-update-resistant, performed by a script.
+
+Do not reach for a blocking lock such as `flock` to make a mutation airtight. Skills here are driven by an agentic, English-prompt runner, so every gate is **probabilistic by nature**: a step may stall, retry, be interrupted, or never resume. A blocking lock held by such a runner can therefore **deadlock** — the holder may hang and never release it — which is exactly the unbounded wait the rule on time-bounded operations forbids. We deliberately prefer the small, self-healing chance of a lost update from lock-free optimistic concurrency over the risk of a deadlock from a held lock: a bounded optimistic retry has a bounded worst case, a blocking lock does not. Because the gates are probabilistic anyway, an occasional lost update is an acceptable, recoverable outcome; a deadlock is not.
+
+## Rule 17: Time-bounded operations — no unbounded waits
+
+No skill may wait on anything indefinitely. Every operation a skill awaits — a spawned sub-run (subagent), an invoked script, or an external command such as `gh` or `git` — must be time-bounded by the party that awaits it, and must end in one of exactly two ways: it completes, or it is terminated and reported as a **timeout error**. It is never left hanging.
+
+- The bound is set by the caller — the party that awaits. When it elapses, the awaited operation is treated exactly as any other failure: it yields a structured error (an `{"error": "timeout: …"}` receipt for a sub-run, or a short `timeout:` message on stderr for a script), so the caller can retry, skip, or fail — but always proceeds rather than blocking.
+
+- For fan-out this composes with the rule on parallel invocation of spawned skills: a parent that aggregates sub-run receipts must bound each sub-run, and if a sub-run has not completed when its bound elapses, the parent treats that sub-run as a timeout error — *including* the case where the timed-out sub-run never wrote its `tmp/<SkillRunId>.json` receipt. A receipt still absent once the bound has elapsed is a timeout, not a reason to keep waiting.
+
+- A script that makes a blocking call — a network request, a subprocess, or any wait on an external resource — must impose its own timeout and exit with a short timeout error rather than blocking forever; it must never await an external resource without a bound.
+
+The effect is that a single slow, stuck, or dead operation can never stall an entire run: the worst case for any wait is a bounded delay followed by a clean, reported timeout that the rest of the run can act on. This is also why a hang-prone lock is the wrong tool for the rule on atomic, idempotent state mutation: an optimistic retry has a bounded worst case, whereas a blocking lock held by a hung process does not.
+
+## Rule 18: Split slow work into collect-then-analyze, and cache the collection
+
+When a unit of work is slow — a network fetch, or any expensive gathering — prefer to split it into two steps: first **collect** the data, then **analyze** it. The collection step writes its result for each input to a file named cleanly by that input's own identity (for example, the pull-request number), through a temporary file and an atomic rename, so that the file's existence is itself the proof that the input was fully collected. A later step — or a later run after an interruption — reuses that file instead of redoing the slow collection.
+
+- Such a cache is a reproducible convenience, not part of the committed journal: keep it in a gitignored location — for instance under the artifact root, whose transient files the rule on persistent repository artifacts already requires to be gitignored — so it never bloats what is committed.
+- Mark an input as fully processed only after every durable effect of processing it has been committed, and key each journaled output by a stable identity so that re-processing refines the existing entry rather than appending a second one — reconciling against the existing journal when that key comes from a judgment rather than mechanically from the input.
+- Together these give crash-safe resumption: after an interruption the run picks up where it stopped, re-processing only the inputs whose completion was not yet recorded — at worst repeating cheap analysis, never repeating the slow collection, never losing an input, and never journaling one more than once.
+
+This rule is vacuous for skills whose work is neither slow nor journaled from a stream of inputs.

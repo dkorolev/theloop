@@ -28,10 +28,14 @@ def sha256_of(path):
 
 
 def manifest_of(skill):
-    listed = subprocess.run(
-        ["git", "ls-files", "--cached", "--others", "--exclude-standard", "--", f".skills/{skill}/"],
-        capture_output=True, text=True, check=True,
-    ).stdout.splitlines()
+    try:
+        listed = subprocess.run(
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard", "--", f".skills/{skill}/"],
+            capture_output=True, text=True, check=True, timeout=120,
+        ).stdout.splitlines()
+    except subprocess.TimeoutExpired:
+        print(json.dumps({"error": "timeout: git ls-files exceeded 120s"}))
+        sys.exit(2)
     paths = sorted(p for p in set(listed) | set(EXTRA_FILES) if os.path.isfile(p))
     check = f"InternalSkillValidateSkill:{skill}"
     lines = [f"{sha256_of(p)}  {p}" for p in paths]
