@@ -88,5 +88,6 @@ act** — surface the proposal and wait for explicit human confirmation:
   and needs no gate; only contradicting or retiring an existing one does.
 - **Splitting or moving a category** when a file has grown to mix clearly unrelated
   concerns. Default to adding to existing files; never reorganize silently. Because
-  the maxim id is category-independent, a move only relocates the marker block and
-  updates the `category`/`file` fields — but it is still a human-gated decision.
+  the maxim id is category-independent, a move only relocates the maxim's entry from
+  one category `.yml` to another (regenerating both `.md` files) and updates its
+  `category` field — but it is still a human-gated decision.
