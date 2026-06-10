@@ -26,6 +26,7 @@ BUNDLE = [
     ("theloop-makeissue", "theloop-makeissue"),
     ("theloop-fixissue", "theloop-fixissue"),
     ("theloop-buildthis", "theloop-buildthis"),
+    ("theloop-keep-maxims-up-to-date", "theloop-keep-maxims-up-to-date"),
     ("InternalSkillCheckGhRepoAccessWithRunId", "InternalSkillCheckGhRepoAccessWithRunId"),
     ("PreCommitSkillForClientRepos", "theloop-precommit"),
     ("ConfigureTheLoopForClientRepos", "newrepo-theloopify-internal-postinit"),

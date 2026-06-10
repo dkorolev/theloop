@@ -19,6 +19,7 @@ This file lives at `.theloop/VIZ.md`, under the `.theloop/` directory in the roo
 | [`ConfigureTheLoopForClientRepos`](../.skills/ConfigureTheLoopForClientRepos/SKILL.md) | One-time agentic setup for a theloop client repository: analyzes docs, tooling, and CI gates, authors a free-form `PRECOMMIT.md`, and flips the configuration gate. Installed in clients as `newrepo-theloopify-internal-postinit`. |
 | [`PreCommitSkillForClientRepos`](../.skills/PreCommitSkillForClientRepos/SKILL.md) | Parameterless pre-commit gate for a theloop client repository: checks the configuration gate, generates a `SkillRunId`, and delegates to `InternalSkillPreCommitForClientWithRunId`. Installed in clients as `theloop-precommit`. |
 | [`InternalSkillPreCommitForClientWithRunId`](../.skills/InternalSkillPreCommitForClientWithRunId/SKILL.md) | Slim client-repo pre-commit gate under a caller-supplied `SkillRunId`: receipt hygiene plus the checks described in a free-form `PRECOMMIT.md`, with no directory rules or skill validation. |
+| [`theloop-keep-maxims-up-to-date`](../.skills/theloop-keep-maxims-up-to-date/SKILL.md) | Distills a repository's unwritten engineering paradigms — its maxims — from merged pull-request history into per-topic `maxims/` files; takes no parameters and generates its own `SkillRunId`. Invokes no other skills. |
 
 ## SkillInvocations
 
@@ -53,4 +54,5 @@ graph TD
     InternalSkillValidateAllSkills --> InternalSkillValidateSkill["InternalSkillValidateSkill"]
     ConfigureTheLoopForClientRepos["ConfigureTheLoopForClientRepos"]
     PreCommitSkillForClientRepos["PreCommitSkillForClientRepos"] --> InternalSkillPreCommitForClientWithRunId["InternalSkillPreCommitForClientWithRunId"]
+    theloop-keep-maxims-up-to-date["theloop-keep-maxims-up-to-date"]
 ```
