@@ -47,21 +47,29 @@ def read_repo_slug():
 
 
 def local_exists(branch):
-    proc = subprocess.run(
-        ["git", "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
-    )
+    try:
+        proc = subprocess.run(
+            ["git", "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
+            timeout=120,
+        )
+    except subprocess.TimeoutExpired:
+        die("timeout: git show-ref exceeded 120s")
     return proc.returncode == 0
 
 
 def remote_exists(branch, slug):
     url = f"https://github.com/{slug}.git"
     env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
-    proc = subprocess.run(
-        ["git", "ls-remote", "--heads", url, f"refs/heads/{branch}"],
-        capture_output=True,
-        text=True,
-        env=env,
-    )
+    try:
+        proc = subprocess.run(
+            ["git", "ls-remote", "--heads", url, f"refs/heads/{branch}"],
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=120,
+        )
+    except subprocess.TimeoutExpired:
+        die("timeout: git ls-remote exceeded 120s")
     if proc.returncode != 0:
         die((proc.stderr or proc.stdout or "git ls-remote failed").strip())
     return bool(proc.stdout.strip())

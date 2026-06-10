@@ -28,7 +28,10 @@ def die(message) -> NoReturn:
 
 
 def git(*args):
-    proc = subprocess.run(["git", *args], capture_output=True, text=True)
+    try:
+        proc = subprocess.run(["git", *args], capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        die(f"timeout: git {' '.join(args)} exceeded 120s")
     if proc.returncode != 0:
         die((proc.stderr or proc.stdout or f"git {' '.join(args)} failed").strip())
     return proc.stdout

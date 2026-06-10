@@ -75,11 +75,15 @@ def main():
 
     slug = read_repo_slug()
     full_body = PREFIX + body
-    proc = subprocess.run(
-        ["gh", "issue", "comment", str(number), "-R", slug, "--body", full_body],
-        capture_output=True,
-        text=True,
-    )
+    try:
+        proc = subprocess.run(
+            ["gh", "issue", "comment", str(number), "-R", slug, "--body", full_body],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+    except subprocess.TimeoutExpired:
+        die("timeout: gh issue comment exceeded 120s")
     if proc.returncode != 0:
         die((proc.stderr or proc.stdout or "gh issue comment failed").strip())
     return 0

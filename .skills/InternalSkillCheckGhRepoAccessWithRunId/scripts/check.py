@@ -34,7 +34,12 @@ ISSUES_ENABLED_SUGGESTION = (
 
 
 def run(cmd, **kwargs):
-    return subprocess.run(cmd, capture_output=True, text=True, **kwargs)
+    kwargs.setdefault("timeout", 120)
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, **kwargs)
+    except subprocess.TimeoutExpired:
+        print(f"error: timeout: {' '.join(cmd)} exceeded 120s", file=sys.stderr)
+        sys.exit(1)
 
 
 def add(checks, name, status, detail=None, suggestion=None):

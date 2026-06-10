@@ -60,15 +60,19 @@ def main():
         die("--issue-number must be a positive integer")
 
     slug = read_repo_slug()
-    proc = subprocess.run(
-        [
-            "gh", "issue", "view", str(number),
-            "-R", slug,
-            "--json", "number,title,body,url,labels",
-        ],
-        capture_output=True,
-        text=True,
-    )
+    try:
+        proc = subprocess.run(
+            [
+                "gh", "issue", "view", str(number),
+                "-R", slug,
+                "--json", "number,title,body,url,labels",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+    except subprocess.TimeoutExpired:
+        die("timeout: gh issue view exceeded 120s")
     if proc.returncode != 0:
         detail = (proc.stderr or proc.stdout or "gh issue view failed").strip()
         die(detail)

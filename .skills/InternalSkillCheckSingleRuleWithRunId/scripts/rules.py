@@ -29,7 +29,10 @@ def non_ignored_files(pathspec=None):
     cmd = ["git", "ls-files", "--cached", "--others", "--exclude-standard"]
     if pathspec is not None:
         cmd += ["--", pathspec]
-    listed = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.splitlines()
+    try:
+        listed = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=120).stdout.splitlines()
+    except subprocess.TimeoutExpired:
+        sys.exit(die_json("timeout: git ls-files exceeded 120s"))
     return sorted(p for p in set(listed) if os.path.isfile(p))
 
 

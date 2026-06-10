@@ -67,20 +67,24 @@ def main():
         die(f"body file not found: {args.body_file}")
 
     slug = read_repo_slug()
-    proc = subprocess.run(
-        [
-            "gh", "pr", "create",
-            "-R", slug,
-            "--title", title,
-            "--body-file", args.body_file,
-            "--head", head,
-            "--base", base,
-            "--label", THELOOP_LABEL,
-            "--json", "number,url",
-        ],
-        capture_output=True,
-        text=True,
-    )
+    try:
+        proc = subprocess.run(
+            [
+                "gh", "pr", "create",
+                "-R", slug,
+                "--title", title,
+                "--body-file", args.body_file,
+                "--head", head,
+                "--base", base,
+                "--label", THELOOP_LABEL,
+                "--json", "number,url",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+    except subprocess.TimeoutExpired:
+        die("timeout: gh pr create exceeded 120s")
     if proc.returncode != 0:
         die((proc.stderr or proc.stdout or "gh pr create failed").strip())
 

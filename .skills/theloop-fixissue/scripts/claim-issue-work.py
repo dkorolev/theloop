@@ -56,7 +56,10 @@ def read_repo_slug():
 
 
 def gh_api_json(args):
-    proc = subprocess.run(["gh", "api", *args], capture_output=True, text=True)
+    try:
+        proc = subprocess.run(["gh", "api", *args], capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        die("timeout: gh api exceeded 120s")
     if proc.returncode != 0:
         die((proc.stderr or proc.stdout or "gh api failed").strip())
     try:

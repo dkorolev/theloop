@@ -12,7 +12,11 @@ import sys
 
 
 def git(*args):
-    proc = subprocess.run(["git", *args], capture_output=True, text=True)
+    try:
+        proc = subprocess.run(["git", *args], capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        print(f"error: timeout: git {' '.join(args)} exceeded 120s", file=sys.stderr)
+        sys.exit(1)
     return proc.returncode, proc.stdout.strip()
 
 

@@ -70,13 +70,17 @@ def run_check(entry):
     directory = entry["directory"]
     if not os.path.isdir(directory):
         return "fail", f"directory {directory!r} does not exist"
-    proc = subprocess.run(
-        entry["command"],
-        shell=True,
-        cwd=directory,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        proc = subprocess.run(
+            entry["command"],
+            shell=True,
+            cwd=directory,
+            capture_output=True,
+            text=True,
+            timeout=1800,
+        )
+    except subprocess.TimeoutExpired:
+        return "fail", f"{entry['command']!r} in {directory!r} timed out after 1800s"
     if proc.returncode == 0:
         return "pass", None
     detail = proc.stderr.strip() or proc.stdout.strip() or f"exit code {proc.returncode}"

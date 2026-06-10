@@ -65,17 +65,21 @@ def main():
 
     slug = read_repo_slug()
 
-    proc = subprocess.run(
-        [
-            "gh", "issue", "create",
-            "-R", slug,
-            "--title", title,
-            "--body-file", body_path,
-            "--label", THELOOP_LABEL,
-        ],
-        capture_output=True,
-        text=True,
-    )
+    try:
+        proc = subprocess.run(
+            [
+                "gh", "issue", "create",
+                "-R", slug,
+                "--title", title,
+                "--body-file", body_path,
+                "--label", THELOOP_LABEL,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+    except subprocess.TimeoutExpired:
+        die("timeout: gh issue create exceeded 120s")
     if proc.returncode != 0:
         detail = (proc.stderr or proc.stdout or "gh issue create failed").strip()
         die(detail)

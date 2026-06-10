@@ -13,7 +13,10 @@ def non_ignored_files(pathspec=None):
     cmd = ["git", "ls-files", "--cached", "--others", "--exclude-standard"]
     if pathspec is not None:
         cmd += ["--", pathspec]
-    listed = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.splitlines()
+    try:
+        listed = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=120).stdout.splitlines()
+    except subprocess.TimeoutExpired:
+        raise ValueError("timeout: git ls-files exceeded 120s")
     return sorted(p for p in set(listed) if os.path.isfile(p))
 
 
@@ -36,7 +39,10 @@ def sub_run_suffix(rule_path):
 
 
 def probe_one(rule_path):
-    result = subprocess.run([PROBE_SCRIPT, "probe-one", rule_path], capture_output=True, text=True)
+    try:
+        result = subprocess.run([PROBE_SCRIPT, "probe-one", rule_path], capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        raise ValueError(f"timeout: probe-one {rule_path} exceeded 120s")
     if result.returncode == 2:
         raise ValueError(json.loads(result.stdout)["error"])
     return json.loads(result.stdout)
