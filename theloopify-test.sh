@@ -51,8 +51,9 @@ git -C "$WORK" status --porcelain | grep -qE '(\.theloop/|/skills/)' \
 # PRECOMMIT.md is owned by newrepo-theloopify-internal-postinit, not theloopify:
 missing "$WORK/PRECOMMIT.md"
 
-# --- the eight bundled skills, under client-facing names --------------------
+# --- the nine bundled skills, under client-facing names ---------------------
 for s in theloop-makeissue theloop-fixissue theloop-buildthis theloop-keep-maxims-up-to-date \
+         theloop-verify-newcode-aligns-with-maxims \
          theloop-internal-check-gh-repo-access theloop-precommit newrepo-theloopify-internal-postinit \
          theloop-internal-clientrepo-precommit; do
   have "$WORK/.theloop/skills/$s/SKILL.md"
