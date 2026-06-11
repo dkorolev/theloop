@@ -53,6 +53,10 @@ multiline blocks. This is a preference, not a hard rule: when an existing docume
 is written in a different style, we explicitly want it to stay that way — leave it
 alone rather than restyle it.
 
+When a person appears in any maxim text you write — a statement, a rationale, an
+evidence note — refer to them by their GitHub handle (the same login the evidence
+fields carry), never by their full name.
+
 ## Parameters
 
 This skill takes no parameters. If any parameters are passed, stop immediately and
