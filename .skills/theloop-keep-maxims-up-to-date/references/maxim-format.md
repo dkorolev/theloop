@@ -17,8 +17,9 @@ re-derive it as a maxim.
    Maxims mining works best on repositories that **do not squash-merge**; when they
    do, lean on the other two signals.
 2. **Reviewer steering.** A review comment or a CHANGES_REQUESTED review pushing the
-   author toward a norm. Attribute it to the reviewer by login. This is the most
-   durable signal and survives any merge strategy.
+   author toward a norm. Attribute it to the reviewer by login — wherever a person
+   is named in a maxim, use their GitHub handle, never their full name. This is the
+   most durable signal and survives any merge strategy.
 3. **Repetition across PRs.** The same correction recurring across PRs promotes a
    maxim from `proposed` to `confirmed`.
 
