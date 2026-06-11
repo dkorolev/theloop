@@ -39,6 +39,20 @@ reports that the path belongs to something else. All updates to the artifact go
 through the bundled scripts, which write atomically and idempotently per the rule on
 atomic, idempotent state mutation; you must never hand-edit files under `maxims/`.
 
+## Style discipline — no cosmetic changes
+
+Never make cosmetic-only changes — not to existing maxims, not to their `.yml`
+sources, not to any other file this skill touches. Do not adjust spacing, rewrap
+lines, churn quote or formatting styles, or otherwise reformat text whose substance
+is unchanged. A refinement must change meaning; when the only diff you would
+produce is formatting, produce no diff at all.
+
+For verbatim fixed-font text in the prose you write, we prefer single backticks
+over double for inline fragments (`like this`), and triple-backtick fences for
+multiline blocks. This is a preference, not a hard rule: when an existing document
+is written in a different style, we explicitly want it to stay that way — leave it
+alone rather than restyle it.
+
 ## Parameters
 
 This skill takes no parameters. If any parameters are passed, stop immediately and
