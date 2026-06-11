@@ -40,6 +40,7 @@ The scripts under `.skills/newrepo-theloopify-internal-postinit/scripts/` are ex
 
 7. **Final report.** Tell the user:
    - That configuration is complete and the workflow skills (`theloop-makeissue`, `theloop-fixissue`, `theloop-buildthis`, `theloop-precommit`) are now available;
+   - To run `/reload-skills` so the newly installed skills are picked up by the current Claude Code session (and to restart Claude Code if they still do not appear);
    - The path of the `PRECOMMIT.md` written and the checks it now contains;
    - The `SkillRunId` of this run.
 

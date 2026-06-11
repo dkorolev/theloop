@@ -99,6 +99,7 @@ Work from the **repository root** you want to instrument (the current working di
    - theloop is fully configured in this repository;
    - the path to the `PRECOMMIT.md` that was written;
    - the workflow skills now available: `/theloop-makeissue`, `/theloop-fixissue <n>`, `/theloop-buildthis`, `/theloop-precommit`;
+   - to run `/reload-skills` so the freshly symlinked skills under `.claude/skills/` are picked up by the current session — and to restart Claude Code if they still do not appear, since `.claude/skills/` did not exist when the session started;
    - that `.theloop/` scaffolding and agent symlinks are local-only (listed in `.theloop/do_not_commit.txt`) and should not appear in feature pull requests;
    - that theloop has gitignored its own instrumentation and left `.gitignore` modified but uncommitted on purpose — a compromise, since theloop does not otherwise manage `.gitignore` — so a dirty-tree check still passes while the `.gitignore` change never enters a feature PR.
 EOF
@@ -211,7 +212,7 @@ The skill will:
 - verify the seven bundled skills are present;
 - execute **`/newrepo-theloopify-internal-postinit`** agentically (authors `PRECOMMIT.md`, flips the configuration gate).
 
-When setup completes, use:
+When setup completes, run **`/reload-skills`** so the freshly symlinked skills are picked up by the current session (restart Claude Code if they still do not appear — `.claude/skills/` did not exist when the session started). Then use:
 
 | Skill | Purpose |
 |---|---|
