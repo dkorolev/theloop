@@ -3,9 +3,10 @@
 
 Usage (CLI — preferred):
   write-receipt.py --skill-run-id ID --status pass \
-      --prs-considered N --maxims-written N \
+      --gh-check-sub-run-id ID --prs-considered N --maxims-written N \
       --categories-touched "frontend,backend" --human-decisions-requested N
-  write-receipt.py --skill-run-id ID --status error --error "REASON"
+  write-receipt.py --skill-run-id ID --status error --error "REASON" \
+      [--gh-check-sub-run-id ID]
 
 Usage (stdin — fallback):
   write-receipt.py < receipt.json
@@ -24,7 +25,7 @@ from typing import NoReturn
 
 SKILL = "theloop-keep-maxims-up-to-date"
 FIELDS = {
-    "skill_run_id", "skill", "status",
+    "skill_run_id", "skill", "status", "gh_check_sub_run_id",
     "prs_considered", "maxims_written", "categories_touched",
     "human_decisions_requested", "error",
 }
@@ -50,11 +51,16 @@ def validate(receipt):
         die('"status" must be "pass" or "error"')
 
     is_error = receipt["status"] == "error"
+    gh_check = receipt["gh_check_sub_run_id"]
+    if gh_check is not None and (not isinstance(gh_check, str) or not gh_check):
+        die('"gh_check_sub_run_id" must be a non-empty string or null')
     if is_error:
         for field in COUNTS + ("categories_touched",):
             if receipt[field] is not None:
                 die(f'"{field}" must be null when status is "error"')
     else:
+        if gh_check is None:
+            die('"gh_check_sub_run_id" must be set when status is "pass"')
         for field in COUNTS:
             if not isinstance(receipt[field], int) or isinstance(receipt[field], bool) or receipt[field] < 0:
                 die(f'"{field}" must be a non-negative integer when status is "pass"')
@@ -71,6 +77,7 @@ def build_from_args(args):
             die("--error is required when --status error")
         return {
             "skill_run_id": args.skill_run_id, "skill": SKILL, "status": "error",
+            "gh_check_sub_run_id": args.gh_check_sub_run_id or None,
             "prs_considered": None, "maxims_written": None, "categories_touched": None,
             "human_decisions_requested": None, "error": args.error,
         }
@@ -87,9 +94,12 @@ def build_from_args(args):
             die(f"{flag} must be a non-negative integer")
         if counts[attr] < 0:
             die(f"{flag} must be a non-negative integer")
+    if not args.gh_check_sub_run_id:
+        die("--gh-check-sub-run-id is required when --status is not 'error'")
     categories = [c.strip() for c in (args.categories_touched or "").split(",") if c.strip()]
     return {
         "skill_run_id": args.skill_run_id, "skill": SKILL, "status": "pass",
+        "gh_check_sub_run_id": args.gh_check_sub_run_id,
         "categories_touched": categories, "error": None, **counts,
     }
 
@@ -110,6 +120,7 @@ def main():
         parser = argparse.ArgumentParser(add_help=False)
         parser.add_argument("--skill-run-id", required=True)
         parser.add_argument("--status", required=True, choices=list(STATUSES))
+        parser.add_argument("--gh-check-sub-run-id")
         parser.add_argument("--prs-considered")
         parser.add_argument("--maxims-written")
         parser.add_argument("--categories-touched")
