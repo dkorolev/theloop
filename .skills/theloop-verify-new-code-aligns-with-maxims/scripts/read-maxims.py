@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """List the maxims categories to verify against, validating the maxims/ artifact.
 
-Usage: .skills/theloop-verify-newcode-aligns-with-maxims/scripts/read-maxims.py   (from the repository root)
+Usage: .skills/theloop-verify-new-code-aligns-with-maxims/scripts/read-maxims.py   (from the repository root)
 
 This skill only reads maxims/; the artifact is owned and written by
 theloop-keep-maxims-up-to-date.

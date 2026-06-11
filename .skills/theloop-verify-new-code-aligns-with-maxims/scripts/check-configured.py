@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check whether this repository has completed newrepo-theloopify-internal-postinit.
 
-Usage: .skills/theloop-verify-newcode-aligns-with-maxims/scripts/check-configured.py   (from the repository root)
+Usage: .skills/theloop-verify-new-code-aligns-with-maxims/scripts/check-configured.py   (from the repository root)
 
 The gate keys off the positive marker .theloop/configure_the_loop.done, never the
 mere absence of the pending marker, so deleting the pending marker cannot bypass it.

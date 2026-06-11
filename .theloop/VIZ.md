@@ -20,7 +20,7 @@ This file lives at `.theloop/VIZ.md`, under the `.theloop/` directory in the roo
 | [`theloop-clientrepo-precommit`](../.skills/theloop-clientrepo-precommit/SKILL.md) | Parameterless pre-commit gate for a theloop client repository: checks the configuration gate, generates a `SkillRunId`, and delegates to `theloop-internal-clientrepo-precommit`.<br>**Client repos:** installed as `theloop-precommit`. |
 | [`theloop-internal-clientrepo-precommit`](../.skills/theloop-internal-clientrepo-precommit/SKILL.md) | Slim client-repo pre-commit gate under a caller-supplied `SkillRunId`: receipt hygiene plus the checks described in a free-form `PRECOMMIT.md`, with no directory rules or skill validation.<br>**Client repos:** installed as `theloop-internal-clientrepo-precommit`. |
 | [`theloop-keep-maxims-up-to-date`](../.skills/theloop-keep-maxims-up-to-date/SKILL.md) | Distills a repository's unwritten engineering paradigms — its maxims — from merged pull-request history into per-topic `maxims/` files; takes no parameters and generates its own `SkillRunId`. Verifies GitHub access via `theloop-internal-check-gh-repo-access` before touching the repository.<br>**Client repos:** installed as `theloop-keep-maxims-up-to-date`. |
-| [`theloop-verify-newcode-aligns-with-maxims`](../.skills/theloop-verify-newcode-aligns-with-maxims/SKILL.md) | Verifies that the new code — the linear commits the current branch adds on top of the origin's main — aligns with the maxims under `maxims/`; takes no parameters, generates its own `SkillRunId`, and is strictly read-only. Invokes no other skills.<br>**Client repos:** installed as `theloop-verify-newcode-aligns-with-maxims`. |
+| [`theloop-verify-new-code-aligns-with-maxims`](../.skills/theloop-verify-new-code-aligns-with-maxims/SKILL.md) | Verifies that the new code — the linear commits the current branch adds on top of the origin's main — aligns with the maxims under `maxims/`; takes no parameters, generates its own `SkillRunId`, and is strictly read-only. Invokes no other skills.<br>**Client repos:** installed as `theloop-verify-new-code-aligns-with-maxims`. |
 
 ## SkillInvocations
 
@@ -57,5 +57,5 @@ graph TD
     newrepo-theloopify-internal-postinit["newrepo-theloopify-internal-postinit"]
     theloop-clientrepo-precommit["theloop-clientrepo-precommit"] --> theloop-internal-clientrepo-precommit["theloop-internal-clientrepo-precommit"]
     theloop-keep-maxims-up-to-date["theloop-keep-maxims-up-to-date"] --> theloop-internal-check-gh-repo-access
-    theloop-verify-newcode-aligns-with-maxims["theloop-verify-newcode-aligns-with-maxims"]
+    theloop-verify-new-code-aligns-with-maxims["theloop-verify-new-code-aligns-with-maxims"]
 ```

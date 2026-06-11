@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Resolve the new code to verify: the linear chain of commits on top of the origin's main.
 
-Usage: .skills/theloop-verify-newcode-aligns-with-maxims/scripts/resolve-newcode.py --run-id ID
+Usage: .skills/theloop-verify-new-code-aligns-with-maxims/scripts/resolve-new-code.py --run-id ID
        (from the repository root)
 
 Performs, with every git call time-bounded:
@@ -10,7 +10,7 @@ Performs, with every git call time-bounded:
      must be the merge base of the two, and origin/main..HEAD must contain no merge
      commits — otherwise exit with a clear message telling the user to rebase first;
   3. write the payload — every commit in the range, in order, with its full message,
-     stat, and diff — to the gitignored tmp/<run-id>-newcode.txt.
+     stat, and diff — to the gitignored tmp/<run-id>-new-code.txt.
 
 This script is read-only with respect to the repository's content: it never stages,
 commits, or modifies tracked files; its only writes are under the gitignored tmp/.
@@ -96,7 +96,7 @@ def main():
         payload = git("log", "--reverse", "--stat", "--patch", f"{base}..{head}")
         if payload.returncode != 0:
             return fail("git log --patch failed over the resolved range")
-        payload_path = os.path.join("tmp", f"{args.run_id}-newcode.txt")
+        payload_path = os.path.join("tmp", f"{args.run_id}-new-code.txt")
         os.makedirs("tmp", exist_ok=True)
         temp_path = f"{payload_path}.{args.run_id}.tmp"
         with open(temp_path, "w") as f:

@@ -27,7 +27,7 @@ BUNDLE = [
     ("theloop-fixissue", "theloop-fixissue"),
     ("theloop-buildthis", "theloop-buildthis"),
     ("theloop-keep-maxims-up-to-date", "theloop-keep-maxims-up-to-date"),
-    ("theloop-verify-newcode-aligns-with-maxims", "theloop-verify-newcode-aligns-with-maxims"),
+    ("theloop-verify-new-code-aligns-with-maxims", "theloop-verify-new-code-aligns-with-maxims"),
     ("theloop-internal-check-gh-repo-access", "theloop-internal-check-gh-repo-access"),
     ("theloop-clientrepo-precommit", "theloop-precommit"),
     ("newrepo-theloopify-internal-postinit", "newrepo-theloopify-internal-postinit"),

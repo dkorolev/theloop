@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and write the run receipt of theloop-verify-newcode-aligns-with-maxims, write-once.
+"""Validate and write the run receipt of theloop-verify-new-code-aligns-with-maxims, write-once.
 
 Usage (CLI):
   write-receipt.py --skill-run-id ID --status pass \
@@ -21,7 +21,7 @@ import re
 import sys
 from typing import NoReturn
 
-SKILL = "theloop-verify-newcode-aligns-with-maxims"
+SKILL = "theloop-verify-new-code-aligns-with-maxims"
 FIELDS = {
     "skill_run_id", "skill", "status",
     "base", "head", "commits_checked", "categories_checked", "violations",

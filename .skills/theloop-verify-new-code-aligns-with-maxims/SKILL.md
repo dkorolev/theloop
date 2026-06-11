@@ -1,9 +1,9 @@
 ---
-name: theloop-verify-newcode-aligns-with-maxims
+name: theloop-verify-new-code-aligns-with-maxims
 description: Verifies that the new code — the linear chain of commits the current branch adds on top of the origin's main branch — aligns with the repository's maxims under maxims/. Takes no parameters and generates its own SkillRunId; strictly read-only, it fetches the origin's main, requires the current branch to sit squarely on top of it, judges each new commit's diff and message against every recorded maxim, and reports any violations without creating commits or modifying anything.
 ---
 
-# theloop-verify-newcode-aligns-with-maxims
+# theloop-verify-new-code-aligns-with-maxims
 
 This skill verifies that **new code aligns with the repository's maxims**: it takes
 the linear chain of commits the current branch adds on top of the origin's main
@@ -41,20 +41,20 @@ report an error.
 
 ## Steps
 
-The Python scripts under `.skills/theloop-verify-newcode-aligns-with-maxims/scripts/`
+The Python scripts under `.skills/theloop-verify-new-code-aligns-with-maxims/scripts/`
 are executable and begin with `#!/usr/bin/env python3`; run each one directly by
 path — never prefix it with `python` or `python3`. Every external `git` call those
 scripts make is time-bounded, per the rule on time-bounded operations.
 
 1. **Check the configuration gate, then generate the run identifier.** First run
-   `.skills/theloop-verify-newcode-aligns-with-maxims/scripts/check-configured.py`
+   `.skills/theloop-verify-new-code-aligns-with-maxims/scripts/check-configured.py`
    from the repository root. If it exits non-zero (the repository has been
    theloopified but `newrepo-theloopify-internal-postinit` has not completed), stop
    immediately: tell the user they must run `newrepo-theloopify-internal-postinit`
    first, and do not generate an identifier. When it reports configured — including
    the not-applicable case in a non-theloopified repository, such as the theloop
    repository itself — continue. Then run
-   `.skills/theloop-verify-newcode-aligns-with-maxims/scripts/new-run-id.sh` from the
+   `.skills/theloop-verify-new-code-aligns-with-maxims/scripts/new-run-id.sh` from the
    repository root: it prints a fresh `SkillRunId` in the default format codified in
    the rule on run receipts, `YYYYMMDD-HHMMSS-{six_random_latin_lowercase_characters}`.
    Tell the user which identifier was generated. Then confirm that
@@ -64,7 +64,7 @@ scripts make is time-bounded, per the rule on time-bounded operations.
    alike.**
 
 2. **Validate the maxims artifact.** Run
-   `.skills/theloop-verify-newcode-aligns-with-maxims/scripts/read-maxims.py` from
+   `.skills/theloop-verify-new-code-aligns-with-maxims/scripts/read-maxims.py` from
    the repository root. It refuses a missing `maxims/` (there is nothing to verify
    against — tell the user to run `theloop-keep-maxims-up-to-date` first), refuses a
    `maxims/` that lacks the `metadata.json` ownership marker (the path belongs to
@@ -73,7 +73,7 @@ scripts make is time-bounded, per the rule on time-bounded operations.
    reporting the script's message.
 
 3. **Resolve the new code.** Run
-   `.skills/theloop-verify-newcode-aligns-with-maxims/scripts/resolve-newcode.py --run-id <SkillRunId>`
+   `.skills/theloop-verify-new-code-aligns-with-maxims/scripts/resolve-new-code.py --run-id <SkillRunId>`
    from the repository root. It fetches the origin's main branch (time-bounded), then
    requires the current branch to sit **squarely on top** of it: the origin's main
    tip must be the merge base of the two, and the range must contain no merge
@@ -84,7 +84,7 @@ scripts make is time-bounded, per the rule on time-bounded operations.
    there is no new code: tell the user so, write the run receipt with
    `"status": "pass"` and zero commits checked, and stop. Otherwise it has written
    the payload — every commit in the range with its full message, stat, and diff, in
-   order — to the gitignored `tmp/<SkillRunId>-newcode.txt`.
+   order — to the gitignored `tmp/<SkillRunId>-new-code.txt`.
 
 4. **Judge the new code against the maxims.** This is the only genuine judgment
    step. Read every category `.yml` file reported by step 2, then read the payload
@@ -102,7 +102,7 @@ scripts make is time-bounded, per the rule on time-bounded operations.
    them this skill changed nothing: acting on the findings is theirs to do.
 
 6. **Write the run receipt** by calling
-   `.skills/theloop-verify-newcode-aligns-with-maxims/scripts/write-receipt.py` with
+   `.skills/theloop-verify-new-code-aligns-with-maxims/scripts/write-receipt.py` with
    CLI flags: `--skill-run-id` and `--status pass|fail|error`; when status is `pass`
    or `fail`: `--base SHA`, `--head SHA`, `--commits-checked N`,
    `--categories-checked "a,b"` (comma-separated category ids, empty string for
@@ -117,7 +117,7 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
 ```json
 {
   "skill_run_id": "string — the generated SkillRunId",
-  "skill": "theloop-verify-newcode-aligns-with-maxims",
+  "skill": "theloop-verify-new-code-aligns-with-maxims",
   "status": "pass | fail | error",
   "base": "string|null — SHA of the origin's main tip the branch sits on, null when error",
   "head": "string|null — SHA of HEAD, null when error",
