@@ -34,6 +34,7 @@ Throughout this run, record progress on the GitHub issue by posting comments via
 | After the PR is created | `created PR #<pr_number>` |
 | While waiting on GitHub gates | `waiting on GitHub checks: <check names>` |
 | After the GitHub gates settle | `GitHub checks passed`, or `GitHub checks failed — <failing check(s)>` |
+| When the bounded wait on GitHub gates times out | `GitHub checks timed out — <still-pending check(s)>` |
 | When restarting a flaky gate | `restarting flaky gate <name>` |
 | When fixing a red gate | `fixing GitHub gate <name> — <root cause>` |
 
@@ -125,7 +126,8 @@ The Python scripts under `.skills/theloop-fixissue/scripts/` are executable and 
 
 13. **Drive the GitHub gates to green.** After the PR is opened, the repository may run required GitHub checks (CI and other status gates) against it. If the PR has any such gates, **this skill is not done until every one of them is green.** Journal around the wait so the issue timeline records it with timestamps:
     - Before waiting, journal `waiting on GitHub checks: <check names>` — list the pending checks; if you cannot enumerate them, write `waiting on GitHub checks`.
-    - Poll the gates roughly every ten seconds until every one has settled — green (passed) or red (failed) — rather than leaving while any is still pending. `gh pr checks <pr_number> --watch --interval 10` from the repository root blocks until they settle and exits non-zero if any gate is red.
+    - Poll the gates roughly every ten seconds until every one has settled — green (passed) or red (failed) — rather than leaving while any is still pending. Per the rule on time-bounded operations, never let this wait run unbounded: run `timeout 1800 gh pr checks <pr_number> --watch --interval 10` from the repository root — the watch blocks until the gates settle and exits non-zero if any gate is red, while the 30-minute `timeout` bound guarantees a slow or stuck gate cannot stall the run indefinitely. The bound applies per wait: restarting a flaky gate or pushing a fix starts a fresh bounded wait.
+    - When the bound elapses with gates still unsettled (`timeout` kills the watch with exit code 124), treat it as a timeout error, never a reason to keep waiting: journal `GitHub checks timed out — <still-pending check(s)>`, report the timeout and the still-pending gates to the user, write the run receipt with `"status": "fail"`, and stop.
     - If the PR has no required GitHub checks (`gh pr checks` reports none), journal `no GitHub checks configured` and continue to the final report.
     - When every gate is green, journal `GitHub checks passed` and continue to the final report.
     - When one or more gates are red, journal `GitHub checks failed — <failing check(s)>`, then resolve each failing gate and go back to polling. Repeat as many times as necessary until every gate is green:
@@ -170,7 +172,7 @@ The JSON object written to `tmp/<SkillRunId>.json` must have exactly these field
 
 - `commits` is `[]` when no commits were made, and `null` only when `status` is `"error"` before any commit;
 - `status` is `"pass"` when the PR was created, the final `theloop-precommit` run reported `"pass"`, and every GitHub gate on the PR is green — or the PR has no GitHub gates (then `error` is `null`);
-- `"fail"` when checks or PR creation failed after partial progress, or a GitHub gate stayed red and could not be driven green without weakening it (then `error` is `null`);
+- `"fail"` when checks or PR creation failed after partial progress, a GitHub gate stayed red and could not be driven green without weakening it, or the bounded wait on the GitHub gates timed out (then `error` is `null`);
 - `"error"` when the skill could not proceed — bad parameters, missing issue, or a pre-existing receipt file (then nullable fields are `null` and `error` explains why).
 
 **Run receipt (final reminder):** before finishing this skill — regardless of outcome, success, failure, or error alike — write `tmp/<SkillRunId>.json` containing a single well-formed JSON object conforming to the schema above. The only exception is when `tmp/<SkillRunId>.json` already existed before the run: in that case, never overwrite it.
